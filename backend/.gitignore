@@ -1,5 +1,25 @@
-build/
+# Gradle / build
 .gradle/
+build/
 *.class
-application-local.yml
-application-prod.yml
+
+# Logs
+*.log
+logs/
+
+# OS / IDE (선택)
+.DS_Store
+Thumbs.db
+.idea/
+*.iml
+.vscode/
+
+# Spring secret config
+src/main/resources/application-secret.yml
+src/main/resources/application-local.yml
+src/main/resources/application-prod.yml
+
+# Env files
+.env
+.env.*
+!.env.example
