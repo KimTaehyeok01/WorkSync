@@ -8,6 +8,11 @@ spring:
     active: local
     include: secret
 
+  servlet:
+    multipart:
+      max-file-size: 50MB      # 파일 업로드 최대 크기
+      max-request-size: 55MB   # 파일 + 메타데이터 여유분
+
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
