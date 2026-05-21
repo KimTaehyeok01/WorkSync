@@ -5,7 +5,7 @@ import lombok.*;
 
 @Entity
 @Table(name = "approval_doc_item")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter @NoArgsConstructor @AllArgsConstructor @Builder
 public class ApprovalDocItem {
 
     @Id
