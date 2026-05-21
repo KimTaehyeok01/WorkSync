@@ -1,0 +1,61 @@
+import { createBrowserRouter } from "react-router-dom";
+import { Layout } from "../components/layout/Layout";
+import DashboardPage from "../domains/dashboard/pages/DashboardPage";
+import ApprovalListPage from "../domains/approval/pages/ApprovalListPage";
+import ApprovalCreatePage from "../domains/approval/pages/ApprovalCreatePage";
+import ApprovalDetailPage from "../domains/approval/pages/ApprovalDetailPage";
+import BoardListPage from "../domains/board/pages/BoardListPage";
+import BoardCreatePage from "../domains/board/pages/BoardCreatePage";
+import BoardDetailPage from "../domains/board/pages/BoardDetailPage";
+import OrganizationPage from "../domains/organization/pages/OrganizationPage";
+import EmployeeCreatePage from "../domains/organization/pages/EmployeeCreatePage";
+import TaskListPage from "../domains/task/pages/TaskListPage";
+import TaskCreatePage from "../domains/task/pages/TaskCreatePage";
+import TaskDetailPage from "../domains/task/pages/TaskDetailPage";
+import ChatPage from "../domains/chat/pages/ChatPage";
+import LoginPage from "../domains/auth/pages/LoginPage";
+import AuditLogPage from "../domains/audit/pages/AuditLogPage";
+import styles from "./AppRouter.module.css";
+
+
+function NotFound() {
+  return (
+    <div className={styles.auto_001}>
+      <p className={styles.notFoundTitle}>
+        404 - Page Not Found
+      </p>
+      <p className={styles.notFoundDesc}>The page you are looking for does not exist.</p>
+    </div>
+  );
+}
+
+export const router = createBrowserRouter([
+  {
+    path: "/login",
+    Component: LoginPage,
+  },
+  {
+    path: "/",
+    Component: Layout,
+    children: [
+      { index: true, Component: DashboardPage },
+      { path: "approval", Component: ApprovalListPage },
+      { path: "approval/new", Component: ApprovalCreatePage },
+      { path: "approval/:id", Component: ApprovalDetailPage },
+      { path: "board", Component: BoardListPage },
+      { path: "board/new", Component: BoardCreatePage },
+      { path: "board/notice", Component: BoardListPage },
+      { path: "board/free", Component: BoardListPage },
+      { path: "board/qna", Component: BoardListPage },
+      { path: "board/:id", Component: BoardDetailPage },
+      { path: "organization", Component: OrganizationPage },
+      { path: "organization/employee-add", Component: EmployeeCreatePage },
+      { path: "tasks", Component: TaskListPage },
+      { path: "tasks/new", Component: TaskCreatePage },
+      { path: "tasks/:id", Component: TaskDetailPage },
+      { path: "messenger", Component: ChatPage },
+      { path: "audit-log", Component: AuditLogPage },
+      { path: "*", Component: NotFound },
+    ],
+  },
+]);

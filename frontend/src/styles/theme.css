@@ -1,0 +1,39 @@
+:root {
+  /*
+   * Compatibility aliases only.
+   * `tokens.css` is the canonical WorkSync token source used by domain CSS.
+   */
+  --font-size: 16px;
+  --background: var(--ws-bg);
+  --foreground: var(--ws-text-800);
+  --card: var(--ws-surface);
+  --card-foreground: var(--ws-text-800);
+  --popover: var(--ws-surface);
+  --popover-foreground: var(--ws-text-800);
+  --primary: var(--ws-primary);
+  --primary-foreground: #ffffff;
+  --secondary: var(--ws-border-light);
+  --secondary-foreground: var(--ws-text-800);
+  --muted: var(--ws-border-light);
+  --muted-foreground: var(--ws-text-500);
+  --accent: var(--ws-primary-soft);
+  --accent-foreground: var(--ws-primary);
+  --destructive: var(--ws-danger);
+  --destructive-foreground: #ffffff;
+  --border: var(--ws-border);
+  --input: var(--ws-surface);
+  --input-background: var(--ws-border-light);
+  --switch-background: var(--ws-text-300);
+  --font-weight-medium: 600;
+  --font-weight-normal: 400;
+  --ring: var(--ws-primary-ring);
+  --radius: var(--ws-radius-md);
+  --sidebar: var(--ws-dark);
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: var(--ws-primary);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(255,255,255,0.08);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255,255,255,0.08);
+  --sidebar-ring: var(--ws-primary-ring);
+}
