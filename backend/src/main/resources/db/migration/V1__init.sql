@@ -7,7 +7,7 @@
 -- ── ENUM 타입 ────────────────────────────────────────────────
 CREATE TYPE employee_role          AS ENUM ('USER', 'ADMIN');
 CREATE TYPE employee_status        AS ENUM ('ACTIVE', 'INACTIVE', 'AWAY');
-CREATE TYPE job_grade_type         AS ENUM ('STAFF', 'SENIOR_STAFF', 'ASSISTANT_MANAGER', 'MANAGER', 'GENERAL_MANAGER', 'DIRECTOR', 'CEO');
+CREATE TYPE job_grade_type         AS ENUM ('STAFF', 'SENIOR', 'ASSISTANT_MANAGER', 'MANAGER', 'GENERAL_MANAGER', 'DIRECTOR', 'CEO');
 CREATE TYPE approval_doc_status    AS ENUM ('IN_PROGRESS', 'APPROVED', 'REJECTED');
 CREATE TYPE step_type_enum         AS ENUM ('DRAFT', 'REVIEW', 'APPROVE', 'REFERENCE');
 CREATE TYPE approval_line_status   AS ENUM ('WAITING', 'APPROVED', 'REJECTED');
