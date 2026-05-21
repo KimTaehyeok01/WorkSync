@@ -7,7 +7,7 @@
 -- ── ENUM 타입 ────────────────────────────────────────────────
 CREATE TYPE employee_role          AS ENUM ('USER', 'ADMIN');
 CREATE TYPE employee_status        AS ENUM ('ACTIVE', 'INACTIVE', 'AWAY');
-CREATE TYPE job_grade_type         AS ENUM ('사원', '주임', '대리', '과장', '부장', '이사', '대표');
+CREATE TYPE job_grade_type         AS ENUM ('STAFF', 'SENIOR_STAFF', 'ASSISTANT_MANAGER', 'MANAGER', 'GENERAL_MANAGER', 'DIRECTOR', 'CEO');
 CREATE TYPE approval_doc_status    AS ENUM ('IN_PROGRESS', 'APPROVED', 'REJECTED');
 CREATE TYPE step_type_enum         AS ENUM ('DRAFT', 'REVIEW', 'APPROVE', 'REFERENCE');
 CREATE TYPE approval_line_status   AS ENUM ('WAITING', 'APPROVED', 'REJECTED');
@@ -38,7 +38,7 @@ CREATE TABLE employee (
     phone             VARCHAR(20),
     role              employee_role    NOT NULL DEFAULT 'USER',
     status            employee_status  NOT NULL DEFAULT 'ACTIVE',
-    job_grade         job_grade_type   NOT NULL DEFAULT '사원',
+    job_grade         job_grade_type   NOT NULL DEFAULT 'STAFF',
     department_id     BIGINT           REFERENCES department(id) ON DELETE SET NULL,
     profile_image     VARCHAR(512),
     hire_date         DATE,

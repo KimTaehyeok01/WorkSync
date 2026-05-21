@@ -48,7 +48,7 @@ public class Employee {
     @Enumerated(EnumType.STRING)
     @Column(name = "job_grade", nullable = false, columnDefinition = "job_grade_type")
     @Builder.Default
-    private JobGrade jobGrade = JobGrade.사원;
+    private JobGrade jobGrade = JobGrade.STAFF;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
