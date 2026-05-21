@@ -17,9 +17,9 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     @Transactional(readOnly = true)
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Employee employee = employeeRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("사원을 찾을 수 없습니다: " + email));
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Employee employee = employeeRepository.findByEmpNo(username)
+                .orElseThrow(() -> new UsernameNotFoundException("사원을 찾을 수 없습니다: " + username));
         return new CustomUserDetails(employee);
     }
 
