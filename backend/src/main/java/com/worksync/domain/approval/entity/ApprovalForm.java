@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "approval_form")
 @EntityListeners(AuditingEntityListener.class)
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter @NoArgsConstructor @AllArgsConstructor @Builder
 public class ApprovalForm {
 
     @Id
