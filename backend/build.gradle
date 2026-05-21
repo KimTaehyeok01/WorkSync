@@ -51,7 +51,7 @@ dependencies {
     implementation 'org.flywaydb:flyway-core'
 
     // Swagger - API 명세서
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
+        implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
 
     // Lombok
     compileOnly 'org.projectlombok:lombok'
