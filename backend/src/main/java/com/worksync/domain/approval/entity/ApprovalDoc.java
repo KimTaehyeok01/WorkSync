@@ -3,20 +3,19 @@ package com.worksync.domain.approval.entity;
 import com.worksync.domain.employee.entity.Employee;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "approval_doc")
-@Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Builder
-@AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class ApprovalDoc {
-
-    public enum Status { IN_PROGRESS, APPROVED, REJECTED }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,26 +34,28 @@ public class ApprovalDoc {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "approval_doc_status")
-    private Status status;
+    @Builder.Default
+    private ApprovalDocStatus status = ApprovalDocStatus.IN_PROGRESS;
 
+    @Column(name = "submitted_at")
     private LocalDateTime submittedAt;
+
+    @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
-    @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @OneToMany(mappedBy = "doc", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<ApprovalLine> approvalLines = new ArrayList<>();
+
+    @OneToMany(mappedBy = "doc", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<ApprovalDocItem> approvalDocItems = new ArrayList<>();
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @UpdateTimestamp
-    @Column(nullable = false)
+    @LastModifiedDate
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-
-    public void approve() {
-        this.status = Status.APPROVED;
-        this.completedAt = LocalDateTime.now();
-    }
-
-    public void reject() {
-        this.status = Status.REJECTED;
-        this.completedAt = LocalDateTime.now();
-    }
 }

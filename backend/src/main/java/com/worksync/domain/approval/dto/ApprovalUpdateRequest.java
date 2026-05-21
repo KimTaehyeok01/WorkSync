@@ -1,30 +1,16 @@
 package com.worksync.domain.approval.dto;
 
-import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.util.List;
+import java.util.Map;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Setter
 public class ApprovalUpdateRequest {
 
-    @Size(max = 200)
+    @NotBlank
     private String title;
 
-    private List<ItemDto> items;
-
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public static class ItemDto {
-        private String itemKey;
-        private String itemValue;
-    }
+    private Map<String, String> items;
 }

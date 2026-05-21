@@ -1,26 +1,35 @@
 package com.worksync.domain.file.dto;
 
 import com.worksync.domain.file.entity.FileAttachment;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Builder
 public class FileUploadResponse {
 
     private Long id;
     private String originalName;
     private String filePath;
-    private long fileSize;
+    private Long fileSize;
     private String mimeType;
-    private FileAttachment.RefType refType;
+    private String refType;
     private Long refId;
-    private int version;
+    private Integer version;
     private LocalDateTime createdAt;
+
+    public static FileUploadResponse from(FileAttachment file) {
+        return FileUploadResponse.builder()
+                .id(file.getId())
+                .originalName(file.getOriginalName())
+                .filePath(file.getFilePath())
+                .fileSize(file.getFileSize())
+                .mimeType(file.getMimeType())
+                .refType(file.getRefType())
+                .refId(file.getRefId())
+                .version(file.getVersion())
+                .createdAt(file.getCreatedAt())
+                .build();
+    }
 }

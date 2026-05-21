@@ -1,20 +1,17 @@
 package com.worksync.domain.employee.dto;
 
-import com.worksync.domain.employee.entity.Employee;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import com.worksync.domain.employee.entity.EmployeeStatus;
+import com.worksync.domain.employee.entity.JobGrade;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Setter
 public class EmployeeUpdateRequest {
 
     private String name;
     private String phone;
-    private Employee.JobGrade jobGrade;
+    private JobGrade jobGrade;
+    private EmployeeStatus status;
     private Long departmentId;
-    private Employee.Status status;
+    private String profileImage;
 }

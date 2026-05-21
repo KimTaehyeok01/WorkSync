@@ -4,7 +4,8 @@ import com.worksync.domain.approval.entity.ApprovalDoc;
 import com.worksync.domain.employee.entity.Employee;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -12,14 +13,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "leave_request")
-@Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Builder
-@AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class LeaveRequest {
-
-    public enum LeaveType   { ANNUAL, HALF, SICK, FAMILY }
-    public enum LeaveStatus { PENDING, APPROVED, REJECTED }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,16 +30,16 @@ public class LeaveRequest {
     private ApprovalDoc approvalDoc;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "leave_type_enum")
+    @Column(name = "leave_type", nullable = false, columnDefinition = "leave_type_enum")
     private LeaveType leaveType;
 
-    @Column(nullable = false)
+    @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
 
-    @Column(nullable = false)
+    @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
-    @Column(nullable = false, precision = 3, scale = 1)
+    @Column(name = "days_count", nullable = false, precision = 3, scale = 1)
     private BigDecimal daysCount;
 
     @Column(columnDefinition = "TEXT")
@@ -51,13 +47,14 @@ public class LeaveRequest {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "leave_status_enum")
-    private LeaveStatus status;
+    @Builder.Default
+    private LeaveStatus status = LeaveStatus.PENDING;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approver_id")
     private Employee approver;
 
-    @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 }

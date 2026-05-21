@@ -1,20 +1,17 @@
 package com.worksync.domain.board.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Setter
 public class PostCreateRequest {
 
+    @NotNull
+    private Long boardId;
+
     @NotBlank
-    @Size(max = 300)
     private String title;
 
     @NotBlank

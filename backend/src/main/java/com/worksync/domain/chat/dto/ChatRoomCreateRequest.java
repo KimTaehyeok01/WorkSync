@@ -1,23 +1,18 @@
 package com.worksync.domain.chat.dto;
 
-import com.worksync.domain.chat.entity.ChatRoom;
+import com.worksync.domain.chat.entity.RoomType;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Setter
 public class ChatRoomCreateRequest {
 
     @NotNull
-    private ChatRoom.RoomType roomType;
+    private RoomType roomType;
 
     private String name;
 

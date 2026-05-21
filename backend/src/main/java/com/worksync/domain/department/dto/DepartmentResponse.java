@@ -1,17 +1,12 @@
 package com.worksync.domain.department.dto;
 
 import com.worksync.domain.department.entity.Department;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Builder
 public class DepartmentResponse {
 
     private Long id;
@@ -19,10 +14,10 @@ public class DepartmentResponse {
     private LocalDateTime createdAt;
 
     public static DepartmentResponse from(Department department) {
-        return new DepartmentResponse(
-                department.getId(),
-                department.getName(),
-                department.getCreatedAt()
-        );
+        return DepartmentResponse.builder()
+                .id(department.getId())
+                .name(department.getName())
+                .createdAt(department.getCreatedAt())
+                .build();
     }
 }

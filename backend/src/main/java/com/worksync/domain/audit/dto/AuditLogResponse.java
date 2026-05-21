@@ -1,17 +1,12 @@
 package com.worksync.domain.audit.dto;
 
 import com.worksync.domain.audit.entity.AuditLog;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Builder
 public class AuditLogResponse {
 
     private Long id;
@@ -25,16 +20,16 @@ public class AuditLogResponse {
     private LocalDateTime createdAt;
 
     public static AuditLogResponse from(AuditLog log) {
-        return new AuditLogResponse(
-                log.getId(),
-                log.getActorId(),
-                log.getActorName(),
-                log.getAction(),
-                log.getTargetType(),
-                log.getTargetId(),
-                log.getClientIp(),
-                log.getUserAgent(),
-                log.getCreatedAt()
-        );
+        return AuditLogResponse.builder()
+                .id(log.getId())
+                .actorId(log.getActorId())
+                .actorName(log.getActorName())
+                .action(log.getAction())
+                .targetType(log.getTargetType())
+                .targetId(log.getTargetId())
+                .clientIp(log.getClientIp())
+                .userAgent(log.getUserAgent())
+                .createdAt(log.getCreatedAt())
+                .build();
     }
 }

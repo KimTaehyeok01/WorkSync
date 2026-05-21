@@ -5,10 +5,7 @@ import lombok.*;
 
 @Entity
 @Table(name = "approval_doc_item")
-@Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Builder
-@AllArgsConstructor
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class ApprovalDocItem {
 
     @Id
@@ -19,9 +16,9 @@ public class ApprovalDocItem {
     @JoinColumn(name = "doc_id", nullable = false)
     private ApprovalDoc doc;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "item_key", nullable = false, length = 100)
     private String itemKey;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "item_value", columnDefinition = "TEXT")
     private String itemValue;
 }

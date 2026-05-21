@@ -3,19 +3,16 @@ package com.worksync.domain.notification.entity;
 import com.worksync.domain.employee.entity.Employee;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "notification")
-@Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Builder
-@AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Notification {
-
-    public enum Type { APPROVAL, TASK, MESSAGE }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,27 +24,25 @@ public class Notification {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "notification_type_enum")
-    private Type type;
+    private NotificationType type;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Column(length = 30)
+    @Column(name = "target_type", length = 30)
     private String targetType;
 
+    @Column(name = "target_id")
     private Long targetId;
 
     @Column(name = "is_read", nullable = false)
-    private boolean read;
+    @Builder.Default
+    private Boolean isRead = false;
 
-    @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "read_at")
     private LocalDateTime readAt;
-
-    public void markAsRead() {
-        this.read = true;
-        this.readAt = LocalDateTime.now();
-    }
 }

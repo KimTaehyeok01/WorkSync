@@ -3,31 +3,24 @@ package com.worksync.domain.employee.entity;
 import com.worksync.domain.department.entity.Department;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "employee")
-@Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Builder
-@AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Employee {
-
-    public enum Role   { USER, ADMIN }
-    public enum Status { ACTIVE, INACTIVE, AWAY }
-    public enum JobGrade {
-        STAFF, SENIOR, ASSISTANT_MANAGER, MANAGER, GENERAL_MANAGER, DIRECTOR, CEO
-    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 20)
+    @Column(name = "emp_no", nullable = false, unique = true, length = 20)
     private String empNo;
 
     @Column(nullable = false, length = 50)
@@ -44,51 +37,41 @@ public class Employee {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "employee_role")
-    private Role role;
+    @Builder.Default
+    private EmployeeRole role = EmployeeRole.USER;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "employee_status")
-    private Status status;
+    @Builder.Default
+    private EmployeeStatus status = EmployeeStatus.ACTIVE;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "job_grade_type")
-    private JobGrade jobGrade;
+    @Column(name = "job_grade", nullable = false, columnDefinition = "job_grade_type")
+    @Builder.Default
+    private JobGrade jobGrade = JobGrade.사원;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
     private Department department;
 
-    @Column(length = 512)
+    @Column(name = "profile_image", length = 512)
     private String profileImage;
 
+    @Column(name = "hire_date")
     private LocalDate hireDate;
 
-    @Column(nullable = false)
-    private int loginFailCount;
+    @Column(name = "login_fail_count", nullable = false)
+    @Builder.Default
+    private Integer loginFailCount = 0;
 
+    @Column(name = "locked_until")
     private LocalDateTime lockedUntil;
 
-    @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @UpdateTimestamp
-    @Column(nullable = false)
+    @LastModifiedDate
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-
-    public void updateStatus(Status status) {
-        this.status = status;
-    }
-
-    public void incrementLoginFailCount() {
-        this.loginFailCount++;
-    }
-
-    public void resetLoginFailCount() {
-        this.loginFailCount = 0;
-    }
-
-    public void lockUntil(LocalDateTime lockedUntil) {
-        this.lockedUntil = lockedUntil;
-    }
 }

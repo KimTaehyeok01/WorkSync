@@ -1,19 +1,15 @@
 package com.worksync.domain.board.dto;
 
-import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Setter
 public class PostUpdateRequest {
 
-    @Size(max = 300)
+    @NotBlank
     private String title;
 
+    @NotBlank
     private String content;
 }

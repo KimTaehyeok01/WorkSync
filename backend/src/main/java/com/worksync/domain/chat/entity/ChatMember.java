@@ -3,14 +3,18 @@ package com.worksync.domain.chat.entity;
 import com.worksync.domain.employee.entity.Employee;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "chat_member",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"room_id", "employee_id"}))
-@Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Builder
-@AllArgsConstructor
+@Table(
+    name = "chat_member",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"room_id", "employee_id"})
+)
+@EntityListeners(AuditingEntityListener.class)
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class ChatMember {
 
     @Id
@@ -25,9 +29,10 @@ public class ChatMember {
     @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
 
+    @Column(name = "last_read_message_id")
     private Long lastReadMessageId;
 
-    public void updateLastReadMessageId(Long messageId) {
-        this.lastReadMessageId = messageId;
-    }
+    @CreatedDate
+    @Column(name = "joined_at", nullable = false, updatable = false)
+    private LocalDateTime joinedAt;
 }

@@ -1,4 +1,4 @@
 package com.worksync.global.security;
 
-public class CustomUserDetailsService {
+public class CustomUserDetailsService  {
 }

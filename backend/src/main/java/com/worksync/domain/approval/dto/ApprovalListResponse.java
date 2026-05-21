@@ -1,26 +1,32 @@
 package com.worksync.domain.approval.dto;
 
 import com.worksync.domain.approval.entity.ApprovalDoc;
-import lombok.AllArgsConstructor;
+import com.worksync.domain.approval.entity.ApprovalDocStatus;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Builder
 public class ApprovalListResponse {
 
     private Long id;
     private String title;
-    private ApprovalDoc.Status status;
-    private String drafterName;
-    private String drafterJobGrade;
-    private String drafterProfileImage;
     private String formName;
+    private String drafterName;
+    private ApprovalDocStatus status;
     private LocalDateTime submittedAt;
     private LocalDateTime createdAt;
+
+    public static ApprovalListResponse from(ApprovalDoc doc) {
+        return ApprovalListResponse.builder()
+                .id(doc.getId())
+                .title(doc.getTitle())
+                .formName(doc.getForm().getFormName())
+                .drafterName(doc.getDrafter().getName())
+                .status(doc.getStatus())
+                .submittedAt(doc.getSubmittedAt())
+                .createdAt(doc.getCreatedAt())
+                .build();
+    }
 }

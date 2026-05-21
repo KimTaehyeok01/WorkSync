@@ -7,16 +7,9 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "approval_line",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"doc_id", "step_order"}))
-@Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Builder
-@AllArgsConstructor
+@Table(name = "approval_line")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class ApprovalLine {
-
-    public enum StepType   { DRAFT, REVIEW, APPROVE, REFERENCE }
-    public enum LineStatus { WAITING, APPROVED, REJECTED }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,31 +23,21 @@ public class ApprovalLine {
     @JoinColumn(name = "approver_id", nullable = false)
     private Employee approver;
 
-    @Column(nullable = false)
-    private int stepOrder;
+    @Column(name = "step_order", nullable = false)
+    private Integer stepOrder;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "step_type_enum")
+    @Column(name = "step_type", nullable = false, columnDefinition = "step_type_enum")
     private StepType stepType;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "approval_line_status")
-    private LineStatus status;
+    @Builder.Default
+    private ApprovalLineStatus status = ApprovalLineStatus.WAITING;
 
     @Column(columnDefinition = "TEXT")
     private String comment;
 
+    @Column(name = "processed_at")
     private LocalDateTime processedAt;
-
-    public void approve(String comment) {
-        this.status = LineStatus.APPROVED;
-        this.comment = comment;
-        this.processedAt = LocalDateTime.now();
-    }
-
-    public void reject(String comment) {
-        this.status = LineStatus.REJECTED;
-        this.comment = comment;
-        this.processedAt = LocalDateTime.now();
-    }
 }

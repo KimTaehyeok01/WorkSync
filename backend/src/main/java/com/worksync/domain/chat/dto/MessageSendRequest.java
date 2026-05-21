@@ -1,24 +1,19 @@
 package com.worksync.domain.chat.dto;
 
-import com.worksync.domain.chat.entity.Message;
+import com.worksync.domain.chat.entity.MessageType;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Setter
 public class MessageSendRequest {
 
     @NotNull
-    private Message.MsgType msgType;
+    private Long roomId;
 
-    @Size(max = 300)
     private String content;
+
+    private MessageType msgType;
 
     private Long fileId;
 }

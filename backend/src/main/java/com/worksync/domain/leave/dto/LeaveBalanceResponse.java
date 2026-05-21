@@ -1,32 +1,31 @@
 package com.worksync.domain.leave.dto;
 
 import com.worksync.domain.leave.entity.AnnualLeaveBalance;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Builder
 public class LeaveBalanceResponse {
 
     private Long id;
-    private int year;
+    private Long employeeId;
+    private String employeeName;
+    private Short year;
     private BigDecimal totalDays;
     private BigDecimal usedDays;
-    private BigDecimal remainDays;
+    private BigDecimal remainingDays;
 
-    public static LeaveBalanceResponse from(AnnualLeaveBalance b) {
-        return new LeaveBalanceResponse(
-                b.getId(),
-                b.getYear(),
-                b.getTotalDays(),
-                b.getUsedDays(),
-                b.getRemainDays()
-        );
+    public static LeaveBalanceResponse from(AnnualLeaveBalance balance) {
+        return LeaveBalanceResponse.builder()
+                .id(balance.getId())
+                .employeeId(balance.getEmployee().getId())
+                .employeeName(balance.getEmployee().getName())
+                .year(balance.getYear())
+                .totalDays(balance.getTotalDays())
+                .usedDays(balance.getUsedDays())
+                .remainingDays(balance.getTotalDays().subtract(balance.getUsedDays()))
+                .build();
     }
 }

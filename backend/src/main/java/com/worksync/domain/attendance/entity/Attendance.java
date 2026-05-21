@@ -3,21 +3,20 @@ package com.worksync.domain.attendance.entity;
 import com.worksync.domain.employee.entity.Employee;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "attendance",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"employee_id", "work_date"}))
-@Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Builder
-@AllArgsConstructor
+@Table(
+    name = "attendance",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"employee_id", "work_date"})
+)
+@EntityListeners(AuditingEntityListener.class)
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Attendance {
-
-    public enum Status { NORMAL, LATE, EARLY_LEAVE, ABSENT }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,25 +26,24 @@ public class Attendance {
     @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
 
-    @Column(nullable = false)
+    @Column(name = "work_date", nullable = false)
     private LocalDate workDate;
 
+    @Column(name = "check_in_time")
     private LocalDateTime checkInTime;
+
+    @Column(name = "check_out_time")
     private LocalDateTime checkOutTime;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "attendance_status_type")
-    private Status status;
+    @Builder.Default
+    private AttendanceStatus status = AttendanceStatus.NORMAL;
 
-    @Column(length = 45)
+    @Column(name = "client_ip", length = 45)
     private String clientIp;
 
-    @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
-    public void checkOut(LocalDateTime checkOutTime, Status status) {
-        this.checkOutTime = checkOutTime;
-        this.status = status;
-    }
 }
