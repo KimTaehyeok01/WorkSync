@@ -14,7 +14,7 @@ import java.util.List;
 @Entity
 @Table(name = "approval_doc")
 @EntityListeners(AuditingEntityListener.class)
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter @NoArgsConstructor @AllArgsConstructor @Builder
 public class ApprovalDoc {
 
     @Id
