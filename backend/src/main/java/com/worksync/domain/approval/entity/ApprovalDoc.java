@@ -3,6 +3,8 @@ package com.worksync.domain.approval.entity;
 import com.worksync.domain.employee.entity.Employee;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -32,7 +34,7 @@ public class ApprovalDoc {
     @Column(nullable = false, length = 200)
     private String title;
 
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(nullable = false, columnDefinition = "approval_doc_status")
     @Builder.Default
     private ApprovalDocStatus status = ApprovalDocStatus.IN_PROGRESS;
