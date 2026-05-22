@@ -232,6 +232,7 @@
   align-items: center;
   gap: 12px;
   padding: 14px 20px;
+  height: 70px;
   background: #fff;
   border-bottom: 1px solid var(--ws-border);
   flex-shrink: 0;
@@ -572,7 +573,6 @@
   gap: 12px;
   margin-left: 10px;
 }
-
 
 .memberName {
   font-weight: 600;
