@@ -4,6 +4,8 @@ import com.worksync.domain.approval.entity.ApprovalDoc;
 import com.worksync.domain.employee.entity.Employee;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -29,7 +31,7 @@ public class LeaveRequest {
     @JoinColumn(name = "approval_doc_id")
     private ApprovalDoc approvalDoc;
 
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "leave_type", nullable = false, columnDefinition = "leave_type_enum")
     private LeaveType leaveType;
 
@@ -45,7 +47,7 @@ public class LeaveRequest {
     @Column(columnDefinition = "TEXT")
     private String reason;
 
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(nullable = false, columnDefinition = "leave_status_enum")
     @Builder.Default
     private LeaveStatus status = LeaveStatus.PENDING;

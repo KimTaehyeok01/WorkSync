@@ -3,6 +3,8 @@ package com.worksync.domain.approval.entity;
 import com.worksync.domain.employee.entity.Employee;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
@@ -26,11 +28,11 @@ public class ApprovalLine {
     @Column(name = "step_order", nullable = false)
     private Integer stepOrder;
 
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "step_type", nullable = false, columnDefinition = "step_type_enum")
     private StepType stepType;
 
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(nullable = false, columnDefinition = "approval_line_status")
     @Builder.Default
     private ApprovalLineStatus status = ApprovalLineStatus.WAITING;

@@ -3,6 +3,8 @@ package com.worksync.domain.employee.entity;
 import com.worksync.domain.department.entity.Department;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -35,17 +37,17 @@ public class Employee {
     @Column(length = 20)
     private String phone;
 
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(nullable = false, columnDefinition = "employee_role")
     @Builder.Default
     private EmployeeRole role = EmployeeRole.USER;
 
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(nullable = false, columnDefinition = "employee_status")
     @Builder.Default
     private EmployeeStatus status = EmployeeStatus.ACTIVE;
 
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "job_grade", nullable = false, columnDefinition = "job_grade_type")
     @Builder.Default
     private JobGrade jobGrade = JobGrade.STAFF;
