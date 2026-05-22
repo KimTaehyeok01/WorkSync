@@ -1,12 +1,27 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Search, Filter, X, ChevronDown } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  Filter,
+  X,
+  ChevronDown,
+} from "lucide-react";
 import s from "./Widgets.module.css";
 
 export * from "./FormComponents";
 export * from "./LayoutComponents";
 
 /** WS Card */
-export function WSCard({ title, subtitle, action, children, className = "", noPad = false, style }) {
+export function WSCard({
+  title,
+  subtitle,
+  action,
+  children,
+  className = "",
+  noPad = false,
+  style,
+}) {
   return (
     <div className={`${s.card} ${className}`} style={style}>
       {(title || action) && (
@@ -27,7 +42,10 @@ export function WSCard({ title, subtitle, action, children, className = "", noPa
 export function WSStatCard({ label, value, sub, icon, color, trend }) {
   return (
     <div className={s.statCard}>
-      <div className={s.statIcon} style={{ "--stat-bg": `${color}18`, "--stat-color": color }}>
+      <div
+        className={s.statIcon}
+        style={{ "--stat-bg": `${color}18`, "--stat-color": color }}
+      >
         <span className={s.statIconGlyph}>{icon}</span>
       </div>
       <div className={s.statBody}>
@@ -36,7 +54,9 @@ export function WSStatCard({ label, value, sub, icon, color, trend }) {
         {sub && <p className={s.statSub}>{sub}</p>}
         {trend && (
           <div className={s.trendRow}>
-            <span className={`${s.trendBadge} ${trend.up ? s.trendUp : s.trendDown}`}>
+            <span
+              className={`${s.trendBadge} ${trend.up ? s.trendUp : s.trendDown}`}
+            >
               {trend.up ? "▲" : "▼"} {trend.value}
             </span>
             <span className={s.trendSub}>지난주 대비</span>
@@ -49,33 +69,41 @@ export function WSStatCard({ label, value, sub, icon, color, trend }) {
 
 /** WS Badge */
 const BADGE_STYLES = {
-  pending:    { bg: "#FEF3C7", color: "#D97706" },
-  approved:   { bg: "#D1FAE5", color: "#059669" },
-  rejected:   { bg: "#FEE2E2", color: "#DC2626" },
-  high:       { bg: "#FEE2E2", color: "#DC2626" },
-  medium:     { bg: "#FEF3C7", color: "#D97706" },
-  low:        { bg: "#DBEAFE", color: "#1D4ED8" },
-  urgent:     { bg: "#FCE7F3", color: "#BE185D" },
-  online:     { bg: "#D1FAE5", color: "#059669" },
-  away:       { bg: "#FEF3C7", color: "#D97706" },
-  offline:    { bg: "#F3F4F6", color: "#6B7280" },
-  todo:       { bg: "#F3F4F6", color: "#374151" },
+  pending: { bg: "#FEF3C7", color: "#D97706" },
+  approved: { bg: "#D1FAE5", color: "#059669" },
+  rejected: { bg: "#FEE2E2", color: "#DC2626" },
+  high: { bg: "#FEE2E2", color: "#DC2626" },
+  medium: { bg: "#FEF3C7", color: "#D97706" },
+  low: { bg: "#DBEAFE", color: "#1D4ED8" },
+  urgent: { bg: "#FCE7F3", color: "#BE185D" },
+  online: { bg: "#D1FAE5", color: "#059669" },
+  away: { bg: "#FEF3C7", color: "#D97706" },
+  offline: { bg: "#F3F4F6", color: "#6B7280" },
+  todo: { bg: "#F3F4F6", color: "#374151" },
   inProgress: { bg: "#DBEAFE", color: "#1D4ED8" },
-  review:     { bg: "#EDE9FE", color: "#7C3AED" },
-  done:       { bg: "#D1FAE5", color: "#059669" },
+  review: { bg: "#EDE9FE", color: "#7C3AED" },
+  done: { bg: "#D1FAE5", color: "#059669" },
 };
 
 const STATUS_LABELS = {
-  pending: "대기", approved: "승인", rejected: "반려",
-  high: "높음", medium: "보통", low: "낮음", urgent: "긴급",
-  online: "온라인", away: "자리 비움", offline: "오프라인",
-  todo: "할 일", inProgress: "진행 중", review: "검토 중", done: "완료",
+  pending: "대기",
+  approved: "승인",
+  rejected: "반려",
+  online: "온라인",
+  away: "자리 비움",
+  offline: "오프라인",
+  todo: "준비중",
+  inProgress: "진행중",
+  done: "완료",
 };
 
 export function WSBadge({ status, label }) {
   const style = BADGE_STYLES[status] || { bg: "#F3F4F6", color: "#374151" };
   return (
-    <span className={s.badge} style={{ "--badge-bg": style.bg, "--badge-color": style.color }}>
+    <span
+      className={s.badge}
+      style={{ "--badge-bg": style.bg, "--badge-color": style.color }}
+    >
       {label || STATUS_LABELS[status] || status}
     </span>
   );
@@ -120,11 +148,13 @@ export function WSPagination({ total, page, perPage = 10, onPageChange }) {
 
   return (
     <div className={s.pagination}>
-      <span className={s.paginationInfo}>
-        <strong>{start}–{end}</strong> / 총 <strong>{total}</strong>개
-      </span>
       <div className={s.pagerControls}>
-        <button onClick={() => onPageChange?.(page - 1)} disabled={page <= 1} className={s.pagerBtn} aria-label="이전 페이지">
+        <button
+          onClick={() => onPageChange?.(page - 1)}
+          disabled={page <= 1}
+          className={s.pagerBtn}
+          aria-label="이전 페이지"
+        >
           <ChevronLeft size={14} />
         </button>
         {pages.map((p) => (
@@ -140,12 +170,21 @@ export function WSPagination({ total, page, perPage = 10, onPageChange }) {
         {totalPages > 5 && page < totalPages - 2 && (
           <>
             <span className={s.pagerEllipsis}>...</span>
-            <button onClick={() => onPageChange?.(totalPages)} className={s.pagerBtn} aria-label={`마지막 페이지 ${totalPages}`}>
+            <button
+              onClick={() => onPageChange?.(totalPages)}
+              className={s.pagerBtn}
+              aria-label={`마지막 페이지 ${totalPages}`}
+            >
               {totalPages}
             </button>
           </>
         )}
-        <button onClick={() => onPageChange?.(page + 1)} disabled={page >= totalPages} className={s.pagerBtn} aria-label="다음 페이지">
+        <button
+          onClick={() => onPageChange?.(page + 1)}
+          disabled={page >= totalPages}
+          className={s.pagerBtn}
+          aria-label="다음 페이지"
+        >
           <ChevronRight size={14} />
         </button>
       </div>
@@ -177,7 +216,11 @@ export function WSSearchFilters({
           className={s.searchInputField}
         />
         {search && (
-          <button onClick={() => onSearchChange("")} className={s.searchInputClear} aria-label="검색어 지우기">
+          <button
+            onClick={() => onSearchChange("")}
+            className={s.searchInputClear}
+            aria-label="검색어 지우기"
+          >
             <X size={12} />
           </button>
         )}
@@ -188,7 +231,9 @@ export function WSSearchFilters({
         return (
           <div key={filter.key} className={s.filterWrap}>
             <button
-              onClick={() => setOpenFilter(openFilter === filter.key ? null : filter.key)}
+              onClick={() =>
+                setOpenFilter(openFilter === filter.key ? null : filter.key)
+              }
               className={`${s.filterBtn} ${active ? s.filterBtnActive : ""}`}
               aria-haspopup="menu"
               aria-expanded={openFilter === filter.key}
@@ -201,7 +246,10 @@ export function WSSearchFilters({
               <div className={s.filterMenu} role="menu">
                 <button
                   className={`${s.filterMenuItem} ${s.filterMenuClear}`}
-                  onClick={() => { onFilterChange?.(filter.key, ""); setOpenFilter(null); }}
+                  onClick={() => {
+                    onFilterChange?.(filter.key, "");
+                    setOpenFilter(null);
+                  }}
                   role="menuitem"
                 >
                   전체 {filter.label}
@@ -210,7 +258,10 @@ export function WSSearchFilters({
                   <button
                     key={opt}
                     className={`${s.filterMenuItem} ${activeFilters[filter.key] === opt ? s.filterMenuItemSel : ""}`}
-                    onClick={() => { onFilterChange?.(filter.key, opt); setOpenFilter(null); }}
+                    onClick={() => {
+                      onFilterChange?.(filter.key, opt);
+                      setOpenFilter(null);
+                    }}
                     role="menuitem"
                   >
                     {opt}
@@ -236,17 +287,32 @@ export function WSSearchFilters({
 }
 
 /** WS Progress */
-export function WSProgress({ value, color = "#1A73E8", label, showLabel = true }) {
+export function WSProgress({
+  value,
+  color = "#1A73E8",
+  label,
+  showLabel = true,
+}) {
   return (
     <div className={s.progressWrap}>
       {(label || showLabel) && (
         <div className={s.progressTop}>
           {label && <span className={s.progressLabel}>{label}</span>}
-          {showLabel && <span className={s.progressValue} style={{ "--progress-color": color }}>{value}%</span>}
+          {showLabel && (
+            <span
+              className={s.progressValue}
+              style={{ "--progress-color": color }}
+            >
+              {value}%
+            </span>
+          )}
         </div>
       )}
       <div className={s.progressTrack}>
-        <div className={s.progressFill} style={{ "--progress-width": `${value}%`, "--progress-color": color }} />
+        <div
+          className={s.progressFill}
+          style={{ "--progress-width": `${value}%`, "--progress-color": color }}
+        />
       </div>
     </div>
   );
@@ -271,19 +337,33 @@ const TAG_COLORS = {
 export function WSTag({ label }) {
   const style = TAG_COLORS[label] || { bg: "#F3F4F6", color: "#374151" };
   return (
-    <span className={s.tag} style={{ "--tag-bg": style.bg, "--tag-color": style.color }}>
+    <span
+      className={s.tag}
+      style={{ "--tag-bg": style.bg, "--tag-color": style.color }}
+    >
       {label}
     </span>
   );
 }
 
 /** WS Button */
-export function WSButton({ label, icon, variant = "primary", size = "md", onClick, disabled, className = "" }) {
+export function WSButton({
+  label,
+  icon,
+  variant = "primary",
+  size = "md",
+  onClick,
+  disabled,
+  className = "",
+}) {
   const variantCls =
-    variant === "secondary" ? s.btnSecondary :
-    variant === "ghost" ? s.btnGhost :
-    variant === "danger" ? s.btnDanger :
-    s.btnPrimary;
+    variant === "secondary"
+      ? s.btnSecondary
+      : variant === "ghost"
+        ? s.btnGhost
+        : variant === "danger"
+          ? s.btnDanger
+          : s.btnPrimary;
   const sizeCls = size === "sm" ? s.btnSizeSm : s.btnSizeMd;
   return (
     <button
@@ -292,7 +372,13 @@ export function WSButton({ label, icon, variant = "primary", size = "md", onClic
       className={`${s.btn} ${variantCls} ${sizeCls} ${className}`}
       aria-label={label}
     >
-      {icon && <span>{icon}</span>}
+      {icon && (
+        <span
+          style={{ display: "flex", alignItems: "center", marginTop: "2px" }}
+        >
+          {icon}
+        </span>
+      )}
       {label}
     </button>
   );

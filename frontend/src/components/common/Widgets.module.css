@@ -9,7 +9,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 20px 20px 12px 20px;
   border-bottom: 1px solid var(--ws-border-light);
 }
 .cardTitle {
@@ -36,9 +36,9 @@
   border: 1px solid var(--ws-border-light);
   border-radius: var(--ws-radius-md);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-  padding: 20px;
+  padding: 13px 0px 13px 20px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 16px;
 }
 .statIcon {
@@ -47,6 +47,7 @@
   border-radius: 8px;
   background: var(--stat-bg);
   display: flex;
+  margin-bottom: 5px;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
@@ -57,6 +58,10 @@
 .statBody {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-top: 12px;
 }
 .statLabel {
   color: var(--ws-text-500);
@@ -102,6 +107,9 @@
 
 /* ====== Badge ====== */
 .badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 2px 8px;
   border-radius: 999px;
   background: var(--badge-bg);
@@ -140,7 +148,7 @@
 .pagination {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   padding-top: 16px;
   border-top: 1px solid var(--ws-border-light);
   margin-top: 16px;
@@ -375,7 +383,7 @@
   font-size: 13px;
 }
 .btnSizeSm {
-  padding: 6px 12px;
+  padding: 6px 12px 9px 12px;
   font-size: 12px;
 }
 .btnPrimary {
@@ -527,6 +535,58 @@
   transform: translateY(-50%);
   color: var(--ws-text-400);
   pointer-events: none;
+}
+
+.datePickerWrap {
+  position: relative;
+}
+.dateInputBase {
+  width: 100%;
+  border: 1px solid var(--ws-border);
+  border-radius: 8px;
+  padding: 10px 38px 10px 16px;
+  color: var(--ws-text-800);
+  font-size: 13.5px;
+  outline: none;
+  background: #fff;
+  transition: border-color 0.15s;
+}
+.dateInputBase:focus {
+  border-color: #93c5fd;
+}
+.dateInputBase:disabled {
+  background: #f9fafb;
+  cursor: not-allowed;
+}
+.dateInputBase::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  cursor: pointer;
+}
+.dateInputBase:disabled::-webkit-calendar-picker-indicator {
+  cursor: not-allowed;
+}
+.datePickerIcon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ws-text-400);
+  pointer-events: none;
+}
+.calendarPickerWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.calendarPickerField {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.calendarPickerDivider {
+  color: var(--ws-text-400);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 /* ====== Icon button / divider / spinner / circle ====== */
