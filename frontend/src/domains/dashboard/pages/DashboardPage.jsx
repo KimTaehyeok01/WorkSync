@@ -177,6 +177,7 @@ export default function Dashboard() {
                           )}
                           {post.title}
                         </p>
+                        <p className={s.postContent}>{post.content}</p>
 
                         <div className={s.postMeta}>
                           <span style={{ marginRight: 6 }}>
