@@ -89,4 +89,4 @@ public PostResponse getPost(Long boardId,Long postId){
         }
     }
 
-}
+
