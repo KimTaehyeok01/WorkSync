@@ -155,14 +155,6 @@ export function TopBar({ pathname }) {
                 </div>
               ))}
             </div>
-            <div className={styles.notifFooter}>
-              <button
-                onClick={() => setShowNotifs(false)}
-                className={styles.notifFooterBtn}
-              >
-                모든 알림 보기
-              </button>
-            </div>
           </div>
         )}
       </div>
