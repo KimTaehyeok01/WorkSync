@@ -38,6 +38,7 @@ public class BoardService {
     }
 
     //게시판 단건 조회
+    @Transactional(readOnly = true)
     public BoardResponse getBoard(Long boardId){
         Board board=boardRepository.findById(boardId)
                 .orElseThrow(()->new RuntimeException("게시판 없음"));

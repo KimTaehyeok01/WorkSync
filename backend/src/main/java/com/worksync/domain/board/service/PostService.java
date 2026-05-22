@@ -19,12 +19,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+
 public class PostService {
     private  final PostRepository postRepository;
     private final BoardRepository boardRepository;
 
     //게시글 목록 조회(페이징+제목검색)
+    @Transactional(readOnly = true)
     public Page<PostResponse>getPosts(Long boardId, String keyword, Pageable pageable){
         Page<Post> posts;
         if (keyword != null) {
@@ -37,6 +38,7 @@ public class PostService {
     }
 
     //게시글 상세 조회
+    @Transactional(readOnly = true)
     public PostResponse getPost(Long boardId,Long postId){
         Post post=postRepository.findById(postId)
                 .orElseThrow(()-> new RuntimeException("게시판 없음"));
