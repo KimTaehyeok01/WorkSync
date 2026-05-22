@@ -258,7 +258,7 @@ export default function Dashboard() {
                       <div className={s.approvalBody}>
                         <p className={s.approvalTitle}>{doc.title}</p>
                         <p className={s.approvalMeta}>
-                          {doc.id} · {doc.requester.name} · {doc.date}
+                          {doc.requester.name} · {doc.date}
                         </p>
                       </div>
                     </div>
