@@ -13,32 +13,34 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BoardService {
     private final BoardRepository boardRepository;
-    public List<BoardResponse> getBoards (BoardType boardType){
+    public List<BoardResponse> getBoards (BoardType boardType,Long departmentId){
         List<Board>boards;
-        if(boardType !=null){
+        //boardType과 departmentId 둘다 있으면 둘다 필터링
+        if(boardType !=null && departmentId !=null){
+            boards=boardRepository.findByBoardTypeAndDepartmentId(boardType,departmentId);
+            //boardType만 있으면 게시판 타입으로 필터링
+        } else if (boardType !=null ){
             boards=boardRepository.findByBoardType(boardType);
-        }
-        else{
+            //departmentId 만 있으면 부서로 필터링
+        } else if (departmentId !=null) {
+            boards=boardRepository.findByDepartmentId(departmentId);
+            //둘다 없으면 전체조회
+        } else{
             boards=boardRepository.findAll();
         }
     return boards.stream()
-            .map(board->{
-                Long departmentId=null;
-                String departmentName=null;
-                if(board.getDepartment() !=null){
-                    departmentId=board.getDepartment().getId();
-                    departmentName=board.getDepartment().getName();
-                }
-                return BoardResponse.builder()
-                        .id(board.getId())
-                        .boardType(board.getBoardType())
-                        .name(board.getName())
-                        .departmentId(departmentId)
-                        .departmentName(departmentName)
-                        .createdAt(board.getCreatedAt())
-                        .build();
-            })
+            .map(BoardResponse::from)
             .toList();
+            }
+            //게시판 단건 조회
+    public BoardResponse getBoard(Long boardId){
+        Board board=boardRepository.findById(boardId)
+                .orElseThrow(()->new RuntimeException("게시판 없음"));
+        return BoardResponse.from(board);
     }
+        }
 
-}
+
+
+
+

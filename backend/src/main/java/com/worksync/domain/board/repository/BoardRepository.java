@@ -9,5 +9,6 @@ import java.util.List;
 public interface BoardRepository extends JpaRepository<Board,Long>  {
     List<Board> findByBoardType (BoardType boardType);
     List<Board> findByDepartmentId(Long departmentId);
+    List<Board> findByBoardTypeAndDepartmentId(BoardType boardType,Long departmentId);
 
 }
