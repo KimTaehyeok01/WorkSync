@@ -11,15 +11,9 @@
         <module name="worksync.main" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="worksync" target="21" />
-    </bytecodeTargetLevel>
+    <bytecodeTargetLevel target="21" />
   </component>
   <component name="JavacSettings">
-    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="worksync" options="-parameters" />
-      <module name="worksync.main" options="-parameters" />
-      <module name="worksync.test" options="-parameters" />
-    </option>
+    <option name="ADDITIONAL_OPTIONS_STRING" value="-parameters" />
   </component>
 </project>
