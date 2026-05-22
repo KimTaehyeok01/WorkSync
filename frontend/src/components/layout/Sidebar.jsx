@@ -83,12 +83,12 @@ export function Sidebar() {
         </div>
       </nav>
 
-      {/* <div className={styles.footer}>
+      <div className={styles.footer}>
         <NavLink to="/login" className={styles.loginShortcut}>
           <LogIn size={15} />
           <span>로그인 화면 미리보기</span>
         </NavLink>
-        <div className={styles.profile}>
+        {/* <div className={styles.profile}>
           <div className={styles.avatarWrap}>
             <img src={me.avatar} alt={me.name} className={styles.avatar} />
             <span className={styles.status} />
@@ -98,8 +98,8 @@ export function Sidebar() {
             <div className={styles.profileRole}>{me.role}</div>
           </div>
           <Settings size={14} className={styles.profileIcon} />
-        </div>
-      </div> */}
+        </div> */}
+      </div>
     </aside>
   );
 }

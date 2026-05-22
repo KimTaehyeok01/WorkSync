@@ -67,9 +67,8 @@ const BADGE_STYLES = {
 
 const STATUS_LABELS = {
   pending: "대기", approved: "승인", rejected: "반려",
-  high: "높음", medium: "보통", low: "낮음", urgent: "긴급",
   online: "온라인", away: "자리 비움", offline: "오프라인",
-  todo: "할 일", inProgress: "진행 중", review: "검토 중", done: "완료",
+  todo: "준비중", inProgress: "진행중", done: "완료",
 };
 
 export function WSBadge({ status, label }) {
@@ -120,9 +119,6 @@ export function WSPagination({ total, page, perPage = 10, onPageChange }) {
 
   return (
     <div className={s.pagination}>
-      <span className={s.paginationInfo}>
-        <strong>{start}–{end}</strong> / 총 <strong>{total}</strong>개
-      </span>
       <div className={s.pagerControls}>
         <button onClick={() => onPageChange?.(page - 1)} disabled={page <= 1} className={s.pagerBtn} aria-label="이전 페이지">
           <ChevronLeft size={14} />
