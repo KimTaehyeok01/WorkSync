@@ -170,14 +170,16 @@ export default function Dashboard() {
                       onClick={() => navigate("/board")}
                       className={s.postItem}
                     >
-                      {isNotice && (
-                        <span className={s.postNoticeBadge}>공지</span>
-                      )}
                       <div className={s.postBody}>
-                        <p className={s.postTitle}>{post.title}</p>
+                        <p className={s.postTitle}>
+                          {post.title}
+                          {isNotice && (
+                            <span className={s.postNoticeBadge}>공지</span>
+                          )}
+                        </p>
+
                         <p className={s.postMeta}>
-                          {post.author.name} · {post.createdAt} · 조회{" "}
-                          {post.views}
+                          {post.author.name} · {post.createdAt}
                         </p>
                       </div>
                       <div className={s.postStats}>
