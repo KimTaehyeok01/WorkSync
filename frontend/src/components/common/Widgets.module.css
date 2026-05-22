@@ -47,6 +47,7 @@
   border-radius: 8px;
   background: var(--stat-bg);
   display: flex;
+  margin-bottom: 5px;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
