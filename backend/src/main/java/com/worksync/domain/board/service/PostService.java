@@ -36,7 +36,7 @@ public class PostService {
         return posts.map(PostResponse::from);
     }
 
-    //게시글 단건 조회
+    //게시글 상세     조회
 public PostResponse getPost(Long boardId,Long postId){
         Post post=postRepository.findById(postId)
                 .orElseThrow(()-> new RuntimeException("게시판 없음"));
