@@ -10,6 +10,7 @@ public class EmployeeUpdateRequest {
 
     private String name;
     private String phone;
+    private String password;
     private JobGrade jobGrade;
     private EmployeeStatus status;
     private Long departmentId;

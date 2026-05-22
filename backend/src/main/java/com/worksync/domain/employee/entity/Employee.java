@@ -76,4 +76,18 @@ public class Employee {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    public void update(String name, String phone, JobGrade jobGrade, Department department,
+                       String profileImage, String encodedPassword) {
+        if (name != null) this.name = name;
+        if (phone != null) this.phone = phone;
+        if (jobGrade != null) this.jobGrade = jobGrade;
+        if (department != null) this.department = department;
+        if (profileImage != null) this.profileImage = profileImage;
+        if (encodedPassword != null) this.password = encodedPassword;
+    }
+
+    public void changeStatus(EmployeeStatus status) {
+        this.status = status;
+    }
 }
