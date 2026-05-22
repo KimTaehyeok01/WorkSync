@@ -61,7 +61,7 @@ app:
     issuer: worksync
     access-token-exp-minutes: 60
     refresh-token-exp-days: 7
+  # 프론트엔드 기본 URL (로컬 개발 기본값)
+  frontend-url: http://localhost:3000
   cors:
-    allowed-origins:
-      - http://localhost:3000
-      - https://worksync.example.com
+    allowed-origins: https://worksync.example.com
