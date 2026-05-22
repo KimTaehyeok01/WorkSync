@@ -8,7 +8,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px;
+  padding: 14px 20px 22px 20px;
   color: #fff;
   border-radius: 8px;
   background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
@@ -22,6 +22,7 @@
 .bannerSub {
   font-size: 13px;
   opacity: 0.8;
+  line-height: 0.5;
 }
 .bannerRight {
   display: flex;
