@@ -418,8 +418,6 @@
 }
 
 /* ====== Form Field ====== */
-.field {
-}
 .fieldLabel {
   display: flex;
   align-items: center;
@@ -461,11 +459,14 @@
 /* ====== Input/Textarea/Select ====== */
 .inputBase {
   width: 100%;
+  height: 40px;
+  box-sizing: border-box;
   border: 1px solid var(--ws-border);
   border-radius: 8px;
   padding: 10px 16px;
   color: var(--ws-text-800);
-  font-size: 14px;
+  font-size: 13.5px;
+  line-height: 18px;
   outline: none;
   background: #fff;
   transition: border-color 0.15s;
@@ -510,12 +511,15 @@
 }
 .selectBase {
   width: 100%;
+  height: 40px;
+  box-sizing: border-box;
   appearance: none;
   border: 1px solid var(--ws-border);
   border-radius: 8px;
   padding: 10px 16px;
   color: var(--ws-text-800);
   font-size: 13.5px;
+  line-height: 18px;
   outline: none;
   background: #fff;
   transition: border-color 0.15s;
@@ -534,6 +538,66 @@
   transform: translateY(-50%);
   color: var(--ws-text-400);
   pointer-events: none;
+}
+
+.datePickerWrap {
+  position: relative;
+}
+.dateInputBase {
+  width: 100%;
+  height: 40px;
+  box-sizing: border-box;
+  appearance: none;
+  border: 1px solid var(--ws-border);
+  border-radius: 8px;
+  padding: 10px 38px 10px 16px;
+  color: var(--ws-text-800);
+  font-size: 13.5px;
+  line-height: 18px;
+  outline: none;
+  background: #fff;
+  transition: border-color 0.15s;
+}
+.dateInputBase:focus {
+  border-color: #93c5fd;
+}
+.dateInputBase:disabled {
+  background: #f9fafb;
+  cursor: not-allowed;
+}
+.dateInputBase::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.dateInputBase:disabled::-webkit-calendar-picker-indicator {
+  cursor: not-allowed;
+}
+.datePickerIcon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ws-text-400);
+  pointer-events: none;
+}
+.calendarPickerWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.calendarPickerField {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.calendarPickerDivider {
+  color: var(--ws-text-400);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 /* ====== Icon button / divider / spinner / circle ====== */
@@ -744,6 +808,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  text-align: center;
   padding: 32px;
   border-radius: 10px;
   border: 2px dashed var(--ws-border);

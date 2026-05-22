@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronDown, X, Search, Info, CheckCircle, AlertCircle } from "lucide-react";
+import { ChevronDown, X, Search, Info, CheckCircle, AlertCircle, Calendar } from "lucide-react";
 import s from "./Widgets.module.css";
 
 /** 아이콘 버튼 */
@@ -117,6 +117,82 @@ export function WSSelect({ value, onChange, options, placeholder = "선택...", 
         ))}
       </select>
       <ChevronDown size={14} className={s.selectChevron} />
+    </div>
+  );
+}
+
+/** 날짜 선택박스 */
+export function WSDatepicker({
+  value,
+  onChange,
+  placeholder = "날짜 선택",
+  disabled,
+  min,
+  max,
+  className = "",
+}) {
+  return (
+    <div className={s.datePickerWrap}>
+      <input
+        type="date"
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        disabled={disabled}
+        min={min}
+        max={max}
+        className={`${s.dateInputBase} ${className}`}
+        aria-label={placeholder}
+      />
+      <Calendar size={14} className={s.datePickerIcon} />
+    </div>
+  );
+}
+
+/** 기간 선택박스 */
+export function WSCalendarpicker({
+  startValue,
+  endValue,
+  onStartChange,
+  onEndChange,
+  startPlaceholder = "시작일",
+  endPlaceholder = "종료일",
+  disabled,
+  min,
+  max,
+  className = "",
+}) {
+  return (
+    <div className={`${s.calendarPickerWrap} ${className}`}>
+      <div className={s.calendarPickerField}>
+        <input
+          type="date"
+          value={startValue}
+          onChange={onStartChange}
+          placeholder={startPlaceholder}
+          disabled={disabled}
+          min={min}
+          max={endValue || max}
+          className={s.dateInputBase}
+          aria-label={startPlaceholder}
+        />
+        <Calendar size={14} className={s.datePickerIcon} />
+      </div>
+      <span className={s.calendarPickerDivider}>~</span>
+      <div className={s.calendarPickerField}>
+        <input
+          type="date"
+          value={endValue}
+          onChange={onEndChange}
+          placeholder={endPlaceholder}
+          disabled={disabled}
+          min={startValue || min}
+          max={max}
+          className={s.dateInputBase}
+          aria-label={endPlaceholder}
+        />
+        <Calendar size={14} className={s.datePickerIcon} />
+      </div>
     </div>
   );
 }
