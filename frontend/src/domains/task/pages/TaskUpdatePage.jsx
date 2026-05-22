@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Paperclip, CheckCircle, Send, X } from "lucide-react";
+import { ArrowLeft, Paperclip, CheckCircle, Pencil } from "lucide-react";
 import { TEAM_MEMBERS } from "../../../constants/mockData";
 import { WSCard, WSButton } from "../../../components/common/CommonWidgets";
 import { WSInput, WSSelect, WSTextarea, WSFileUploadZone, WSCalendarpicker, WSFileList } from "../../../components/common/FormComponents";
@@ -89,7 +89,7 @@ export default function TaskNew() {
             <ArrowLeft size={16} />
           </button>
           <div>
-            <h1 className={s.pageTitle}>새 작업 등록</h1>
+            <h1 className={s.pageTitle}>작업 수정</h1>
           </div>
         </div>
       </div>
@@ -200,8 +200,8 @@ export default function TaskNew() {
 
           <div className={s.actionsCol}>
             <WSButton 
-              label="작업 등록"
-              icon={<Send size={16} />}
+              label="수정 등록"
+              icon={<Pencil size={16} />}
               onClick={handleSubmit}
               disabled={!isValid}
               className={s.submitBtn}

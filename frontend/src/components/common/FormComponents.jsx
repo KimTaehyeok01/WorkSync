@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronDown, X, Search, Info, CheckCircle, AlertCircle, Calendar } from "lucide-react";
+import { ChevronDown, X, Search, Info, CheckCircle, AlertCircle, Calendar, Download } from "lucide-react";
 import s from "./Widgets.module.css";
 
 /** 아이콘 버튼 */
@@ -330,4 +330,49 @@ export function WSFileUploadZone({
       />
     </>
   );
+}
+
+/** 파일 리스트 **/
+export function WSFileList({files, onRemove, onDownload}) {
+  if (!files || files.length === 0) return null;
+
+  const getExt = (name) => name.split(".").pop();
+
+  const getSize = (size) => {
+    if (size < 1024*1024) {
+      return `${(size/1024).toFixed(1)}KB`;
+    } else {
+      return `${(size/(1024*1024)).toFixed(1)}MB`;
+    }
+  }
+
+  return (
+    <>
+      {
+        files.map((file, idx) => (
+          <div key={idx} className={s.attachRow}>
+            <div className={s.attachLeft}>
+              <div className={s.attachIcon}>{getExt(file.name)}</div>
+              <div>
+                <p className={s.attachName}>{file.name}</p>
+                <p className={s.attachSize}>{getSize(file.size)}</p>
+              </div>
+            </div>
+            <div>
+              {onDownload && (
+                <button className={s.attachDl} onClick={()=>onDownload(file,idx)}>
+                  <Download size={18} />
+                </button>
+              )}
+              {onRemove && (
+                <button className={s.attachDl} onClick={()=>onRemove(idx)}>
+                  <X size={18} />
+                </button>
+              )}
+            </div>
+          </div>
+        ))
+      }
+    </>
+  )
 }

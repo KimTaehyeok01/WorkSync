@@ -8,6 +8,7 @@ import {
   WSEmptyState,
   WSFilterBar,
   WSPagination,
+  WSTableHeader
 } from "../../../components/common/CommonWidgets";
 import s from "./TaskListPage.module.css";
 
@@ -23,6 +24,8 @@ const STATUS_OPTIONS = [
   { key: "inProgress", label: "진행중" },
   { key: "done", label: "완료" },
 ];
+
+const TH_COL = ["상태", "작업명", "진행률(%)", "담당자", "프로젝트 기간"]
 
 export default function Tasks() {
   const [search, setSearch] = useState("");
@@ -62,13 +65,10 @@ export default function Tasks() {
       />
 
       <div className={s.table}>
-        <div className={s.tableHeader}>
-          <span>상태</span>
-          <span>작업명</span>
-          <span>진행률(%)</span>
-          <span>담당자</span>
-          <span>프로젝트 기간</span>
-        </div>
+        <WSTableHeader
+          columns={TH_COL}
+          gridTemplate="100px 1fr 120px 150px 220px"
+         />
 
         {paginatedTasks.length === 0 ? (
           <div className={s.empty}>

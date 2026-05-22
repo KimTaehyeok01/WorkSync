@@ -1121,3 +1121,24 @@
   font-size: 12px;
   margin: 0;
 }
+
+.attachRow {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px;
+  background: #F9FAFB;
+  border: 1px solid var(--ws-border);
+  border-radius: 8px;
+  margin-top: 10px;
+}
+.attachLeft { display: flex; align-items: center; gap: 12px; }
+.attachIcon {
+  width: 40px; height: 40px;
+  border-radius: 8px;
+  background: #10B981;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 11px; font-weight: 700;
+}
+.attachName { color: var(--ws-text-800); font-size: 13px; font-weight: 600; margin: 0; }
+.attachSize { color: var(--ws-text-500); font-size: 11.5px; margin: 0; }
+.attachDl { color: var(--ws-text-400); transition: color 0.15s; }
+.attachDl:hover { color: var(--ws-text-600); }

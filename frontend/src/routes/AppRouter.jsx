@@ -12,6 +12,7 @@ import EmployeeCreatePage from "../domains/organization/pages/EmployeeCreatePage
 import TaskListPage from "../domains/task/pages/TaskListPage";
 import TaskCreatePage from "../domains/task/pages/TaskCreatePage";
 import TaskDetailPage from "../domains/task/pages/TaskDetailPage";
+import TaskUpdatePage from "../domains/task/pages/TaskUpdatePage";
 import ChatPage from "../domains/chat/pages/ChatPage";
 import LoginPage from "../domains/auth/pages/LoginPage";
 import AuditLogPage from "../domains/audit/pages/AuditLogPage";
@@ -53,6 +54,7 @@ export const router = createBrowserRouter([
       { path: "tasks", Component: TaskListPage },
       { path: "tasks/new", Component: TaskCreatePage },
       { path: "tasks/:id", Component: TaskDetailPage },
+      { path: "tasks/edit/:id", Component: TaskUpdatePage },
       { path: "messenger", Component: ChatPage },
       { path: "audit-log", Component: AuditLogPage },
       { path: "*", Component: NotFound },
