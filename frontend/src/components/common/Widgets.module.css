@@ -537,6 +537,58 @@
   pointer-events: none;
 }
 
+.datePickerWrap {
+  position: relative;
+}
+.dateInputBase {
+  width: 100%;
+  border: 1px solid var(--ws-border);
+  border-radius: 8px;
+  padding: 10px 38px 10px 16px;
+  color: var(--ws-text-800);
+  font-size: 13.5px;
+  outline: none;
+  background: #fff;
+  transition: border-color 0.15s;
+}
+.dateInputBase:focus {
+  border-color: #93c5fd;
+}
+.dateInputBase:disabled {
+  background: #f9fafb;
+  cursor: not-allowed;
+}
+.dateInputBase::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  cursor: pointer;
+}
+.dateInputBase:disabled::-webkit-calendar-picker-indicator {
+  cursor: not-allowed;
+}
+.datePickerIcon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ws-text-400);
+  pointer-events: none;
+}
+.calendarPickerWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.calendarPickerField {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.calendarPickerDivider {
+  color: var(--ws-text-400);
+  font-size: 13px;
+  font-weight: 600;
+}
+
 /* ====== Icon button / divider / spinner / circle ====== */
 .iconBtn {
   color: var(--ws-text-400);
