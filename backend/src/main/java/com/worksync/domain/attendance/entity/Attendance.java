@@ -3,6 +3,8 @@ package com.worksync.domain.attendance.entity;
 import com.worksync.domain.employee.entity.Employee;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -35,7 +37,7 @@ public class Attendance {
     @Column(name = "check_out_time")
     private LocalDateTime checkOutTime;
 
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(nullable = false, columnDefinition = "attendance_status_type")
     @Builder.Default
     private AttendanceStatus status = AttendanceStatus.NORMAL;

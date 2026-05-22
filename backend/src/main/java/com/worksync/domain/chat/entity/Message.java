@@ -3,6 +3,8 @@ package com.worksync.domain.chat.entity;
 import com.worksync.domain.employee.entity.Employee;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -29,7 +31,7 @@ public class Message {
     @Column(columnDefinition = "TEXT")
     private String content;
 
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "msg_type", nullable = false, columnDefinition = "msg_type_enum")
     @Builder.Default
     private MessageType msgType = MessageType.TEXT;
