@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Zap, Eye, EyeOff, Mail, Lock, AlertCircle } from "lucide-react";
 import styles from "./LoginPage.module.css";
+import useAuth from "../../../hooks/useAuth";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [focusEmp, setFocusEmp] = useState(false);
   const [focusPw, setFocusPw] = useState(false);
+  const { login } = useAuth();
 
   function handleLogin(e) {
     if (e) e.preventDefault();
@@ -24,6 +26,7 @@ export default function Login() {
       setLoading(false);
       navigate("/");
     }, 900);
+    login(empNo, password);
   }
 
   return (
@@ -37,7 +40,7 @@ export default function Login() {
         </div>
         <div>
           <div className={styles.brandName}>WorkSync</div>
-          <div className={styles.brandSub}>ENTERPRISE v2.4</div>
+          <div className={styles.brandSub}>ENTERPRISE v1.0</div>
         </div>
       </div>
 
@@ -110,7 +113,7 @@ export default function Login() {
               로그인에 문제가 발생하셨나요?{" "}
               <span className={styles.footerLink}>0120 내선번호로 문의주세요</span>
             </p>
-            <p className={styles.copyright}>© 2026 WorkSync Enterprise · v2.4.0</p>
+            <p className={styles.copyright}>© 2026 WorkSync Enterprise · v1.0</p>
           </div>
         </div>
       </div>

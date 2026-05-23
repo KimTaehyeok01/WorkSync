@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Search, Bell, ChevronDown, Settings, LogOut, User, HelpCircle, X, CheckCircle, MessageSquare, FileCheck, AlertCircle, Coffee } from "lucide-react";
 import { NOTIFICATIONS, TEAM_MEMBERS } from "../../constants/mockData";
 import styles from "./TopBar.module.css";
+import useAuth from "../../hooks/useAuth";
 
 const me = TEAM_MEMBERS[3];
 
@@ -41,6 +42,7 @@ export function TopBar({ pathname }) {
   const [isAway] = useState(false);
   const page = PAGE_TITLES[pathname] || { title: "WorkSync", breadcrumb: ["홈"] };
   const unreadCount = NOTIFICATIONS.filter((n) => !n.read).length;
+  const { logout } = useAuth();
 
   return (
     <header className={styles.header}>
@@ -172,7 +174,7 @@ export function TopBar({ pathname }) {
               );
             })}
             <div className={styles.menuDivider}>
-              <button className={`${styles.menuItem} ${styles.logoutItem}`} type="button">
+              <button className={`${styles.menuItem} ${styles.logoutItem}`} type="button" onClick={logout}>
                 <LogOut size={15} />
                 <span>로그아웃</span>
               </button>
