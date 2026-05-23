@@ -90,4 +90,18 @@ public class Employee {
     public void changeStatus(EmployeeStatus status) {
         this.status = status;
     }
+
+    // 로그인 실패 횟수 증가 — maxFails 이상이면 lockMinutes 분간 계정 잠금
+    public void incrementLoginFailCount(int maxFails, int lockMinutes) {
+        this.loginFailCount++;
+        if (this.loginFailCount >= maxFails) {
+            this.lockedUntil = LocalDateTime.now().plusMinutes(lockMinutes);
+        }
+    }
+
+    // 로그인 성공 시 실패 횟수 및 잠금 초기화
+    public void resetLoginFailCount() {
+        this.loginFailCount = 0;
+        this.lockedUntil = null;
+    }
 }
