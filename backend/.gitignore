@@ -24,3 +24,5 @@ src/main/resources/templates/
 .env
 .env.*
 !.env.example
+# IntelliJ build output
+out/
