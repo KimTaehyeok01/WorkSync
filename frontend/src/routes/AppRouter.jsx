@@ -1,4 +1,5 @@
-import { createBrowserRouter } from "react-router-dom";
+// Navigate — 로그인 여부에 따라 페이지 접근 제어 시 사용 (AuthContext 연동 후 활성화)
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import DashboardPage from "../domains/dashboard/pages/DashboardPage";
 import ApprovalListPage from "../domains/approval/pages/ApprovalListPage";
