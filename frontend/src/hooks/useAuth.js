@@ -16,6 +16,7 @@ export default function useAuth() {
             })
             .then((json) => {
                 setAccessToken(json.accessToken);
+                localStorage.setItem('refreshToken', json.refreshToken);    
             })
             .catch((error) => {
                 console.log("로그인 에러: " + error);

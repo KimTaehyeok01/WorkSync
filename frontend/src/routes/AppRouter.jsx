@@ -1,4 +1,3 @@
-// Navigate — 로그인 여부에 따라 페이지 접근 제어 시 사용 (AuthContext 연동 후 활성화)
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import DashboardPage from "../domains/dashboard/pages/DashboardPage";
@@ -15,48 +14,51 @@ import TaskCreatePage from "../domains/task/pages/TaskCreatePage";
 import TaskDetailPage from "../domains/task/pages/TaskDetailPage";
 import ChatPage from "../domains/chat/pages/ChatPage";
 import LoginPage from "../domains/auth/pages/LoginPage";
-import AuditLogPage from "../domains/audit/pages/AuditLogPage";
+import AuditLogPage from "../domains/audit/pages/AuovalLogPage";
 import styles from "./AppRouter.module.css";
-
+import { useAuthContext } from "../store/AuthContext"; // ✅ 중괄호 추가
 
 function NotFound() {
-  return (
-    <div className={styles.auto_001}>
-      <p className={styles.notFoundTitle}>
-        404 - Page Not Found
-      </p>
-      <p className={styles.notFoundDesc}>The page you are looking for does not exist.</p>
-    </div>
-  );
+    return (
+        <div className={styles.auto_001}>
+            <p className={styles.notFoundTitle}>404 - Page Not Found</p>
+            <p className={styles.notFoundDesc}>The page you are looking for does not exist.</p>
+        </div>
+    );
+}
+
+const AuthRouter = ({ Component }) => {
+    const { isAuthenticated } = useAuthContext(); // ✅ isAuthenticated 사용
+    return isAuthenticated ? <Component /> : <Navigate to="/login" />;
 }
 
 export const router = createBrowserRouter([
-  {
-    path: "/login",
-    Component: LoginPage,
-  },
-  {
-    path: "/",
-    Component: Layout,
-    children: [
-      { index: true, Component: DashboardPage },
-      { path: "approval", Component: ApprovalListPage },
-      { path: "approval/new", Component: ApprovalCreatePage },
-      { path: "approval/:id", Component: ApprovalDetailPage },
-      { path: "board", Component: BoardListPage },
-      { path: "board/new", Component: BoardCreatePage },
-      { path: "board/notice", Component: BoardListPage },
-      { path: "board/free", Component: BoardListPage },
-      { path: "board/qna", Component: BoardListPage },
-      { path: "board/:id", Component: BoardDetailPage },
-      { path: "organization", Component: OrganizationPage },
-      { path: "organization/employee-add", Component: EmployeeCreatePage },
-      { path: "tasks", Component: TaskListPage },
-      { path: "tasks/new", Component: TaskCreatePage },
-      { path: "tasks/:id", Component: TaskDetailPage },
-      { path: "messenger", Component: ChatPage },
-      { path: "audit-log", Component: AuditLogPage },
-      { path: "*", Component: NotFound },
-    ],
-  },
+    {
+        path: "/login",
+        Component: LoginPage,
+    },
+    {
+        path: "/",
+        Component: Layout,
+        children: [
+            { index: true, Component: DashboardPage },
+            { path: "approval", Component: ApprovalListPage },
+            { path: "approval/new", Component: ApprovalCreatePage },
+            { path: "approval/:id", Component: ApprovalDetailPage },
+            { path: "board", Component: BoardListPage },
+            { path: "board/new", Component: BoardCreatePage },
+            { path: "board/notice", Component: BoardListPage },
+            { path: "board/free", Component: BoardListPage },
+            { path: "board/qna", Component: BoardListPage },
+            { path: "board/:id", Component: BoardDetailPage },
+            { path: "organization", Component: OrganizationPage },
+            { path: "organization/employee-add", Component: EmployeeCreatePage },
+            { path: "tasks", Component: TaskListPage },
+            { path: "tasks/new", Component: TaskCreatePage },
+            { path: "tasks/:id", Component: TaskDetailPage },
+            { path: "messenger", Component: ChatPage },
+            { path: "audit-log", Component: AuditLogPage },
+            { path: "*", Component: NotFound },
+        ],
+    },
 ]);

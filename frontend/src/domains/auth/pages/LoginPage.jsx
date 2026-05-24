@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Zap, Eye, EyeOff, Mail, Lock, AlertCircle } from "lucide-react";
 import styles from "./LoginPage.module.css";
-import useAuth from "../../../hooks/useAuth";
+import useAuthContext from "../../../store/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -14,19 +14,17 @@ export default function Login() {
   const [error, setError] = useState("");
   const [focusEmp, setFocusEmp] = useState(false);
   const [focusPw, setFocusPw] = useState(false);
-  const { login } = useAuth();
+  const { login } = useAuthContext();
 
-  function handleLogin(e) {
+  async function handleLogin(e) {
     if (e) e.preventDefault();
     setError("");
     if (!empNo.trim()) { setError("사번을 입력해 주세요."); return; }
     if (!password.trim()) { setError("비밀번호를 입력해 주세요."); return; }
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      navigate("/");
-    }, 900);
-    login(empNo, password);
+    await login(empNo, password);
+    setLoading(false);
+    navigate("/");
   }
 
   return (
