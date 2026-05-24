@@ -15,6 +15,7 @@ public enum ErrorCode {
 
     // 사원
     EMPLOYEE_NOT_FOUND(404, "존재하지 않는 사원입니다."),
+    EMPLOYEE_INACTIVE(403, "퇴직한 사원입니다."),
     DUPLICATE_EMAIL(409, "이미 사용 중인 이메일입니다."),
     DUPLICATE_EMP_NO(409, "이미 사용 중인 사원번호입니다."),
 
