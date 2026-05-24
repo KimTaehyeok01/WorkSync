@@ -18,6 +18,7 @@ import LoginPage from "../domains/auth/pages/LoginPage";
 import AuditLogPage from "../domains/audit/pages/AuditLogPage";
 import styles from "./AppRouter.module.css";
 
+
 function NotFound() {
   return (
     <div className={styles.auto_001}>
