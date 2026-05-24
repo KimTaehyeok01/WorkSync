@@ -17,7 +17,6 @@ import ChatPage from "../domains/chat/pages/ChatPage";
 import LoginPage from "../domains/auth/pages/LoginPage";
 import AuditLogPage from "../domains/audit/pages/AuditLogPage";
 import styles from "./AppRouter.module.css";
-import useAuth from "../hooks/useAuth";
 
 function NotFound() {
   return (
@@ -29,11 +28,6 @@ function NotFound() {
     </div>
   );
 }
-
-const AuthRouter = ({Component}) => {
-  const { accessToken } = useAuth();
-  return accessToken ? <DashboardPage /> : <Navigate to="/login" />;
-})
 
 export const router = createBrowserRouter([
   {
