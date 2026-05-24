@@ -34,6 +34,7 @@ export default function useAuth() {
         }
         setAccessToken(json.data.accessToken);
         localStorage.setItem('refreshToken', json.data.refreshToken);
+        return json.data.accessToken;
     };
 
     // 로그아웃

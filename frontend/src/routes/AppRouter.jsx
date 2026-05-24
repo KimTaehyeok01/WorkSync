@@ -28,7 +28,8 @@ function NotFound() {
 }
 
 const AuthRouter = ({ Component }) => {
-    const { isAuthenticated } = useAuthContext();
+    const { isAuthenticated, isLoading } = useAuthContext();
+    if (isLoading) return null;
     return isAuthenticated ? <Component /> : <Navigate to="/login" />;
 }
 
@@ -39,7 +40,7 @@ export const router = createBrowserRouter([
     },
     {
         path: "/",
-        Component: Layout,
+        element: <AuthRouter Component={Layout} />,
         children: [
             { index: true, Component: DashboardPage },
             { path: "approval", Component: ApprovalListPage },

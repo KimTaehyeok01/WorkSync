@@ -24,12 +24,12 @@ export function AuthProvider({ children }) {
         })
             .then((response) => {
                 if (response.status === 401) {
-                    return refresh().then(() => {
+                    return refresh().then((newAccessToken) => {
                         return fetch(url, {
                             method: options.method || 'GET',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${accessToken}`,
+                                'Authorization': `Bearer ${newAccessToken}`,
                                 ...options.headers
                             },
                             body: options.body
