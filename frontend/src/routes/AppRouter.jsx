@@ -14,9 +14,9 @@ import TaskCreatePage from "../domains/task/pages/TaskCreatePage";
 import TaskDetailPage from "../domains/task/pages/TaskDetailPage";
 import ChatPage from "../domains/chat/pages/ChatPage";
 import LoginPage from "../domains/auth/pages/LoginPage";
-import AuditLogPage from "../domains/audit/pages/AuovalLogPage";
+import AuditLogPage from "../domains/audit/pages/AuditLogPage";
 import styles from "./AppRouter.module.css";
-import { useAuthContext } from "../store/AuthContext"; // ✅ 중괄호 추가
+import useAuthContext from "../store/AuthContext";
 
 function NotFound() {
     return (
@@ -28,7 +28,7 @@ function NotFound() {
 }
 
 const AuthRouter = ({ Component }) => {
-    const { isAuthenticated } = useAuthContext(); // ✅ isAuthenticated 사용
+    const { isAuthenticated } = useAuthContext();
     return isAuthenticated ? <Component /> : <Navigate to="/login" />;
 }
 

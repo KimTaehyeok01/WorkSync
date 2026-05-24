@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Zap, Eye, EyeOff, Mail, Lock, AlertCircle } from "lucide-react";
 import styles from "./LoginPage.module.css";
-import useAuthContext from "../../../store/AuthContext";
+import useAuth from "../../../hooks/useAuth";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [focusEmp, setFocusEmp] = useState(false);
   const [focusPw, setFocusPw] = useState(false);
-  const { login } = useAuthContext();
+  const { login } = useAuth();
 
   async function handleLogin(e) {
     if (e) e.preventDefault();
