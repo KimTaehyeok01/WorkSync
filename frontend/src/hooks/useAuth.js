@@ -21,23 +21,19 @@ export default function useAuth() {
 
     // AccessToken 재발급
     const refresh = async () => {
-        const refreshToken = localStorage.getItem('refreshToken')
-
-        await fetch('/api/auth/token/refresh', {
+        const refreshToken = localStorage.getItem('refreshToken');
+        const response = await fetch('/api/auth/token/refresh', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({refreshToken})
-        })
-            .then((response) => {
-                return response.json();
-            })
-            .then((json) => {
-                setAccessToken(json.data.accessToken);
-                localStorage.setItem('refreshToken', json.data.refreshToken);
-            })
-            .catch((error) => {
-                console.log("재발급 에러: " + error);
-            })
+        });
+        const json = await response.json();
+        if (!response.ok || !json.success) {
+            localStorage.removeItem('refreshToken');
+            throw new Error(json.message || '재발급 실패');
+        }
+        setAccessToken(json.data.accessToken);
+        localStorage.setItem('refreshToken', json.data.refreshToken);
     };
 
     // 로그아웃

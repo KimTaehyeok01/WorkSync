@@ -46,9 +46,13 @@ export function AuthProvider({ children }) {
     // 앱 시작 후 전에 로그인 상태 확인 (refreshToken 있는지 확인)
     useEffect(() => {
         const loginCheck = async () => {
-            const refreshToken = localStorage.getItem('refreshToken')
+            const refreshToken = localStorage.getItem('refreshToken');
             if (refreshToken) {
-                await refresh();
+                try {
+                    await refresh();
+                } catch (e) {
+                    // 만료된 refreshToken — 이미 refresh() 내부에서 localStorage 제거됨
+                }
             }
             setIsLoading(false);
         };
