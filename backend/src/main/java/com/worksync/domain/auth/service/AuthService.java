@@ -30,7 +30,7 @@ public class AuthService {
 
     @Transactional(noRollbackFor = CustomException.class)
     public LoginResponse login(LoginRequest request) {
-        Employee employee = employeeRepository.findByEmail(request.getEmail())
+        Employee employee = employeeRepository.findByEmpNo(request.getEmpNo())
                 .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CREDENTIALS));
 
         // 계정 잠금 확인
