@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -71,7 +73,7 @@ public class AuthService {
                 .build();
     }
 
-    public String reissue(ReissueRequest request) {
+    public Map<String, String> reissue(ReissueRequest request) {
         String refreshToken = request.getRefreshToken();
 
         if (!jwtTokenProvider.validateToken(refreshToken)) {
@@ -82,11 +84,17 @@ public class AuthService {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
 
-        return jwtTokenProvider.generateAccessToken(
+        String newAccessToken = jwtTokenProvider.generateAccessToken(
                 employee.getId(), employee.getEmail(), employee.getRole().name());
+        String newRefreshToken = jwtTokenProvider.generateRefreshToken(employee.getId());
+
+        Map<String, String> tokens = new HashMap<>();
+        tokens.put("accessToken", newAccessToken);
+        tokens.put("refreshToken", newRefreshToken);
+        return tokens;
     }
 
-    public void logout(Long employeeId) {
-        // 클라이언트에서 토큰 삭제 — 일단은 서버는 별도 처리 없음(팀원과 상의해야함)
+    public void logout() {
+        // 클라이언트에서 토큰 삭제 — 서버는 별도 처리 없음(팀원과 상의해야함)
     }
 }

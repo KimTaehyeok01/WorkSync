@@ -5,12 +5,12 @@ import com.worksync.domain.auth.dto.LoginResponse;
 import com.worksync.domain.auth.dto.ReissueRequest;
 import com.worksync.domain.auth.service.AuthService;
 import com.worksync.global.response.ApiResponse;
-import com.worksync.global.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -27,9 +27,9 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok(authService.login(request)));
     }
 
-    // 토큰 재발급 — 리프레시 토큰으로 새 액세스 토큰 발급
+    // 토큰 재발급 — 리프레시 토큰으로 새 액세스/리프레시 토큰 발급
     @PostMapping("/token/refresh")
-    public ResponseEntity<ApiResponse<String>> reissue(
+    public ResponseEntity<ApiResponse<Map<String, String>>> reissue(
             @RequestBody @Valid ReissueRequest request) {
 
         return ResponseEntity.ok(ApiResponse.ok(authService.reissue(request)));
@@ -38,9 +38,9 @@ public class AuthController {
     // 로그아웃
     @DeleteMapping("/token")
     public ResponseEntity<ApiResponse<Void>> logout(
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
+            @RequestBody ReissueRequest request) {
 
-        authService.logout(userDetails.getId());
+        authService.logout();
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 }
