@@ -5,9 +5,11 @@ import com.worksync.domain.auth.dto.LoginResponse;
 import com.worksync.domain.auth.dto.ReissueRequest;
 import com.worksync.domain.auth.service.AuthService;
 import com.worksync.global.response.ApiResponse;
+import com.worksync.global.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -33,9 +35,12 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok(authService.reissue(request)));
     }
 
-    // 로그아웃 — 클라이언트 측 토큰 삭제
+    // 로그아웃
     @DeleteMapping("/token")
-    public ResponseEntity<ApiResponse<Void>> logout() {
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        authService.logout(userDetails.getId());
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 }
