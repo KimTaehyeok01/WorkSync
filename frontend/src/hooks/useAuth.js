@@ -12,7 +12,7 @@ export default function useAuth() {
             body: JSON.stringify({empNo, password})
         });
         const json = await response.json();
-        if (!response.ok || !json.success) {
+        if (!response.ok) {
             throw new Error(json.message || '로그인 실패');
         }
         setAccessToken(json.data.accessToken);
@@ -28,7 +28,7 @@ export default function useAuth() {
             body: JSON.stringify({refreshToken})
         });
         const json = await response.json();
-        if (!response.ok || !json.success) {
+        if (!response.ok) {
             localStorage.removeItem('refreshToken');
             throw new Error(json.message || '재발급 실패');
         }
