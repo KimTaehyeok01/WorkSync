@@ -43,3 +43,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+
+# Backend (별도 프로젝트 — 프론트 브랜치에서 무시)
+backend/
