@@ -36,11 +36,11 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 로그인, 토큰 재발급만 인증 불필요 (POST 메서드만 허용)
-                        // DELETE /api/auth/token(로그아웃)은 인증 필요이므로 제외
+                        // 로그인, 토큰 재발급, 로그아웃은 인증 불필요
                         .requestMatchers(HttpMethod.POST, "/api/auth/token").permitAll()
-                        .requestMatchers("/api/hello").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/token/refresh").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/auth/token").permitAll()
+                        .requestMatchers("/api/hello").permitAll()
                         // 개발 도구
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         // WebSocket 핸드셰이크
