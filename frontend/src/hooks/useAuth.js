@@ -6,21 +6,17 @@ export default function useAuth() {
 
     // 로그인 (AccessToken 발급)
     const login = async (empNo, password) => {
-        await fetch('/api/auth/token', {
+        const response = await fetch('/api/auth/token', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({empNo, password})
-        })
-            .then((response) => {
-                return response.json();
-            })
-            .then((json) => {
-                setAccessToken(json.accessToken);
-                localStorage.setItem('refreshToken', json.refreshToken);    
-            })
-            .catch((error) => {
-                console.log("로그인 에러: " + error);
-            })
+        });
+        const json = await response.json();
+        if (!response.ok || !json.success) {
+            throw new Error(json.message || '로그인 실패');
+        }
+        setAccessToken(json.data.accessToken);
+        localStorage.setItem('refreshToken', json.data.refreshToken);
     };
 
     // AccessToken 재발급
@@ -36,8 +32,8 @@ export default function useAuth() {
                 return response.json();
             })
             .then((json) => {
-                setAccessToken(json.accessToken);
-                localStorage.setItem('refreshToken', json.refreshToken);
+                setAccessToken(json.data.accessToken);
+                localStorage.setItem('refreshToken', json.data.refreshToken);
             })
             .catch((error) => {
                 console.log("재발급 에러: " + error);
