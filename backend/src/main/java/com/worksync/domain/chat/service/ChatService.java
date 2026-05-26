@@ -7,6 +7,8 @@ import com.worksync.domain.chat.repository.ChatRoomRepository;
 import com.worksync.domain.chat.repository.MessageRepository;
 import com.worksync.domain.employee.entity.Employee;
 import com.worksync.domain.employee.repository.EmployeeRepository;
+import com.worksync.domain.notification.entity.NotificationType;
+import com.worksync.domain.notification.service.NotificationService;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ public class ChatService {
     private final ChatMemberRepository chatMemberRepository;
     private final MessageRepository messageRepository;
     private final EmployeeRepository employeeRepository;
+    private final NotificationService notificationService;
 
     // 채팅방 생성
     @Transactional
@@ -209,6 +212,18 @@ public class ChatService {
 
         messageRepository.save(message);
         room.updateLastMessageAt(LocalDateTime.now());
+
+        // 나를 제외한 채팅방 멤버들에게 알림 전송
+        String notificationContent = sender.getName() + ": " + request.getContent();
+        room.getMembers().stream()
+                .filter(m -> !m.getEmployee().getId().equals(myId))
+                .forEach(m -> notificationService.send(
+                        m.getEmployee().getId(),
+                        NotificationType.MESSAGE,
+                        notificationContent,
+                        "CHAT_ROOM",
+                        roomId
+                ));
 
         return MessageResponse.from(message);
     }
