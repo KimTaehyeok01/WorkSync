@@ -8,23 +8,24 @@ import {
   WSEmptyState,
   WSFilterBar,
   WSPagination,
+  WSTableHeader
 } from "../../../components/common/CommonWidgets";
 import s from "./TaskListPage.module.css";
 
 const STATUS_CONFIG = {
-  todo: { label: "대기중", bg: "#FEF3C7", text: "#92400E" },
-  inProgress: { label: "진행중", bg: "#DBEAFE", text: "#1E40AF" },
-  review: { label: "검토중", bg: "#E0E7FF", text: "#4338CA" },
-  done: { label: "완료", bg: "#D1FAE5", text: "#065F46" },
+  todo: { label: "대기중" },
+  inProgress: { label: "진행중" },
+  done: { label: "완료" },
 };
 
 const STATUS_OPTIONS = [
   { key: "all", label: "전체" },
   { key: "todo", label: "대기중" },
   { key: "inProgress", label: "진행중" },
-  { key: "review", label: "검토중" },
   { key: "done", label: "완료" },
 ];
+
+const TH_COL = ["상태", "작업명", "진행률(%)", "담당자", "프로젝트 기간"]
 
 export default function Tasks() {
   const [search, setSearch] = useState("");
@@ -35,7 +36,6 @@ export default function Tasks() {
   const allTasks = [
     ...KANBAN_TASKS.todo.map((t) => ({ ...t, status: "todo" })),
     ...KANBAN_TASKS.inProgress.map((t) => ({ ...t, status: "inProgress" })),
-    ...KANBAN_TASKS.review.map((t) => ({ ...t, status: "review" })),
     ...KANBAN_TASKS.done.map((t) => ({ ...t, status: "done" })),
   ];
 
@@ -65,13 +65,10 @@ export default function Tasks() {
       />
 
       <div className={s.table}>
-        <div className={s.tableHeader}>
-          <span>상태</span>
-          <span>작업명</span>
-          <span>진행률(%)</span>
-          <span>담당자</span>
-          <span>프로젝트 기간</span>
-        </div>
+        <WSTableHeader
+          columns={TH_COL}
+          gridTemplate="100px 1fr 120px 150px 220px"
+         />
 
         {paginatedTasks.length === 0 ? (
           <div className={s.empty}>
@@ -90,7 +87,9 @@ export default function Tasks() {
                 onClick={() => navigate(`/tasks/${task.id}`)}
                 className={s.row}
               >
-                <WSBadge status={task.status} label={config.label} />
+                <div className={s.statusBadge}>
+                  <WSBadge status={task.status} label={config.label} />
+                </div>
                 <p className={s.title}>{task.title}</p>
                 <p className={s.progress}>{task.progress}%</p>
                 <div className={s.assignee}>

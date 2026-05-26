@@ -1,20 +1,44 @@
-.root { display: flex; flex-direction: column; gap: 20px; }
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 
 .banner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px;
+  padding: 14px 20px 22px 20px;
   color: #fff;
   border-radius: 8px;
-  background: linear-gradient(135deg, #1A73E8 0%, #0D47A1 100%);
-  box-shadow: 0 4px 16px rgba(26,115,232,0.3);
+  background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+  box-shadow: 0 4px 16px rgba(26, 115, 232, 0.3);
 }
-.bannerTitle { font-size: 18px; font-weight: 700; line-height: 1.3; margin: 0; }
-.bannerSub { font-size: 13px; opacity: 0.8; margin-top: 4px; }
-.bannerRight { display: flex; align-items: center; gap: 12px; }
-.bannerDateLabel { font-size: 11px; opacity: 0.7; text-align: right; }
-.bannerDate { font-size: 15px; font-weight: 700; text-align: right; }
+.bannerTitle {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.bannerSub {
+  font-size: 13px;
+  opacity: 0.8;
+  line-height: 0.5;
+}
+.bannerRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.bannerDateLabel {
+  font-size: 11px;
+  opacity: 0.7;
+  text-align: right;
+}
+.bannerDate {
+  font-size: 15px;
+  font-weight: 700;
+  text-align: right;
+}
 .bannerCalIcon {
   width: 48px;
   height: 48px;
@@ -22,16 +46,34 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255,255,255,0.2);
+  background: rgba(255, 255, 255, 0.2);
 }
 
-.statsGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
 
-.mainGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-.mainCol { display: flex; flex-direction: column; gap: 20px; }
-.mainColLeft { grid-column: span 2; }
+.mainGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.mainCol {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.mainColLeft {
+  grid-column: span 2;
+}
 
-.headerActions { display: flex; align-items: center; gap: 8px; }
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .toggleBtn {
   padding: 4px 8px;
   border-radius: 4px;
@@ -40,33 +82,66 @@
   border: 1px solid transparent;
   transition: background 0.15s;
 }
-.toggleBtnOn { background: #EBF4FF; color: var(--ws-primary); border-color: #BFDBFE; }
-.toggleBtnOff { background: #F3F4F6; color: var(--ws-text-400); }
+.toggleBtnOn {
+  background: #ebf4ff;
+  color: var(--ws-primary);
+  border-color: #bfdbfe;
+}
+.toggleBtnOff {
+  background: #f3f4f6;
+  color: var(--ws-text-400);
+}
 
-.postList { display: flex; flex-direction: column; gap: 12px; }
+.postList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 .postItem {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 10px 12px 18px;
   border-radius: 8px;
   border: 1px solid var(--ws-border-light);
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
-.postItem:hover { border-color: #BFDBFE; background: rgba(239,246,255,0.5); }
+.postMeta {
+  color: var(--ws-text-400);
+  font-size: 11.5px;
+  margin-top: 10px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.postItem:hover {
+  border-color: #bfdbfe;
+  background: rgba(239, 246, 255, 0.5);
+}
 .postNoticeBadge {
   flex-shrink: 0;
-  padding: 2px 8px;
+  padding: 4px 8px;
+  height: 15px;
   border-radius: 4px;
-  background: #FEE2E2;
-  color: #DC2626;
+  background: #dc2626;
+  color: #ffffff;
   font-size: 10.5px;
   font-weight: 700;
+  margin-right: 8px;
 }
-.postBody { flex: 1; min-width: 0; }
+.postBody {
+  flex: 1;
+  min-width: 0;
+  margin-top: 10px;
+}
 .postTitle {
   color: var(--ws-text-800);
+  line-height: 20px;
   font-size: 13px;
   font-weight: 600;
   margin: 0;
@@ -74,18 +149,37 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.postMeta {
+.postContent {
   color: var(--ws-text-400);
-  font-size: 11.5px;
-  margin-top: 2px;
+  line-height: 20px;
+  font-size: 13px;
+  font-weight: 400;
+  margin-top: 8px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.postStats { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-.postStat { display: flex; align-items: center; gap: 4px; color: var(--ws-text-400); font-size: 11.5px; }
+.postStats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.postStat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ws-text-400);
+  font-size: 11.5px;
+}
 
-.emptyBlock { display: flex; flex-direction: column; align-items: center; padding: 32px 0; gap: 12px; }
+.emptyBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 0;
+  gap: 12px;
+}
 .emptyIconWrap {
   width: 56px;
   height: 56px;
@@ -94,12 +188,31 @@
   align-items: center;
   justify-content: center;
 }
-.emptyIconWrapPosts { background: linear-gradient(135deg, #EBF4FF 0%, #F0F4FF 100%); }
-.emptyIconWrapApprovals { background: linear-gradient(135deg, #D1FAE5 0%, #ECFDF5 100%); }
-.emptyIconPosts { color: #93C5FD; }
-.emptyIconApprovals { color: #34D399; }
-.emptyTitle { color: var(--ws-text-700); font-size: 14px; font-weight: 700; margin: 0 0 4px; }
-.emptySub { color: var(--ws-text-400); font-size: 12.5px; line-height: 1.5; text-align: center; margin: 0; }
+.emptyIconWrapPosts {
+  background: linear-gradient(135deg, #ebf4ff 0%, #f0f4ff 100%);
+}
+.emptyIconWrapApprovals {
+  background: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%);
+}
+.emptyIconPosts {
+  color: #93c5fd;
+}
+.emptyIconApprovals {
+  color: #34d399;
+}
+.emptyTitle {
+  color: var(--ws-text-700);
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+.emptySub {
+  color: var(--ws-text-400);
+  font-size: 12.5px;
+  line-height: 1.5;
+  text-align: center;
+  margin: 0;
+}
 .emptyAction {
   display: inline-flex;
   align-items: center;
@@ -112,27 +225,33 @@
   font-weight: 600;
   transition: opacity 0.15s;
 }
-.emptyAction:hover { opacity: 0.92; }
-.successIconStack { position: relative; }
+.emptyAction:hover {
+  opacity: 0.92;
+}
+.successIconStack {
+  position: relative;
+}
 .successBadgeRow {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
   border-radius: 8px;
-  background: #F0FDF4;
-  border: 1px dashed #86EFAC;
+  background: #f0fdf4;
+  border: 1px dashed #86efac;
   width: 100%;
   justify-content: center;
 }
-.successInlineIcon { color: #10B981; }
+.successInlineIcon {
+  color: #10b981;
+}
 .successBadgeStrong {
   color: #059669;
   font-size: 12.5px;
   font-weight: 600;
 }
 .successBadgeSub {
-  color: #6EE7B7;
+  color: #6ee7b7;
   font-size: 12px;
 }
 .successDoneBadge {
@@ -142,37 +261,52 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #10B981;
+  background: #10b981;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 0 0 2px #fff;
 }
 
-.approvalList { display: flex; flex-direction: column; gap: 12px; }
+.approvalList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 .approvalItem {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
+  padding: 12px 12px 12px 12px;
   border-radius: 8px;
   border: 1px solid var(--ws-border-light);
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
-.approvalItem:hover { border-color: #BFDBFE; background: rgba(239,246,255,0.5); }
+.approvalItem:hover {
+  border-color: #bfdbfe;
+  background: rgba(239, 246, 255, 0.5);
+}
 .approvalIconBox {
   width: 40px;
   height: 40px;
   border-radius: 8px;
-  background: #FEF3C7;
+  background: #fef3c7;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
-.approvalIcon { color: #D97706; }
-.approvalBody { flex: 1; min-width: 0; }
+.approvalIcon {
+  color: #d97706;
+}
+.approvalBody {
+  flex: 1;
+  min-width: 0;
+  margin-top: 7px;
+}
 .approvalTitle {
   color: var(--ws-text-800);
   font-size: 13px;
@@ -182,10 +316,22 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.approvalMeta { color: var(--ws-text-400); font-size: 11.5px; margin-top: 2px; }
+.approvalMeta {
+  color: var(--ws-text-400);
+  font-size: 11.5px;
+  margin-top: 2px;
+}
 
-.attendList { display: flex; flex-direction: column; gap: 10px; }
-.attendRow { display: flex; align-items: center; gap: 10px; }
+.attendList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.attendRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 .attendName {
   flex: 1;
   color: var(--ws-text-700);
@@ -195,13 +341,50 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.attendBadge { padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 600; }
-.attendPresent { background: #D1FAE5; color: #059669; }
-.attendAbsent { background: #FEE2E2; color: #DC2626; }
+.attendBadge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+.attendPresent {
+  background: #d1fae5;
+  color: #059669;
+}
+.attendAbsent {
+  background: #fee2e2;
+  color: #dc2626;
+}
 
-.taskProgressList { display: flex; flex-direction: column; gap: 12px; }
-.taskProgressTop { display: flex; justify-content: space-between; margin-bottom: 6px; }
-.taskProgressLabel { color: var(--ws-text-600); font-size: 12px; }
-.taskProgressValue { color: var(--progress-color); font-size: 12px; font-weight: 700; }
-.taskProgressTrack { width: 100%; height: 5px; border-radius: 999px; background: #F3F4F6; overflow: hidden; }
-.taskProgressFill { width: var(--progress-width); height: 100%; border-radius: 999px; background: var(--progress-color); }
+.taskProgressList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.taskProgressTop {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.taskProgressLabel {
+  color: var(--ws-text-600);
+  font-size: 12px;
+}
+.taskProgressValue {
+  color: var(--progress-color);
+  font-size: 12px;
+  font-weight: 700;
+}
+.taskProgressTrack {
+  width: 100%;
+  height: 5px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  overflow: hidden;
+}
+.taskProgressFill {
+  width: var(--progress-width);
+  height: 100%;
+  border-radius: 999px;
+  background: var(--progress-color);
+}

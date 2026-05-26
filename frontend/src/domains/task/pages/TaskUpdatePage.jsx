@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Paperclip, CheckCircle, Send, X } from "lucide-react";
+import { ArrowLeft, Paperclip, CheckCircle, Pencil } from "lucide-react";
 import { TEAM_MEMBERS } from "../../../constants/mockData";
 import { WSCard, WSButton } from "../../../components/common/CommonWidgets";
 import { WSInput, WSSelect, WSTextarea, WSFileUploadZone, WSCalendarpicker, WSFileList } from "../../../components/common/FormComponents";
@@ -33,6 +33,7 @@ const ALLOWED_EXT = ['.pdf', '.pptx', '.xlsx', '.docx'];
 
 export default function TaskNew() {
   const navigate = useNavigate();
+  // 폼 상태 - 기존 데이터로 초기값
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -53,11 +54,14 @@ export default function TaskNew() {
 
     // 확장자 검사
     if (!ALLOWED_EXT.includes(ext)) {
-      errors.push('허용하지 않은 확장자입니다.');
+      errors.push('확장자 에러');
+      alert(`허용되지 않는 확장자입니다.`);
     }
+
     // 용량 검사
     if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-      errors.push(`파일 크기가 ${MAX_SIZE_MB}MB를 초과했습니다.`);
+      errors.push('파일 크기 초과');
+      alert(`파일 크기가 ${MAX_SIZE_MB}MB를 초과했습니다.`)
     }
 
     return errors;
@@ -67,16 +71,11 @@ export default function TaskNew() {
     if (!newFiles || newFiles.length === 0) {
       return;
     }
-
-    const validated = newFiles.map((item) => ({
-      file: item,
-      errors: validationFile(item)
+    
+    const validated = newFiles.map((file) => ({
+      file: file,
+      errors: validationFile(file)
     }));
-
-    const errorFiles = validated.filter((item) => item.errors.length > 0);
-    errorFiles.forEach((item) => {
-      alert(`${item.file.name}: ${item.errors.join(', ')}`);
-    });
 
     const validOnly = validated.filter((item) => item.errors.length === 0);
 
@@ -123,7 +122,7 @@ export default function TaskNew() {
             <ArrowLeft size={16} />
           </button>
           <div>
-            <h1 className={s.pageTitle}>새 작업 등록</h1>
+            <h1 className={s.pageTitle}>작업 수정</h1>
           </div>
         </div>
       </div>
@@ -235,8 +234,8 @@ export default function TaskNew() {
 
           <div className={s.actionsCol}>
             <WSButton 
-              label="작업 등록"
-              icon={<Send size={16} />}
+              label="수정 등록"
+              icon={<Pencil size={16} />}
               onClick={handleSubmit}
               disabled={!isValid}
               className={s.submitBtn}

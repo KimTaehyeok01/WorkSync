@@ -59,16 +59,6 @@
   border-radius: 8px;
   overflow: hidden;
 }
-.tableHeader {
-  display: grid;
-  grid-template-columns: 100px 1fr 120px 150px 220px;
-  gap: 16px;
-  padding: 12px 20px;
-  background: #F9FAFB;
-  border-bottom: 1px solid var(--ws-border);
-  font-size: 12px; font-weight: 600;
-  color: var(--ws-text-500);
-}
 .row {
   display: grid;
   grid-template-columns: 100px 1fr 120px 150px 220px;
@@ -84,7 +74,6 @@
 
 .statusBadge {
   display: inline-flex;
-  padding: 4px 10px;
   border-radius: 6px;
   font-size: 11px; font-weight: 700;
   width: fit-content;
@@ -100,5 +89,3 @@
   padding: 56px 0;
 }
 .emptyText { color: var(--ws-text-500); font-size: 14px; font-weight: 600; margin: 0; }
-
-.pagination { margin-top: 24px; }
