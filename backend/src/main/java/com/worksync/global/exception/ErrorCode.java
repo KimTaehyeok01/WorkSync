@@ -21,6 +21,7 @@ public enum ErrorCode {
 
     // 부서
     DEPARTMENT_NOT_FOUND(404, "존재하지 않는 부서입니다."),
+    DUPLICATE_DEPARTMENT_NAME(409, "이미 사용 중인 부서명입니다."),
 
     // 결재
     APPROVAL_DOC_NOT_FOUND(404, "존재하지 않는 결재 문서입니다."),
