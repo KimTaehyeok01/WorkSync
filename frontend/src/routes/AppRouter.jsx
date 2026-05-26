@@ -1,4 +1,3 @@
-// Navigate — 로그인 여부에 따라 페이지 접근 제어 시 사용 (AuthContext 연동 후 활성화)
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import DashboardPage from "../domains/dashboard/pages/DashboardPage";
@@ -18,18 +17,24 @@ import ChatPage from "../domains/chat/pages/ChatPage";
 import LoginPage from "../domains/auth/pages/LoginPage";
 import AuditLogPage from "../domains/audit/pages/AuditLogPage";
 import styles from "./AppRouter.module.css";
-
+import useAuthContext from "../store/AuthContext";
 
 function NotFound() {
   return (
     <div className={styles.auto_001}>
-      <p className={styles.notFoundTitle}>
-        404 - Page Not Found
+      <p className={styles.notFoundTitle}>404 - Page Not Found</p>
+      <p className={styles.notFoundDesc}>
+        The page you are looking for does not exist.
       </p>
-      <p className={styles.notFoundDesc}>The page you are looking for does not exist.</p>
     </div>
   );
 }
+
+const AuthRouter = ({ Component }) => {
+  const { isAuthenticated, isLoading } = useAuthContext();
+  if (isLoading) return null;
+  return isAuthenticated ? <Component /> : <Navigate to="/login" />;
+};
 
 export const router = createBrowserRouter([
   {
@@ -38,7 +43,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/",
-    Component: Layout,
+    element: <AuthRouter Component={Layout} />,
     children: [
       { index: true, Component: DashboardPage },
       { path: "approval", Component: ApprovalListPage },
@@ -55,7 +60,6 @@ export const router = createBrowserRouter([
       { path: "tasks", Component: TaskListPage },
       { path: "tasks/new", Component: TaskCreatePage },
       { path: "tasks/:id", Component: TaskDetailPage },
-      { path: "tasks/edit/:id", Component: TaskUpdatePage },
       { path: "messenger", Component: ChatPage },
       { path: "audit-log", Component: AuditLogPage },
       { path: "*", Component: NotFound },

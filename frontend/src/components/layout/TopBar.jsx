@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { NOTIFICATIONS, TEAM_MEMBERS } from "../../constants/mockData";
 import styles from "./TopBar.module.css";
+import useAuthContext from "../../store/AuthContext";
 
 const me = TEAM_MEMBERS[3];
 
@@ -64,6 +65,7 @@ export function TopBar({ pathname }) {
     breadcrumb: ["홈"],
   };
   const unreadCount = NOTIFICATIONS.filter((n) => !n.read).length;
+  const { logout } = useAuthContext();
 
   return (
     <header className={styles.header}>
@@ -215,25 +217,13 @@ export function TopBar({ pathname }) {
                   <span>{item.label}</span>
                 </button>
               );
-            })} */}
-
-            <button
-              className={`${styles.menuItem} ${styles.profileAwayBadge}`}
-              onClick={() => {
-                setIsAway(!isAway);
-                console.log("isAway 변경:", !isAway);
-              }}
-              type="button"
-            >
-              <Coffee size={15} /> 자리비움
-            </button>
-            <button
-              className={`${styles.menuItem} ${styles.logoutItem}`}
-              type="button"
-            >
-              <LogOut size={15} />
-              <span>로그아웃</span>
-            </button>
+            })}
+            <div className={styles.menuDivider}>
+              <button className={`${styles.menuItem} ${styles.logoutItem}`} type="button" onClick={logout}>
+                <LogOut size={15} />
+                <span>로그아웃</span>
+              </button>
+            </div>
           </div>
         )}
       </div>

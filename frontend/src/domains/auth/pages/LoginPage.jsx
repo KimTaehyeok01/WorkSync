@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Zap, Eye, EyeOff, Mail, Lock, AlertCircle } from "lucide-react";
 import styles from "./LoginPage.module.css";
+import useAuthContext from "../../../store/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -13,17 +14,22 @@ export default function Login() {
   const [error, setError] = useState("");
   const [focusEmp, setFocusEmp] = useState(false);
   const [focusPw, setFocusPw] = useState(false);
+  const { login } = useAuthContext();
 
-  function handleLogin(e) {
+  async function handleLogin(e) {
     if (e) e.preventDefault();
     setError("");
     if (!empNo.trim()) { setError("사번을 입력해 주세요."); return; }
     if (!password.trim()) { setError("비밀번호를 입력해 주세요."); return; }
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await login(empNo, password);
       navigate("/");
-    }, 900);
+    } catch (err) {
+      setError("사번 또는 비밀번호가 올바르지 않습니다.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -37,7 +43,7 @@ export default function Login() {
         </div>
         <div>
           <div className={styles.brandName}>WorkSync</div>
-          <div className={styles.brandSub}>ENTERPRISE v2.4</div>
+          <div className={styles.brandSub}>ENTERPRISE v1.0</div>
         </div>
       </div>
 
@@ -110,7 +116,7 @@ export default function Login() {
               로그인에 문제가 발생하셨나요?{" "}
               <span className={styles.footerLink}>0120 내선번호로 문의주세요</span>
             </p>
-            <p className={styles.copyright}>© 2026 WorkSync Enterprise · v2.4.0</p>
+            <p className={styles.copyright}>© 2026 WorkSync Enterprise · v1.0</p>
           </div>
         </div>
       </div>
