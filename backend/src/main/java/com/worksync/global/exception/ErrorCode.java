@@ -48,6 +48,9 @@ public enum ErrorCode {
     LEAVE_REQUEST_NOT_FOUND(404, "존재하지 않는 휴가 신청입니다."),
     INSUFFICIENT_LEAVE_BALANCE(400, "연차 잔여일수가 부족합니다."),
 
+    // 알림
+    NOTIFICATION_NOT_FOUND(404, "존재하지 않는 알림입니다."),
+
     // 공통
     FORBIDDEN(403, "접근 권한이 없습니다."),
     INTERNAL_SERVER_ERROR(500, "서버 내부 오류가 발생했습니다.");
