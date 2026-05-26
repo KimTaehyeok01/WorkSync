@@ -58,7 +58,7 @@ export function TopBar({ pathname }) {
   const [showNotifs, setShowNotifs] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [search, setSearch] = useState("");
-  const [isAway] = useState(false);
+  const [isAway, setIsAway] = useState(false);
   const page = PAGE_TITLES[pathname] || {
     title: "WorkSync",
     breadcrumb: ["홈"],
@@ -219,6 +219,10 @@ export function TopBar({ pathname }) {
 
             <button
               className={`${styles.menuItem} ${styles.profileAwayBadge}`}
+              onClick={() => {
+                setIsAway(!isAway);
+                console.log("isAway 변경:", !isAway);
+              }}
               type="button"
             >
               <Coffee size={15} /> 자리비움

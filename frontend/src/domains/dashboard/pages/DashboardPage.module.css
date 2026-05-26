@@ -8,7 +8,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px;
+  padding: 14px 20px 22px 20px;
   color: #fff;
   border-radius: 8px;
   background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
@@ -102,7 +102,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 10px 12px 18px;
   border-radius: 8px;
   border: 1px solid var(--ws-border-light);
   cursor: pointer;
@@ -116,19 +116,23 @@
 }
 .postNoticeBadge {
   flex-shrink: 0;
-  padding: 2px 8px;
+  padding: 4px 8px;
+  height: 15px;
   border-radius: 4px;
-  background: #fee2e2;
-  color: #dc2626;
+  background: #dc2626;
+  color: #ffffff;
   font-size: 10.5px;
   font-weight: 700;
+  margin-right: 8px;
 }
 .postBody {
   flex: 1;
   min-width: 0;
+  margin-top: 10px;
 }
 .postTitle {
   color: var(--ws-text-800);
+  line-height: 20px;
   font-size: 13px;
   font-weight: 600;
   margin: 0;
@@ -136,10 +140,12 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.postMeta {
+.postContent {
   color: var(--ws-text-400);
-  font-size: 11.5px;
-  margin-top: 2px;
+  line-height: 20px;
+  font-size: 13px;
+  font-weight: 400;
+  margin-top: 8px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -262,7 +268,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
+  padding: 12px 12px 12px 12px;
   border-radius: 8px;
   border: 1px solid var(--ws-border-light);
   cursor: pointer;
@@ -290,6 +296,7 @@
 .approvalBody {
   flex: 1;
   min-width: 0;
+  margin-top: 7px;
 }
 .approvalTitle {
   color: var(--ws-text-800);
