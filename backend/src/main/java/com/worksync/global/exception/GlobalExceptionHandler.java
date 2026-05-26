@@ -36,6 +36,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(ApiResponse.fail(400, message));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegalArgumentException(IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(ApiResponse.fail(400, e.getMessage()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
         log.error("Unhandled exception", e);
