@@ -21,7 +21,8 @@ import s from "./BoardListPage.module.css";
 export default function Board() {
   const navigate = useNavigate();
   const [category, setCategory] = useState("all"); // 현재 선택된 값
-  const [categories, setCategories] = useState([ // 드롭다운 목록 전체
+  const [categories, setCategories] = useState([
+    // 드롭다운 목록 전체
     { value: "all", label: "전체" },
   ]); // 전체 -> 고정으로 유지
   const [search, setSearch] = useState("");
@@ -125,10 +126,14 @@ export default function Board() {
                   onClick={() => navigate(`/board/${post.id}`)}
                   className={s.row}
                 >
-                  {isNotice && <span className={s.noticeBadge}>공지사항</span>}
-
                   <div className={s.rowBody}>
-                    <p className={s.rowTitle}>{post.title}</p>
+                    <div className={s.rowHeader}>
+                      {isNotice && (
+                        <span className={s.noticeBadge}>공지사항</span>
+                      )}
+                      <p className={s.rowTitle}>{post.title}</p>
+                    </div>
+
                     <p className={s.rowContent}>
                       {post.content.slice(0, 200)}...
                     </p>

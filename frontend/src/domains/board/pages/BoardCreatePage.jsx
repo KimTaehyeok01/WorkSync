@@ -1,21 +1,44 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { Send } from "lucide-react";
 import {
-  ArrowLeft, Bold, Italic, Underline, List, Link, AlignLeft,
-  Paperclip, CheckCircle, Image, Trash2
+  ArrowLeft,
+  Bold,
+  Italic,
+  Underline,
+  List,
+  Link,
+  AlignLeft,
+  Paperclip,
+  CheckCircle,
+  Image,
+  Trash2,
 } from "lucide-react";
-import { WSCard } from "../../../components/common/CommonWidgets";
+import { WSCard, WSButton } from "../../../components/common/CommonWidgets";
+import {
+  WSInput,
+  WSSelect,
+  WSTextarea,
+  WSFileUploadZone,
+  WSCalendarpicker,
+  WSFileList,
+} from "../../../components/common/FormComponents";
 import s from "./BoardCreatePage.module.css";
 
 const CATEGORY_OPTIONS = [
-  { value: "notice", label: "공지사항",   color: "#EF4444" },
-  { value: "dept",   label: "부서 게시판", color: "#8B5CF6" },
-  { value: "free",   label: "자유 게시판", color: "#10B981" },
+  { value: "notice", label: "공지사항", color: "#EF4444" },
+  { value: "dept", label: "부서 게시판", color: "#8B5CF6" },
+  { value: "free", label: "자유 게시판", color: "#10B981" },
 ];
 
 const fileIconColor = {
-  PDF: "#EF4444", XLSX: "#10B981", PPTX: "#F59E0B",
-  DOCX: "#3B82F6", PNG: "#06B6D4", ZIP: "#F97316", default: "#6B7280",
+  PDF: "#EF4444",
+  XLSX: "#10B981",
+  PPTX: "#F59E0B",
+  DOCX: "#3B82F6",
+  PNG: "#06B6D4",
+  ZIP: "#F97316",
+  default: "#6B7280",
 };
 
 const TOOLBAR_ITEMS = [
@@ -40,22 +63,36 @@ export default function BoardNew() {
   const [submitted, setSubmitted] = useState(false);
   const MAX_CHARS = 3000;
 
-  const isValid = title.trim().length > 0 && category !== "" && content.trim().length > 0;
+  //파일 추가
+  const addFiles = (newFiles) => {
+    setFiles((prev) => [...prev, ...newFiles.map((f) => ({ file: f }))]);
+  };
+
+  //파일 삭제(index)
+  const removeFiles = (index) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const isValid =
+    title.trim().length > 0 && category !== "" && content.trim().length > 0;
+
+  // function addFiles(newFiles) {
+  //   const mapped = newFiles.map((f, i) => ({
+  //     id: `file-${Date.now()}-${i}`,
+  //     name: f.name,
+  //     size:
+  //       f.size > 1024 * 1024
+  //         ? `${(f.size / 1024 / 1024).toFixed(1)} MB`
+  //         : `${(f.size / 1024).toFixed(0)} KB`,
+  //     type: f.name.split(".").pop()?.toUpperCase() || "FILE",
+  //   }));
+  //   setFiles((prev) => [...prev, ...mapped].slice(0, 10));
+  // }
 
   function handleFileDrop(e) {
     e.preventDefault();
     setIsDragging(false);
     addFiles(Array.from(e.dataTransfer.files));
-  }
-
-  function addFiles(newFiles) {
-    const mapped = newFiles.map((f, i) => ({
-      id: `file-${Date.now()}-${i}`,
-      name: f.name,
-      size: f.size > 1024 * 1024 ? `${(f.size / 1024 / 1024).toFixed(1)} MB` : `${(f.size / 1024).toFixed(0)} KB`,
-      type: f.name.split(".").pop()?.toUpperCase() || "FILE",
-    }));
-    setFiles((prev) => [...prev, ...mapped].slice(0, 10));
   }
 
   function handleFileInput(e) {
@@ -87,14 +124,23 @@ export default function BoardNew() {
 
   return (
     <div className={s.root}>
-      <button onClick={() => navigate("/board")} className={s.backBtn}>
-        <ArrowLeft size={18} />
-        게시글 작성 등록
-      </button>
+      <div className={s.header}>
+        <div className={s.headerLeft}>
+          <button onClick={() => navigate("/tasks")} className={s.backBtn}>
+            <ArrowLeft size={16} />
+          </button>
+          <div>
+            <h1 className={s.pageTitle}>게시글 작성 등록</h1>
+          </div>
+        </div>
+      </div>
 
       <div className={s.layout}>
-        <div className={s.colMain}>
-          <WSCard title="게시글 기본 정보" subtitle="게시판 분류와 제목을 입력하세요">
+        <div className={`${s.col} ${s.colMain}`}>
+          <WSCard
+            title="게시글 기본 정보"
+            subtitle="게시판 분류와 제목을 입력하세요"
+          >
             <div className={s.formGrid}>
               <div>
                 <label className={s.label}>
@@ -142,7 +188,9 @@ export default function BoardNew() {
               title="내용"
               subtitle="게시글 본문을 작성하세요"
               action={
-                <span className={`${s.contentCount} ${content.length > MAX_CHARS * 0.9 ? s.contentCountWarn : ""}`}>
+                <span
+                  className={`${s.contentCount} ${content.length > MAX_CHARS * 0.9 ? s.contentCountWarn : ""}`}
+                >
                   {content.length}/{MAX_CHARS}
                 </span>
               }
@@ -165,66 +213,36 @@ export default function BoardNew() {
           </div>
         </div>
 
-        <div className={s.colSide}>
-          <WSCard title="첨부 파일" subtitle={`${files.length}개 파일 첨부됨`}>
-            <div
-              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-              onDragLeave={() => setIsDragging(false)}
-              onDrop={handleFileDrop}
-              onClick={() => fileInputRef.current?.click()}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  fileInputRef.current?.click();
-                }
-              }}
-              className={`${s.dropzone} ${isDragging ? s.dropzoneActive : ""}`}
-              role="button"
-              tabIndex={0}
-              aria-label="게시글 첨부 파일 추가"
-            >
-              <Paperclip size={28} className={`${s.dropzoneIcon} ${isDragging ? s.dropzoneIconActive : ""}`} />
-              <p className={s.dropzoneText}>
-                파일을 드래그하거나 <span className={s.dropzoneAccent}>클릭하여 업로드</span>
-              </p>
-              <p className={s.dropzoneHint}>PDF, DOCX, XLSX, PPTX - 최대 50MB</p>
-            </div>
-            <input ref={fileInputRef} type="file" multiple className={s.hiddenInput} onChange={handleFileInput} />
+        <div className={`${s.col} ${s.colSide}`}>
+          <WSCard title="첨부파일">
+            <WSFileUploadZone
+              onFilesAdded={addFiles}
+              isDragging={isDragging}
+              onDragStateChange={setIsDragging}
+              icon={<Paperclip size={28} />}
+              accept=".pdf,.ppt,.xlsx,.pptx"
+              label="파일을 드래그하거나 클릭하여 업로드"
+              helperText="PDF, DOCX, XLSX, PPTX - 최대 50MB"
+            />
 
-            {files.length > 0 && (
-              <div className={s.fileList}>
-                {files.map((f) => (
-                  <div key={f.id} className={s.fileRow}>
-                    <div className={s.fileIcon} style={{ "--file-color": fileIconColor[f.type] || fileIconColor.default }}>
-                      {f.type}
-                    </div>
-                    <div className={s.fileBody}>
-                      <p className={s.fileName}>{f.name}</p>
-                      <p className={s.fileSize}>{f.size}</p>
-                    </div>
-                    <button
-                      onClick={() => setFiles(files.filter((x) => x.id !== f.id))}
-                      className={s.fileDel}
-                      title="삭제"
-                      type="button"
-                      aria-label={`${f.name} 삭제`}
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className={s.actionsCol}>
-              <button onClick={handleSubmit} disabled={!isValid} className={s.submitBtn}>
-                등록
-              </button>
-              <button onClick={() => navigate("/board")} className={s.cancelBtn}>
-                취소하고 돌아가기
-              </button>
-            </div>
+            <WSFileList
+              files={files.map(({ file }) => file)}
+              onRemove={removeFiles}
+            />
           </WSCard>
+
+          <div className={s.actionsCol}>
+            <WSButton
+              label="작업 등록"
+              icon={<Send size={16} />}
+              onClick={handleSubmit}
+              disabled={!isValid}
+              className={s.submitBtn}
+            />
+            <button onClick={() => navigate("/board")} className={s.cancelBtn}>
+              취소하고 돌아가기
+            </button>
+          </div>
         </div>
       </div>
     </div>
