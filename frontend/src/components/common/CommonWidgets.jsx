@@ -115,7 +115,7 @@ export function WSAvatar({ src, name, size = 32 }) {
 
   if (!src) {
     return (
-      <div 
+      <div
         className={s.avatarFallback}
         style={{
           "--avatar-size": `${size}px`,

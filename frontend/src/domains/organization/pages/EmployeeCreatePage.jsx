@@ -20,31 +20,26 @@ import s from "./EmployeeCreatePage.module.css";
 import {
   getDepartments,
   getEmployee,
-  uploadProfileImage,
   createEmpoyee,
   editDepartments,
 } from "../services/organizationListApi";
 
 // 직급
 const JOB_GRADE_OPTIONS = [
-  { key: "todo", label: "사원" },
-  { key: "inProgress", label: "주임" },
-  { key: "done", label: "대리" },
-  { key: "done", label: "과장" },
-  { key: "done", label: "부장" },
-  { key: "done", label: "대표" },
+  { key: "STAFF", label: "사원" },
+  { key: "SENIOR", label: "주임" },
+  { key: "ASSISTANT_MANAGER", label: "대리" },
+  { key: "MANAGER", label: "과장" },
+  { key: "GENERAL_MANAGER", label: "부장" },
+  { key: "DIRECTOR", label: "이사" },
+  { key: "CEO", label: "대표" },
 ];
 
 // 권한
 const ROLE_OPTIONS = [
-  { key: "todo", label: "사원" },
-  { key: "inProgress", label: "주임" },
-  { key: "done", label: "대리" },
+  { key: "USER", label: "사용자" },
+  { key: "ADMIN", label: "관리자" },
 ];
-
-// 이미지
-const MAX_SIZE_MB = 50;
-const ALLOWED_EXT = [".png", ".jpg"];
 
 export default function EmployeeAdd() {
   const { accessToken } = useAuthContext();
@@ -59,11 +54,8 @@ export default function EmployeeAdd() {
     role: "",
     department_id: "",
   });
-  const [files, setFiles] = useState([]);
-  const [isDragging, setIsDragging] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [departments, setDepartments] = useState([]);
+  const [submitted, setSubmitted] = useState(false);
 
   // 부서
   useEffect(() => {
@@ -86,7 +78,32 @@ export default function EmployeeAdd() {
   ];
 
   async function handleSubmit() {
-    navigate("/organization");
+    try {
+      if (!isValid) return;
+      await createEmpoyee(accessToken, form);
+      setSubmitted(true);
+      navigate("/organization");
+    } catch (error) {
+      console.log("저장 실패: " + error);
+      alert("저장에 실패했습니다.");
+    }
+  }
+
+  if (submitted) {
+    return (
+      <div className={s.successScreen}>
+        <div className={s.successCard}>
+          <div className={s.successIcon}>
+            <CheckCircle size={40} className={s.successIconGlyph} />
+          </div>
+          <div>
+            <p className={s.successTitle}>작업이 등록되었습니다</p>
+            <p className={s.successDesc}>업무 보드로 이동합니다...</p>
+          </div>
+          <div className={s.successBadge}>업무 보드로 이동 중...</div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -168,9 +185,9 @@ export default function EmployeeAdd() {
                   <WSFormField label="연락처" required>
                     <WSInput
                       type="text"
-                      value={form.password}
+                      value={form.phone}
                       onChange={(e) =>
-                        setForm((p) => ({ ...p, password: e.target.value }))
+                        setForm((p) => ({ ...p, phone: e.target.value }))
                       }
                       placeholder="000-0000-0000"
                       className={s.input}
@@ -206,7 +223,7 @@ export default function EmployeeAdd() {
                       setForm((p) => ({ ...p, department_id: e.target.value }))
                     }
                     options={DEPT_OPTIONS.map((m) => ({
-                      value: m.id,
+                      value: m.key,
                       label: m.label,
                     }))}
                   />
@@ -221,7 +238,7 @@ export default function EmployeeAdd() {
                       setForm((p) => ({ ...p, job_grade: e.target.value }))
                     }
                     options={JOB_GRADE_OPTIONS.map((m) => ({
-                      value: m.id,
+                      value: m.key,
                       label: m.label,
                     }))}
                   />
@@ -235,8 +252,8 @@ export default function EmployeeAdd() {
                     onChange={(e) =>
                       setForm((p) => ({ ...p, role: e.target.value }))
                     }
-                    options={JOB_GRADE_OPTIONS.map((m) => ({
-                      value: m.id,
+                    options={ROLE_OPTIONS.map((m) => ({
+                      value: m.key,
                       label: m.label,
                     }))}
                   />
