@@ -25,7 +25,7 @@ public class FileService {
   private final FileAttachmentRepository fileAttachmentRepository;
   private final EmployeeRepository employeeRepository;
 
-  // 파일 저장경로 일단은 나중에 S3로 바꿔야함?
+  // 파일 저장경로
   private static final String UPLOAD_DIR = "uploads/";
 
   // 파일 업로드
@@ -61,7 +61,7 @@ public class FileService {
   }
 
   // 파일 단건 조회
-  public FileUploadResponse findById(Long id){ //Dto - findById
+  public FileUploadResponse findFileId(Long id){ //Dto - findById
     FileAttachment file = fileAttachmentRepository.findById(id)
             .orElseThrow(()-> new CustomException(ErrorCode.FILE_NOT_FOUND));
     return FileUploadResponse.from(file);
