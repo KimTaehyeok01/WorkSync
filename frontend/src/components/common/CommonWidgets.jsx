@@ -111,6 +111,24 @@ export function WSBadge({ status, label }) {
 
 /** WS Avatar */
 export function WSAvatar({ src, name, size = 32 }) {
+  const initial = name ? name.charAt(0) : "?";
+
+  if (!src) {
+    return (
+      <div
+        className={s.avatarFallback}
+        style={{
+          "--avatar-size": `${size}px`,
+          width: `${size}px`,
+          height: `${size}px`,
+          fontsize: `${size * 0.6}px`,
+        }}
+      >
+        {initial}
+      </div>
+    );
+  }
+
   return (
     <img
       src={src}

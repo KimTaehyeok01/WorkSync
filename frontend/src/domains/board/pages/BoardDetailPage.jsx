@@ -1,19 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Download, Edit, ChevronDown, Pencil } from "lucide-react";
-import { BOARD_POSTS } from "../../../constants/mockData";
 import {
   WSCard,
   WSAvatar,
   WSButton,
 } from "../../../components/common/CommonWidgets";
 import s from "./BoardDetailPage.module.css";
-
-const CATEGORY_LABELS = {
-  notice: "공지 사항",
-  dept: "부서 게시판",
-  free: "자유 게시판",
-};
+import { getPostById } from "../services/boardApi";
 
 const MOCK_ATTACHMENTS = [
   { id: "a1", name: "03_제내_수정.xlsx", size: "1.2 MB", type: "XLSX" },
@@ -22,11 +16,19 @@ const MOCK_ATTACHMENTS = [
 export default function BoardDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-
-  const postIndex = BOARD_POSTS.findIndex((p) => p.id === id);
-  const post = BOARD_POSTS[postIndex];
-
+  const [post, setPost] = useState(null);
   const [attachments, setAttachments] = useState(MOCK_ATTACHMENTS);
+
+  useEffect(() => {
+    const token = localStorage.getItem("refreshToken");
+    getPostById(2, id, token).then((data) => {
+      setPost(data);
+    });
+  }, [id]);
+
+  // 다음 글
+  // const nextPost =
+  //   postIndex < BOARD_POSTS.length - 1 ? BOARD_POSTS[postIndex + 1] : null;
 
   if (!post) {
     return (
@@ -39,10 +41,6 @@ export default function BoardDetail() {
       </div>
     );
   }
-
-  const nextPost =
-    postIndex < BOARD_POSTS.length - 1 ? BOARD_POSTS[postIndex + 1] : null;
-
   function handleDeleteAttachment(attachmentId) {
     if (confirm("첨부파일을 삭제하시겠습니까?")) {
       setAttachments((prev) => prev.filter((a) => a.id !== attachmentId));
@@ -57,9 +55,7 @@ export default function BoardDetail() {
             <ArrowLeft size={16} />
           </button>
           <div>
-            <h1 className={s.pageTitle}>
-              {CATEGORY_LABELS[post.category] || "게시판"}
-            </h1>
+            <h1 className={s.pageTitle}>{post.boardName || "게시판"}</h1>
           </div>
         </div>
       </div>
@@ -69,14 +65,12 @@ export default function BoardDetail() {
           <div className={s.contentCard}>
             <h1 className={s.title}>{post.title}</h1>
             <div className={s.metaRow}>
-              <WSAvatar
-                src={post.author.avatar}
-                name={post.author.name}
-                size={32}
-              />
+              <WSAvatar src={null} name={post.authorName} size={32} />
               <div>
-                <span className={s.metaName}>{post.author.name}</span>
-                <span className={s.metaDate}>{post.createdAt}</span>
+                <span className={s.metaName}>{post.authorName}</span>
+                <span className={s.metaDate}>
+                  {post.createdAt?.slice(0, 10)}
+                </span>
               </div>
             </div>
             <div className={s.content}>{post.content}</div>
@@ -119,7 +113,8 @@ export default function BoardDetail() {
         </div>
       </div>
 
-      {nextPost && (
+      {/* 다음 글 */}
+      {/* {nextPost && (
         <button
           onClick={() => navigate(`/board/${nextPost.id}`)}
           className={s.nextBtn}
@@ -131,7 +126,7 @@ export default function BoardDetail() {
           </div>
           <span className={s.nextDate}>{nextPost.createdAt}</span>
         </button>
-      )}
+      )} */}
     </div>
   );
 }

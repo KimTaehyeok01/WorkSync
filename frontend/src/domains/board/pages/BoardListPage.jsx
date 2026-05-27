@@ -30,7 +30,7 @@ export default function Board() {
 
   // 카테고리 + 검색어 적용하여 정렬
   const filteredPosts = posts.filter((p) => {
-    const matchCat = category === "all" || p.boardType === category;
+    const matchCat = category === "all" || p.boardName === category;
     const matchSearch =
       !search ||
       p.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -50,7 +50,7 @@ export default function Board() {
   // 현재 페이지 게시글만
   const pagePosts = sortedPosts.slice((page - 1) * perPage, page * perPage);
 
-  // API에서 받아온 게시판 목록
+  // API에서 받아온 게시판 목록(드롭다운)
   useEffect(() => {
     const token = localStorage.getItem("refreshToken"); // 저장된 토큰 가져오기
 
@@ -59,8 +59,8 @@ export default function Board() {
 
       // API 데이터를 드롭다운 형식으로 변환
       const apiCategories = data.map((board) => ({
-        value: board.boardType, //"FREE"
-        label: board.name, //"자유게시판"
+        value: board.id, // 1, 2, 3
+        label: board.name, //"공지사항", "부서게시판", "자유게시판"
       }));
 
       // 전체 + API 데이터 합치기
@@ -70,10 +70,30 @@ export default function Board() {
     getPosts(2, token).then((data) => {
       if (!data) return;
 
-      // 수정 필요함
-      setPosts(data.content ?? []);
+      setPosts(data);
     });
   }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem("refreshToken");
+
+    const boardId = category === "all" ? null : category;
+
+    if (boardId === null) {
+      Promise.all([
+        getPosts(1, token),
+        getPosts(2, token),
+        getPosts(3, token),
+      ]).then(([data1, data2, data3]) => {
+        setPosts([...(data1 ?? []), ...(data2 ?? []), ...(data3 ?? [])]);
+      });
+    } else {
+      getPosts(boardId, token).then((data) => {
+        if (!data) return;
+        setPosts(data);
+      });
+    }
+  }, [category]);
 
   return (
     <div className={s.root}>
