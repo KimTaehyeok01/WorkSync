@@ -12,9 +12,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.EOFException;
 import java.io.File;
+import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,10 +30,10 @@ public class FileService {
 
   // 파일 업로드
   @Transactional
-  public FileUploadResponse upload(MultipartFile file, Long uploaderId, String refType, Long refId) throws EOFException{
+  public FileUploadResponse upload(MultipartFile file, Long uploaderId, String refType, Long refId) throws IOException {
 
     // 업로드 사원 조회
-    Employee uploader = employeeRepository.findById(uploaderId)
+    Employee uploader = employeeRepository.findById(uploaderId) //Repo Entity - findById
             .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
 
     // 업로드 폴더가 없을시 생성
@@ -58,5 +60,30 @@ public class FileService {
     return FileUploadResponse.from(fileAttachmentRepository.save(fileAttachment));
   }
 
-  //
+  // 파일 단건 조회
+  public FileUploadResponse findById(Long id){ //Dto - findById
+    FileAttachment file = fileAttachmentRepository.findById(id)
+            .orElseThrow(()-> new CustomException(ErrorCode.FILE_NOT_FOUND));
+    return FileUploadResponse.from(file);
+  }
+
+  // 첨부위치별 파일 목록 조회
+  public List<FileUploadResponse> findByRef(String refType, Long refId){
+    return fileAttachmentRepository.findByRefTypeAndRefId(refType,refId)
+            .stream()
+            .map(FileUploadResponse::from).collect(Collectors.toList());
+  }
+
+  // 파일 삭제
+  @Transactional
+  public void delete(Long id){
+    FileAttachment file = fileAttachmentRepository.findById(id)
+            .orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
+
+    // 로컬에서 파일 삭제
+    new File(file.getFilePath()).delete();
+
+    // DB에서 파일 정보 삭제
+    fileAttachmentRepository.delete(file);
+  }
 }
