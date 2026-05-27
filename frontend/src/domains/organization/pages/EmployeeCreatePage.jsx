@@ -45,14 +45,15 @@ export default function EmployeeAdd() {
   const { accessToken } = useAuthContext();
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    emp_no: "",
+    empNo: "",
     name: "",
     email: "",
     password: "",
     phone: "",
-    job_grade: "",
+    jobGrade: "",
     role: "",
-    department_id: 0,
+    departmentId: 0,
+    hireDate: "",
   });
   const [departments, setDepartments] = useState([]);
   const [submitted, setSubmitted] = useState(false);
@@ -65,23 +66,24 @@ export default function EmployeeAdd() {
       setDepartments(Array.isArray(data.data) ? data.data : []);
     });
   }, [accessToken]);
+
   const DEPT_OPTIONS = departments.map((dept) => ({
     key: dept.id,
     label: dept.name,
   }));
 
   const isValid = [
-    form.emp_no.trim().length > 0,
+    form.empNo.trim().length > 0,
     form.name.trim().length > 0,
     form.email.trim().length > 0,
     form.password.trim().length > 0,
     form.role.trim().length > 0,
-    form.job_grade.trim().length > 0,
-    form.department_id > 0,
+    form.jobGrade.trim().length > 0,
+    form.departmentId > 0,
   ];
 
   async function handleSubmit() {
-    console.log("전송 데이터:", JSON.stringify(form));
+    // console.log("전송 데이터:", JSON.stringify(form));
     try {
       if (!isValid) {
         alert("필수 기재란을 채워주세요.");
@@ -134,9 +136,9 @@ export default function EmployeeAdd() {
                   <WSFormField label="사번" required>
                     <WSInput
                       type="text"
-                      value={form.emp_no}
+                      value={form.empNo}
                       onChange={(e) =>
-                        setForm((p) => ({ ...p, emp_no: e.target.value }))
+                        setForm((p) => ({ ...p, empNo: e.target.value }))
                       }
                       placeholder="사번 입력"
                       className={s.input}
@@ -204,13 +206,9 @@ export default function EmployeeAdd() {
                 <div>
                   <WSFormField label="입사일" required>
                     <WSDatepicker
-                      startValue={form.start_date}
-                      endValue={form.due_date}
-                      onStartChange={(e) =>
-                        setForm((p) => ({ ...p, start_date: e.target.value }))
-                      }
-                      onEndChange={(e) =>
-                        setForm((p) => ({ ...p, due_date: e.target.value }))
+                      value={form.hireDate}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, hireDate: e.target.value }))
                       }
                     />
                   </WSFormField>
@@ -225,11 +223,11 @@ export default function EmployeeAdd() {
                 <WSFormField label="소속 부서" required>
                   <WSSelect
                     placeholder="부서 선택"
-                    value={form.department_id}
+                    value={form.departmentId}
                     onChange={(e) =>
                       setForm((p) => ({
                         ...p,
-                        department_id: Number(e.target.value),
+                        departmentId: Number(e.target.value),
                       }))
                     }
                     options={DEPT_OPTIONS.map((m) => ({
@@ -243,9 +241,9 @@ export default function EmployeeAdd() {
                 <WSFormField label="직급" required>
                   <WSSelect
                     placeholder="직급 선택"
-                    value={form.job_grade}
+                    value={form.jobGrade}
                     onChange={(e) =>
-                      setForm((p) => ({ ...p, job_grade: e.target.value }))
+                      setForm((p) => ({ ...p, jobGrade: e.target.value }))
                     }
                     options={JOB_GRADE_OPTIONS.map((m) => ({
                       value: m.key,
