@@ -29,7 +29,7 @@ const TH_COL = ["부서명", "직급", "이름", "이메일", "연락처", "입�
 const GRID_TEMPLATE = "1fr 1fr 1fr 1fr 1fr 1fr";
 
 export default function OrganizationListPage() {
-  const { accessToken } = useAuthContext();
+  const { accessToken, role } = useAuthContext();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [deptFilter, setDeptFilter] = useState("all");
@@ -167,20 +167,24 @@ export default function OrganizationListPage() {
         searchValue={search}
         onSearchChange={setSearch}
         searchPlaceholder="부서 또는 이름으로 검색하세요."
-        actions={[
-          {
-            label: "부서 관리",
-            onClick: () => setDeptModal(true),
-            icon: <Plus size={16} />,
-            variant: "primary",
-          },
-          {
-            label: "직원 추가",
-            onClick: () => navigate("/organization/new"),
-            icon: <Plus size={16} />,
-            variant: "primary",
-          },
-        ]}
+        actions={
+          role === "ADMIN"
+            ? [
+                {
+                  label: "부서 관리",
+                  onClick: () => setDeptModal(true),
+                  icon: <Plus size={16} />,
+                  variant: "primary",
+                },
+                {
+                  label: "직원 추가",
+                  onClick: () => navigate("/organization/new"),
+                  icon: <Plus size={16} />,
+                  variant: "primary",
+                },
+              ]
+            : []
+        }
       />
 
       <div className={style.table}>
