@@ -204,16 +204,35 @@ export default function OrganizationListPage() {
                 {item.departmentName ? item.departmentName : "-"}
               </p>
               <p className={style.rank}>{JOB_GRADE[item.jobGrade] || "-"}</p>
-              <div
-                className={style.nameCell}
-                onClick={() => navigate(`/organization/edit/${item.id}`)}
-                style={{ cursor: "pointer" }}
-              >
-                <WSAvatar src={item.profileImage} name={item.name} size={28} />
-                <span className={style.name}>
-                  {item.name ? item.name : "-"}
-                </span>
-              </div>
+              {role === "ADMIN"
+                ? [
+                    <div
+                      className={style.nameCell}
+                      onClick={() => navigate(`/organization/edit/${item.id}`)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <WSAvatar
+                        src={item.profileImage}
+                        name={item.name}
+                        size={28}
+                      />
+                      <span className={style.name}>
+                        {item.name ? item.name : "-"}
+                      </span>
+                    </div>,
+                  ]
+                : [
+                    <div className={style.nameCell}>
+                      <WSAvatar
+                        src={item.profileImage}
+                        name={item.name}
+                        size={28}
+                      />
+                      <span className={style.name}>
+                        {item.name ? item.name : "-"}
+                      </span>
+                    </div>,
+                  ]}
               <p className={style.cell}>{item.email ? item.email : "-"}</p>
               <p className={style.cell}>{item.phone ? item.phone : "-"}</p>
               <p className={style.cell}>
