@@ -48,6 +48,11 @@ public enum ErrorCode {
     LEAVE_REQUEST_NOT_FOUND(404, "존재하지 않는 휴가 신청입니다."),
     INSUFFICIENT_LEAVE_BALANCE(400, "연차 잔여일수가 부족합니다."),
 
+    // 근태 기록
+    ATTENDANCE_NOT_FOUND(404, "근태 기록이 존재하지 않습니다."),
+    ALREADY_CHECKED_IN(400, "이미 출근 처리되었습니다."),
+    ALREADY_CHECKED_OUT(400, "이미 퇴근 처리되었습니다."),
+
     // 알림
     NOTIFICATION_NOT_FOUND(404, "존재하지 않는 알림입니다."),
 
