@@ -42,11 +42,6 @@ public enum ErrorCode {
     FILE_NOT_FOUND(404, "존재하지 않는 파일입니다."),
     FILE_UPLOAD_FAILED(500, "파일 업로드에 실패했습니다."),
 
-    // Attendance
-    ATTENDANCE_NOT_FOUND(404, "근태 기록이 존재하지 않습니다."),
-    ALREADY_CHECKED_IN(400, "이미 출근 처리되었습니다."),
-    ALREADY_CHECKED_OUT(400, "이미 퇴근 처리되었습니다."),
-
     // Leave
     LEAVE_REQUEST_NOT_FOUND(404, "존재하지 않는 휴가 신청입니다."),
     INSUFFICIENT_LEAVE_BALANCE(400, "연차 잔여일수가 부족합니다."),
