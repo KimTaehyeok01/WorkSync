@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Send } from "lucide-react";
 import {
@@ -24,13 +24,20 @@ import {
   WSFileList,
 } from "../../../components/common/FormComponents";
 import s from "./BoardCreatePage.module.css";
-import { getCreatePosts } from "../services/boardApi";
+import { getCreatePosts, getBoards } from "../services/boardApi";
+import useAuthContext from "../../../store/AuthContext";
 
-const CATEGORY_OPTIONS = [
-  { value: "notice", label: "공지사항", color: "#EF4444" },
-  { value: "dept", label: "부서 게시판", color: "#8B5CF6" },
-  { value: "free", label: "자유 게시판", color: "#10B981" },
-];
+// const CATEGORY_OPTIONS = [
+//   { value: "notice", label: "공지사항", color: "#EF4444" },
+//   { value: "dept", label: "부서 게시판", color: "#8B5CF6" },
+//   { value: "free", label: "자유 게시판", color: "#10B981" },
+// ];
+
+const BOARD_COLORS = {
+  1: "#EF4444", // 공지사항 - 빨강
+  2: "#8B5CF6", // 부서게시판 - 보라
+  3: "#10B981", // 자유게시판 - 초록
+};
 
 const fileIconColor = {
   PDF: "#EF4444",
@@ -55,7 +62,9 @@ export default function BoardNew() {
   const [isDragging, setIsDragging] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [boardId, setboardId] = useState("");
+  const [boardOptions, setBoardOptions] = useState([]);
   const MAX_CHARS = 3000;
+  const { accessToken } = useAuthContext();
 
   //파일 추가
   const addFiles = (newFiles) => {
@@ -93,16 +102,37 @@ export default function BoardNew() {
     if (e.target.files) addFiles(Array.from(e.target.files));
   }
 
-  async function handleSubmit() {
-    if (!isValid) return;
+  // API에서 받아온 게시판 목록(드롭다운)
+  useEffect(() => {
+    if (!accessToken) return;
 
-    const accessToken = localStorage.getItem("refreshToken");
+    getBoards(accessToken).then((data) => {
+      console.log("게시판 데이터 : ", data);
+      if (!data) return;
+
+      // API 데이터를 드롭다운 형식으로 변환
+      const apiCategories = data
+        .sort((a, b) => a.id - b.id) // boardId 순으로 드롭다운 정렬
+        .map((board) => ({
+          value: board.id, // 1, 2, 3
+          label: board.name, //"공지사항", "부서게시판", "자유게시판"
+          color: BOARD_COLORS[board.id],
+        }));
+
+      setBoardOptions(apiCategories);
+    });
+  }, [accessToken]);
+
+  async function handleSubmit() {
+    if (!accessToken) return;
+
+    if (!isValid) return;
 
     try {
       await getCreatePosts(
-        2,
+        category,
         {
-          boardId: 2,
+          boardId: category,
           title: title,
           content: content,
         },
@@ -113,7 +143,6 @@ export default function BoardNew() {
       setTimeout(() => navigate("/board"), 1800);
     } catch (err) {
       console.error("게시글 등록 실패", err);
-      console.error("전송한 데이터", { boardId: 2, title, content });
     }
   }
 
@@ -159,7 +188,7 @@ export default function BoardNew() {
                   게시판 분류 <span className={s.required}>*</span>
                 </label>
                 <div className={s.catRow}>
-                  {CATEGORY_OPTIONS.map((opt) => {
+                  {boardOptions.map((opt) => {
                     const active = category === opt.value;
                     return (
                       <button

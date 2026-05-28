@@ -32,7 +32,14 @@ export default function Board() {
 
   // 카테고리 + 검색어 적용하여 정렬
   const filteredPosts = posts.filter((p) => {
-    const matchCat = category === "all" || p.boardName === category;
+    console.log("현재 category : ", category);
+    console.log(
+      "posts[0] boardId : ",
+      posts[0]?.boardId,
+      typeof posts[0]?.boardId,
+    );
+
+    const matchCat = category === "all" || p.boardId === category;
     const matchSearch =
       !search ||
       p.title.toLowerCase().includes(search.toLowerCase()) || // 제목에 검색어 포함되면 true
@@ -57,14 +64,15 @@ export default function Board() {
     if (!accessToken) return;
 
     getBoards(accessToken).then((data) => {
-      console.log("게시판 데이터 : ", data);
       if (!data) return;
 
       // API 데이터를 드롭다운 형식으로 변환
-      const apiCategories = data.map((board) => ({
-        value: board.id, // 1, 2, 3
-        label: board.name, //"공지사항", "부서게시판", "자유게시판"
-      }));
+      const apiCategories = data
+        .sort((a, b) => a.id - b.id) // boardId 순으로 드롭다운 정렬
+        .map((board) => ({
+          value: board.id, // 1, 2, 3
+          label: board.name, //"공지사항", "부서게시판", "자유게시판"
+        }));
 
       // 전체 + API 데이터 합치기
       setCategories([{ value: "all", label: "전체" }, ...apiCategories]);
@@ -85,6 +93,7 @@ export default function Board() {
       });
     } else {
       getPosts(boardId, accessToken).then((data) => {
+        console.log("게시글 데이터 확인 : ", data[0]);
         if (!data) return;
         setPosts(data);
       });
@@ -98,7 +107,9 @@ export default function Board() {
           <select
             value={category}
             onChange={(e) => {
-              setCategory(e.target.value);
+              const val =
+                e.target.value === "all" ? "all" : Number(e.target.value);
+              setCategory(val);
               setPage(1);
             }}
             className={s.select}
@@ -148,7 +159,7 @@ export default function Board() {
               return (
                 <div
                   key={post.id}
-                  onClick={() => navigate(`/board/${post.id}`)}
+                  onClick={() => navigate(`/board/${post.boardId}/${post.id}`)}
                   className={s.row}
                 >
                   <div className={s.rowBody}>

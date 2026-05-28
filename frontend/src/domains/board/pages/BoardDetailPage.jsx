@@ -8,23 +8,25 @@ import {
 } from "../../../components/common/CommonWidgets";
 import s from "./BoardDetailPage.module.css";
 import { getPostById } from "../services/boardApi";
+import useAuthContext from "../../../store/AuthContext";
 
 const MOCK_ATTACHMENTS = [
   { id: "a1", name: "03_제내_수정.xlsx", size: "1.2 MB", type: "XLSX" },
 ];
 
 export default function BoardDetail() {
-  const { id } = useParams();
+  const { accessToken } = useAuthContext();
+  const { boardId, postId } = useParams();
   const navigate = useNavigate();
   const [post, setPost] = useState(null);
   const [attachments, setAttachments] = useState(MOCK_ATTACHMENTS);
 
   useEffect(() => {
-    const token = localStorage.getItem("refreshToken");
-    getPostById(2, id, token).then((data) => {
+    if (!accessToken) return;
+    getPostById(boardId, postId, accessToken).then((data) => {
       setPost(data);
     });
-  }, [id]);
+  }, [boardId, postId, accessToken]);
 
   // 다음 글
   // const nextPost =
