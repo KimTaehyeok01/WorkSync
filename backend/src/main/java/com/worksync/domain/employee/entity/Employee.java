@@ -78,12 +78,14 @@ public class Employee {
     private LocalDateTime updatedAt;
 
     public void update(String name, String phone, JobGrade jobGrade, EmployeeRole role,
-                       Department department, String profileImage, String encodedPassword) {
+                       Department department, String email, LocalDate hireDate, String profileImage, String encodedPassword) {
         if (name != null) this.name = name;
         if (phone != null) this.phone = phone;
+        if(email != null) this.email = email;
         if (jobGrade != null) this.jobGrade = jobGrade;
         if (role != null) this.role = role;
         if (department != null) this.department = department;
+        if(hireDate != null) this.hireDate = hireDate;
         if (profileImage != null) this.profileImage = profileImage;
         if (encodedPassword != null) this.password = encodedPassword;
     }

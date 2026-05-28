@@ -5,6 +5,8 @@ import com.worksync.domain.employee.entity.JobGrade;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Getter @Setter
 public class EmployeeUpdateRequest {
 
@@ -15,4 +17,6 @@ public class EmployeeUpdateRequest {
     private EmployeeRole role;
     private Long departmentId;
     private String profileImage;
+    private String email;
+    private LocalDate hireDate;
 }

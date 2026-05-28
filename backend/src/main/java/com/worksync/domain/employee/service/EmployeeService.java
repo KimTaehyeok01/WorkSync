@@ -120,6 +120,8 @@ public class EmployeeService {
                 request.getJobGrade(),
                 request.getRole(),
                 department,
+                request.getEmail(),
+                request.getHireDate(),
                 request.getProfileImage(),
                 encodedPassword
         );
