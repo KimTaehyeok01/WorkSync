@@ -60,14 +60,6 @@ export async function editDepartments(accessToken, editDeptName, editDeptId) {
 }
 
 export async function deleteDepartments(accessToken, editDeptId) {
-  const confirmText = confirm(
-    "삭제 시 해당 부서 직원의 부서도 삭제됩니다. 삭제하시겠습니까?",
-  );
-
-  if (!confirmText) {
-    return;
-  }
-
   return await fetch(`${BASE_URL}/departments/${editDeptId}`, {
     method: "DELETE",
     headers: {
@@ -164,12 +156,6 @@ export async function editEmployee(accessToken, id, form) {
 }
 
 export async function deleteEmployee(accessToken, id) {
-  const confirmText = confirm("삭제 시 복구가 불가능합니다. 삭제하시겠습니까?");
-
-  if (!confirmText) {
-    return;
-  }
-
   return await fetch(`${BASE_URL}/employees/${id}`, {
     method: "DELETE",
     headers: {

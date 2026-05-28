@@ -17,7 +17,13 @@ import {
 } from "../../../components/common/LayoutComponents";
 import style from "./OrganizationListPage.module.css";
 import DeptModal from "../components/DeptModal";
-import { getDepartments, getEmployee } from "../services/organizationListApi";
+import {
+  getDepartments,
+  getEmployee,
+  createDepartments,
+  deleteDepartments,
+  editDepartments,
+} from "../services/organizationListApi";
 
 const TH_COL = ["부서명", "직급", "이름", "이메일", "연락처", "입사일"];
 const GRID_TEMPLATE = "1fr 1fr 1fr 1fr 1fr 1fr";
@@ -31,6 +37,10 @@ export default function OrganizationListPage() {
   const [deptModal, setDeptModal] = useState(false);
   const [departments, setDepartments] = useState([]);
   const [employee, setEmployee] = useState([]);
+  const [addDeptName, setAddDeptName] = useState("");
+  const [editDeptName, setEditDeptName] = useState("");
+  const [editDeptId, setEditDeptId] = useState("");
+  const [modalView, setModalView] = useState("dept");
 
   // 부서 불러오기
   useEffect(() => {
@@ -69,6 +79,7 @@ export default function OrganizationListPage() {
     CEO: "대표",
   };
 
+  // 목록 필터
   const filtered = employee.filter((item) => {
     const matchSearch =
       item.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -79,6 +90,70 @@ export default function OrganizationListPage() {
 
   const perPage = 10;
   const paginatedData = filtered.slice((page - 1) * perPage, page * perPage);
+
+  // 부서 추가 API
+  async function handleAdd() {
+    if (addDeptName.trim()) {
+      await createDepartments(accessToken, addDeptName).then((response) => {
+        // console.log("추가콘솔: " + response.data);
+        // console.log("추가콘솔: " + departments);
+        setDepartments([...departments, response.data]);
+      });
+
+      setModalView("dept");
+    }
+  }
+
+  // 부서 삭제 API
+  async function handleDelete() {
+    try {
+      const confirmText = confirm(
+        "삭제 시 해당 부서 직원의 부서도 삭제됩니다. 삭제하시겠습니까?",
+      );
+
+      if (!confirmText) {
+        return;
+      }
+
+      if (editDeptId) {
+        await deleteDepartments(accessToken, editDeptId).then((response) => {
+          // console.log("삭제콘솔: " + editDeptId);
+          // console.log("삭제콘솔: " + departments);
+          setDepartments(
+            departments.filter((dept) => dept.id !== Number(editDeptId)),
+          );
+          setModalView("dept");
+        });
+      }
+    } catch (error) {
+      alert("삭제 오류입니다.");
+    }
+  }
+
+  // 부서 수정 API
+  async function handleEdit() {
+    if (editDeptName.trim()) {
+      try {
+        const response = await editDepartments(
+          accessToken,
+          editDeptName,
+          editDeptId,
+        );
+        if (!response.data) {
+          alert("이미 존재하는 부서명입니다.");
+          return;
+        }
+        setDepartments(
+          departments.map((dept) =>
+            dept.id === response.data.id ? response.data : dept,
+          ),
+        );
+        setModalView("dept");
+      } catch (error) {
+        alert("이미 존재하는 부서입니다.");
+      }
+    }
+  }
 
   return (
     <div>
@@ -160,6 +235,17 @@ export default function OrganizationListPage() {
         isOpen={deptModal}
         onClose={() => setDeptModal(false)}
         accessToken={accessToken}
+        addDeptName={addDeptName}
+        setAddDeptName={setAddDeptName}
+        editDeptName={editDeptName}
+        setEditDeptName={setEditDeptName}
+        editDeptId={editDeptId}
+        setEditDeptId={setEditDeptId}
+        handleAdd={handleAdd}
+        handleDelete={handleDelete}
+        handleEdit={handleEdit}
+        modalView={modalView}
+        setModalView={setModalView}
       />
     </div>
   );

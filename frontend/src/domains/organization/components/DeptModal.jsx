@@ -13,13 +13,6 @@ import {
 } from "../../../components/common/CommonWidgets";
 import style from "../pages/OrganizationListPage.module.css";
 import useAuthContext from "../../../store/AuthContext";
-import {
-  getDepartments,
-  getEmployee,
-  createDepartments,
-  deleteDepartments,
-  editDepartments,
-} from "../services/organizationListApi";
 
 export default function DeptModal({
   departments = [],
@@ -27,12 +20,18 @@ export default function DeptModal({
   isOpen,
   onClose,
   accessToken,
+  addDeptName,
+  setAddDeptName,
+  editDeptName,
+  setEditDeptName,
+  editDeptId,
+  setEditDeptId,
+  handleAdd,
+  handleDelete,
+  handleEdit,
+  modalView,
+  setModalView,
 }) {
-  const [modalView, setModalView] = useState("dept");
-  const [addDeptName, setAddDeptName] = useState("");
-  const [editDeptName, setEditDeptName] = useState("");
-  const [editDeptId, setEditDeptId] = useState("");
-
   return (
     <>
       <WSModal
@@ -113,16 +112,7 @@ export default function DeptModal({
             label="추가"
             variant="primary"
             disabled={!addDeptName.trim()}
-            onClick={() => {
-              if (addDeptName.trim()) {
-                createDepartments(accessToken, addDeptName).then((response) => {
-                  // console.log("추가콘솔: " + response.data);
-                  // console.log("추가콘솔: " + departments);
-                  setDepartments([...departments, response.data]);
-                });
-                setModalView("dept");
-              }
-            }}
+            onClick={handleAdd}
           />
         </WSModalActions>
       </WSModal>
@@ -154,41 +144,13 @@ export default function DeptModal({
             label="삭제"
             variant="primary"
             disabled={!editDeptId}
-            onClick={() => {
-              if (editDeptId) {
-                deleteDepartments(accessToken, editDeptId).then((response) => {
-                  // console.log("삭제콘솔: " + editDeptId);
-                  // console.log("삭제콘솔: " + departments);
-                  setDepartments(
-                    departments.filter(
-                      (dept) => dept.id !== Number(editDeptId),
-                    ),
-                  );
-                  setModalView("dept");
-                });
-              }
-            }}
+            onClick={handleDelete}
           />
           <WSButton
             label="수정"
             variant="primary"
             disabled={!editDeptName.trim()}
-            onClick={() => {
-              if (editDeptName.trim()) {
-                editDepartments(accessToken, editDeptName, editDeptId).then(
-                  (response) => {
-                    // console.log("수정콘솔: " + response.data);
-                    // console.log("수정콘솔: " + departments);
-                    setDepartments(
-                      departments.map((dept) =>
-                        dept.id === response.data.id ? response.data : dept,
-                      ),
-                    );
-                    setModalView("dept");
-                  },
-                );
-              }
-            }}
+            onClick={handleEdit}
           />
         </WSModalActions>
       </WSModal>

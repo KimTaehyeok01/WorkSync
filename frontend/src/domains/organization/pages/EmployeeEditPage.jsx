@@ -79,6 +79,14 @@ export default function EmployeeEdit() {
 
   // 삭제
   async function handleDelete() {
+    const confirmText = confirm(
+      "삭제 시 복구가 불가능합니다. 삭제하시겠습니까?",
+    );
+
+    if (!confirmText) {
+      return;
+    }
+
     try {
       await deleteEmployee(accessToken, id);
       navigate("/organization");
