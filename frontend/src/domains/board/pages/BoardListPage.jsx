@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import useAuthContext from "../../../store/AuthContext";
 import { getBoards, getPosts } from "../services/boardApi";
 import { useNavigate } from "react-router-dom";
 import { Plus, Search, ChevronDown } from "lucide-react";
@@ -19,6 +20,7 @@ import s from "./BoardListPage.module.css";
 
 export default function Board() {
   const navigate = useNavigate();
+  const { accessToken } = useAuthContext();
   const [posts, setPosts] = useState([]);
   const [category, setCategory] = useState("all"); // 현재 선택된 값
   const [categories, setCategories] = useState([
@@ -33,8 +35,8 @@ export default function Board() {
     const matchCat = category === "all" || p.boardName === category;
     const matchSearch =
       !search ||
-      p.title.toLowerCase().includes(search.toLowerCase()) ||
-      p.content.toLowerCase().includes(search.toLowerCase());
+      p.title.toLowerCase().includes(search.toLowerCase()) || // 제목에 검색어 포함되면 true
+      p.content.toLowerCase().includes(search.toLowerCase()); // 내용에 검색어 포함되면 true
     return matchCat && matchSearch;
   });
 
@@ -52,9 +54,10 @@ export default function Board() {
 
   // API에서 받아온 게시판 목록(드롭다운)
   useEffect(() => {
-    const token = localStorage.getItem("refreshToken"); // 저장된 토큰 가져오기
+    if (!accessToken) return;
 
-    getBoards(token).then((data) => {
+    getBoards(accessToken).then((data) => {
+      console.log("게시판 데이터 : ", data);
       if (!data) return;
 
       // API 데이터를 드롭다운 형식으로 변환
@@ -66,34 +69,27 @@ export default function Board() {
       // 전체 + API 데이터 합치기
       setCategories([{ value: "all", label: "전체" }, ...apiCategories]);
     });
-
-    getPosts(2, token).then((data) => {
-      if (!data) return;
-
-      setPosts(data);
-    });
-  }, []);
+  }, [accessToken]);
 
   useEffect(() => {
-    const token = localStorage.getItem("refreshToken");
-
+    if (!accessToken) return;
     const boardId = category === "all" ? null : category;
 
     if (boardId === null) {
       Promise.all([
-        getPosts(1, token),
-        getPosts(2, token),
-        getPosts(3, token),
+        getPosts(1, accessToken),
+        getPosts(2, accessToken),
+        getPosts(3, accessToken),
       ]).then(([data1, data2, data3]) => {
         setPosts([...(data1 ?? []), ...(data2 ?? []), ...(data3 ?? [])]);
       });
     } else {
-      getPosts(boardId, token).then((data) => {
+      getPosts(boardId, accessToken).then((data) => {
         if (!data) return;
         setPosts(data);
       });
     }
-  }, [category]);
+  }, [category, accessToken]);
 
   return (
     <div className={s.root}>
