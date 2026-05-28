@@ -32,22 +32,22 @@ public class FileController {
 
   // 파일 단건 조회
   @GetMapping("/{id}")
-  public ApiResponse<FileUploadResponse> findById(@PathVariable Long id){
+  public ApiResponse<FileUploadResponse> findById(@PathVariable("id") Long id){
     return ApiResponse.ok(fileService.findFileId(id));
   }
 
   //첨부 위치별 파일 목록 조회
   @GetMapping
   public ApiResponse<List<FileUploadResponse>> findByRef(
-          @RequestParam String refType,
-          @RequestParam Long refId
+          @RequestParam("refType") String refType,
+          @RequestParam("refId") Long refId
   ) {
     return ApiResponse.ok(fileService.findByRef(refType, refId));
   }
 
   // 파일 삭제
   @DeleteMapping("/{id}")
-  public ApiResponse<Void> delete(@PathVariable Long id) {
+  public ApiResponse<Void> delete(@PathVariable("id") Long id) {
     fileService.delete(id);
     return ApiResponse.ok(null);
   }

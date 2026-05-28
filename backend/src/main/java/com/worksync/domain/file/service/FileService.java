@@ -26,7 +26,7 @@ public class FileService {
   private final EmployeeRepository employeeRepository;
 
   // 파일 저장경로
-  private static final String UPLOAD_DIR = "uploads/";
+  private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads/";
 
   // 파일 업로드
   @Transactional
