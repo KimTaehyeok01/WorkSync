@@ -1,15 +1,30 @@
 .header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
   margin-bottom: 24px;
 }
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 .backBtn {
-  color: var(--ws-text-400);
-  transition: color 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--ws-border);
+  border-radius: 8px;
+  color: var(--ws-text-500);
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 .backBtn:hover {
-  color: var(--ws-text-600);
+  background: #f9fafb;
+  color: var(--ws-text-700);
 }
 .pageTitle {
   color: var(--ws-text-900);

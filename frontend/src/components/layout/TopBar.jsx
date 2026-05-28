@@ -34,6 +34,14 @@ const PAGE_TITLES = {
   },
   "/messenger": { title: "메신저", breadcrumb: ["홈", "메신저"] },
   "/organization": { title: "조직도", breadcrumb: ["홈", "인사", "조직도"] },
+  "/organization/new": {
+    title: "조직도",
+    breadcrumb: ["홈", "인사", "조직도"],
+  },
+  "/organization/edit": {
+    title: "조직도",
+    breadcrumb: ["홈", "인사", "조직도"],
+  },
   "/board": { title: "게시판", breadcrumb: ["홈", "게시판"] },
   "/board/new": { title: "글쓰기", breadcrumb: ["홈", "게시판", "글쓰기"] },
   "/audit-log": { title: "감사 로그", breadcrumb: ["홈", "감사 로그"] },
@@ -92,7 +100,7 @@ export function TopBar({ pathname }) {
         <Search size={15} className={styles.searchIcon} />
         <input
           type="text"
-          placeholder="통합 검색..."
+          placeholder="통합 검색하세요."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className={styles.searchInput}

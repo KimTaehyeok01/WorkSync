@@ -5,13 +5,13 @@ import { Plus, ChevronRight, Building2, ClipboardList } from "lucide-react";
 import {
   WSAvatar,
   WSPagination,
-  WSFilterBar,
   WSEmptyState,
   WSFormField,
   WSInput,
   WSButton,
 } from "../../../components/common/CommonWidgets";
 import {
+  WSFilterBar,
   WSTableHeader,
   WSTableRow,
 } from "../../../components/common/LayoutComponents";
@@ -32,6 +32,7 @@ export default function OrganizationListPage() {
   const [departments, setDepartments] = useState([]);
   const [employee, setEmployee] = useState([]);
 
+  // 부서 불러오기
   useEffect(() => {
     if (!accessToken) return;
     getDepartments(accessToken).then((data) => {
@@ -48,6 +49,7 @@ export default function OrganizationListPage() {
     })),
   ];
 
+  // 직원 불러오기
   useEffect(() => {
     if (!accessToken) return;
     getEmployee(accessToken).then((data) => {
@@ -56,11 +58,22 @@ export default function OrganizationListPage() {
     });
   }, [accessToken]);
 
+  // 직급
+  const JOB_GRADE = {
+    STAFF: "사원",
+    SENIOR: "주임",
+    ASSISTANT_MANAGER: "대리",
+    MANAGER: "과장",
+    GENERAL_MANAGER: "부장",
+    DIRECTOR: "이사",
+    CEO: "대표",
+  };
+
   const filtered = employee.filter((item) => {
     const matchSearch =
       item.name.toLowerCase().includes(search.toLowerCase()) ||
-      item.email.toLowerCase().includes(search.toLowerCase());
-    const matchDept = deptFilter === "all" || item.dept === deptFilter;
+      item.departmentName.toLowerCase().includes(search.toLowerCase());
+    const matchDept = deptFilter === "all" || item.departmentId === deptFilter;
     return matchSearch && matchDept;
   });
 
@@ -72,13 +85,13 @@ export default function OrganizationListPage() {
       <WSFilterBar
         filters={[{ label: "부서 선택", key: "dept", options: DEPT_OPTIONS }]}
         filterValues={{ dept: deptFilter }}
-        onFilterChange={(_key, value) => {
+        onFilterChange={(key, value) => {
           setDeptFilter(value);
           setPage(1);
         }}
         searchValue={search}
         onSearchChange={setSearch}
-        searchPlaceholder="검색어를 입력하세요"
+        searchPlaceholder="부서 또는 이름으로 검색하세요."
         actions={[
           {
             label: "부서 관리",
@@ -88,7 +101,7 @@ export default function OrganizationListPage() {
           },
           {
             label: "직원 추가",
-            onClick: () => navigate("/organization/employee-add"),
+            onClick: () => navigate("/organization/new"),
             icon: <Plus size={16} />,
             variant: "primary",
           },
@@ -111,10 +124,12 @@ export default function OrganizationListPage() {
               <p className={style.dept}>
                 {item.departmentName ? item.departmentName : "-"}
               </p>
-              <p className={style.rank}>
-                {item.jobGrade ? item.jobGrade : "-"}
-              </p>
-              <div className={style.nameCell}>
+              <p className={style.rank}>{JOB_GRADE[item.jobGrade] || "-"}</p>
+              <div
+                className={style.nameCell}
+                onClick={() => navigate(`/organization/edit/${item.id}`)}
+                style={{ cursor: "pointer" }}
+              >
                 <WSAvatar src={item.profileImage} name={item.name} size={28} />
                 <span className={style.name}>
                   {item.name ? item.name : "-"}

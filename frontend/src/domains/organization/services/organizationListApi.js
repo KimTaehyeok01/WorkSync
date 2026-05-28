@@ -103,7 +103,27 @@ export async function getEmployee(accessToken) {
     });
 }
 
-export async function createEmpoyee(accessToken, form) {
+export async function getEmployeeById(accessToken, id) {
+  return await fetch(`${BASE_URL}/employees/${id}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+    .then((response) => {
+      return response.json();
+    })
+    .then((json) => {
+      console.log(json.data);
+      return json;
+    })
+    .catch((error) => {
+      console.log("에러발생: " + error);
+    });
+}
+
+export async function createEmployee(accessToken, form) {
   return await fetch(`${BASE_URL}/employees`, {
     method: "POST",
     headers: {
@@ -117,6 +137,49 @@ export async function createEmpoyee(accessToken, form) {
     })
     .then((json) => {
       return json;
+    })
+    .catch((error) => {
+      console.log("에러발생: " + error);
+    });
+}
+
+export async function editEmployee(accessToken, id, form) {
+  return await fetch(`${BASE_URL}/employees/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(form),
+  })
+    .then((response) => {
+      return response.json();
+    })
+    .then((json) => {
+      return json;
+    })
+    .catch((error) => {
+      console.log("에러발생: " + error);
+    });
+}
+
+export async function deleteEmployee(accessToken, id) {
+  const confirmText = confirm("삭제 시 복구가 불가능합니다. 삭제하시겠습니까?");
+
+  if (!confirmText) {
+    return;
+  }
+
+  return await fetch(`${BASE_URL}/employees/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ id: id }),
+  })
+    .then((response) => {
+      return response.ok;
     })
     .catch((error) => {
       console.log("에러발생: " + error);
