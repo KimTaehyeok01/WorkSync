@@ -40,7 +40,7 @@ public class FileService {
     @Value("${app.supabase.service-role-key}")
     private String serviceRoleKey;
 
-    private static final String BUCKET = "Worksync";
+    private static final String BUCKET = "WorkSync";
 
     // 파일 업로드
     @Transactional
