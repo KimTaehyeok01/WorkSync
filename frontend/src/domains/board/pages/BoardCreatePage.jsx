@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Send } from "lucide-react";
-import { getCreatePosts, getBoards, getMyInfo } from "../services/boardApi";
+import { getCreatePosts, getBoards, getMyInfo, getDepartmentBoard } from "../services/boardApi";
 import { ArrowLeft, Paperclip, CheckCircle } from "lucide-react";
 import { WSCard, WSButton } from "../../../components/common/CommonWidgets";
 import {
@@ -42,6 +42,7 @@ export default function BoardNew() {
   const [role, setRole] = useState(null);
   const [boardOptions, setBoardOptions] = useState([]);
   const [myDepartmentName, setMyDepartmentName] = useState("");
+  const [deptBoardId, setDeptBoardId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const MAX_CHARS = 3000;
   const { accessToken } = useAuthContext();
@@ -72,12 +73,16 @@ export default function BoardNew() {
   async function handleSubmit() {
     if (!accessToken || !isValid || isLoading) return;
 
+    // 부서게시판 선택 시 실제 부서 board id 사용
+    const actualBoardId = category === "DEPARTMENT" ? deptBoardId : category;
+    if (!actualBoardId) return;
+
     setIsLoading(true);
     try {
       await getCreatePosts(
-        category,
+        actualBoardId,
         {
-          boardId: category,
+          boardId: actualBoardId,
           title: title,
           content: content,
         },
@@ -97,19 +102,29 @@ export default function BoardNew() {
   useEffect(() => {
     if (!accessToken) return;
 
+    // 내 부서게시판 id 조회
+    getDepartmentBoard(accessToken).then((deptBoard) => {
+      if (deptBoard) setDeptBoardId(deptBoard.id);
+    });
+
     getBoards(accessToken).then((data) => {
       if (!data) return;
 
-      // API 데이터를 드롭다운 형식으로 변환
-      const apiCategories = data
-        .sort((a, b) => a.id - b.id) // boardId 순으로 드롭다운 정렬
+      // DEPARTMENT 타입 개별 게시판 제외 → "부서게시판" 하나로 고정
+      const nonDeptBoards = data
+        .filter((board) => board.boardType !== "DEPARTMENT")
+        .sort((a, b) => a.id - b.id)
         .map((board) => ({
-          value: board.id, // 1, 2, 3
-          label: board.name, //"공지사항", "부서게시판", "자유게시판"
+          value: board.id,
+          label: board.name,
           color: BOARD_COLORS[board.id],
         }));
 
-      setBoardOptions(apiCategories);
+      // 부서게시판 고정 항목 추가 (value="DEPARTMENT")
+      setBoardOptions([
+        ...nonDeptBoards,
+        { value: "DEPARTMENT", label: "부서게시판", color: "#8B5CF6" },
+      ]);
     });
   }, [accessToken]);
 
@@ -183,7 +198,8 @@ export default function BoardNew() {
                     );
                   })}
                 </div>
-                {category === 2 && (
+                
+                {category === "DEPARTMENT" && (
                   <div>
                     <label className={s.label}>부서명</label>
                     <input

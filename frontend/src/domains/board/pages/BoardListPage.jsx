@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import useAuthContext from "../../../store/AuthContext";
-import { getBoards, getMyInfo, getPosts } from "../services/boardApi";
+import { getBoards, getMyInfo, getPosts, getDepartmentBoard } from "../services/boardApi";
 import { useNavigate } from "react-router-dom";
 import { Plus, Search, ChevronDown } from "lucide-react";
 import {
@@ -31,22 +31,21 @@ export default function Board() {
   const [page, setPage] = useState(1);
   const [myDepartmentName, setMyDepartmentName] = useState("");
   const [role, setRole] = useState(null);
+  const [deptBoardId, setDeptBoardId] = useState(null); // 내 부서게시판 id
 
   // 카테고리 + 검색어 적용하여 정렬
   const filteredPosts = posts.filter((p) => {
-    const matchCat = category === "all" || p.boardId === category;
+    // "DEPARTMENT" 선택 시 이미 내 부서 게시판 posts만 가져왔으므로 전부 통과
+    const matchCat =
+      category === "all" || category === "DEPARTMENT" || p.boardId === category;
     const matchSearch =
       !search ||
       p.title
         .replace(/\s/g, "")
         .toLowerCase()
-        .includes(search.replace(/\s/g, "").toLowerCase()) || // 제목에 검색어 포함되면 true
-      p.content.toLowerCase().includes(search.toLowerCase()); // 내용에 검색어 포함되면 true
-    const matchDept =
-      p.boardId === 2
-        ? role === "ADMIN" || p.departmentName === myDepartmentName
-        : true;
-    return matchCat && matchSearch && matchDept;
+        .includes(search.replace(/\s/g, "").toLowerCase()) ||
+      p.content.toLowerCase().includes(search.toLowerCase());
+    return matchCat && matchSearch;
   });
 
   // 공지사항을 상단으로
@@ -71,41 +70,64 @@ export default function Board() {
       setRole(data.role);
     });
 
+    // 부서게시판 id 조회 (로그인 사용자 부서 기준)
+    getDepartmentBoard(accessToken).then((deptBoard) => {
+      if (deptBoard) setDeptBoardId(deptBoard.id);
+    });
+
     getBoards(accessToken).then((data) => {
       if (!data) return;
 
-      // API 데이터를 드롭다운 형식으로 변환
+      // DEPARTMENT 타입 제외 후 드롭다운 구성 (부서게시판은 하나로 고정)
       const apiCategories = data
-        .sort((a, b) => a.id - b.id) // boardId 순으로 드롭다운 정렬
+        .filter((board) => board.boardType !== "DEPARTMENT")
+        .sort((a, b) => a.id - b.id)
         .map((board) => ({
-          value: board.id, // 1, 2, 3
-          label: board.name, //"공지사항", "부서게시판", "자유게시판"
+          value: board.id,
+          label: board.name,
         }));
 
-      // 전체 + API 데이터 합치기
-      setCategories([{ value: "all", label: "전체" }, ...apiCategories]);
+      // 전체 + API 데이터 + 부서게시판 고정 항목
+      setCategories([
+        { value: "all", label: "전체" },
+        ...apiCategories,
+        { value: "DEPARTMENT", label: "부서 게시판" },
+      ]);
     });
   }, [accessToken]);
 
   useEffect(() => {
     if (!accessToken) return;
-    const boardId = category === "all" ? null : category;
 
-    if (boardId === null) {
-      Promise.all([
-        getPosts(1, accessToken),
-        getPosts(2, accessToken),
-        getPosts(3, accessToken),
-      ]).then(([data1, data2, data3]) => {
-        setPosts([...(data1 ?? []), ...(data2 ?? []), ...(data3 ?? [])]);
+    setPosts([]); // category 변경 시 stale 데이터 즉시 초기화
+
+    if (category === "all") {
+      // 전체 조회: DEPARTMENT 타입 중 내 부서 게시판만 포함
+      getBoards(accessToken).then((data) => {
+        if (!data) return;
+        const nonDeptIds = data
+          .filter((b) => b.boardType !== "DEPARTMENT")
+          .map((b) => b.id);
+        const ids = deptBoardId ? [...nonDeptIds, deptBoardId] : nonDeptIds;
+        Promise.all(ids.map((id) => getPosts(id, accessToken))).then(
+          (results) => {
+            setPosts(results.flat().filter(Boolean));
+          }
+        );
+      });
+    } else if (category === "DEPARTMENT") {
+      // 부서게시판: 내 부서 게시판 id로만 조회
+      if (!deptBoardId) return;
+      getPosts(deptBoardId, accessToken).then((data) => {
+        setPosts(data ?? []);
       });
     } else {
-      getPosts(boardId, accessToken).then((data) => {
+      getPosts(category, accessToken).then((data) => {
         if (!data) return;
         setPosts(data);
       });
     }
-  }, [category, accessToken]);
+  }, [category, accessToken, deptBoardId]);
 
   return (
     <div className={s.root}>
@@ -114,8 +136,11 @@ export default function Board() {
           <select
             value={category}
             onChange={(e) => {
+              const raw = e.target.value;
               const val =
-                e.target.value === "all" ? "all" : Number(e.target.value);
+                raw === "all" ? "all"
+                : raw === "DEPARTMENT" ? "DEPARTMENT"
+                : Number(raw);
               setCategory(val);
               setPage(1);
             }}

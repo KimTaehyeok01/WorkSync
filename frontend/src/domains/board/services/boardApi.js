@@ -118,6 +118,22 @@ export async function deletePost(boardId, postId, accessToken) {
     });
 }
 
+// 내 부서게시판 조회 -> 사용자가 속한 부서의 게시글만 조회 가능
+export async function getDepartmentBoard(accessToken) {
+  return await fetch(`${BASE_URL}/boards?boardType=DEPARTMENT`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+    .then((response) => response.json())
+    .then((json) => json.data?.[0] ?? null)
+    .catch((error) => {
+      console.log("에러발생: " + error);
+    });
+}
+
 // 내 정보 조회 (부서 정보 포함)
 export async function getMyInfo(accessToken) {
   return await fetch(`${BASE_URL}/employees/me`, {
