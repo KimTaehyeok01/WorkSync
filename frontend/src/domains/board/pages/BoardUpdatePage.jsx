@@ -37,9 +37,10 @@ export default function BoardNew() {
   const [files, setFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [role, setRole] = useState(null);
+  const [myDepartmentName, setMyDepartmentName] = useState("");
   const { accessToken } = useAuthContext();
   const { boardId, postId } = useParams();
-  const [myDepartmentName, setMyDepartmentName] = useState("");
   const MAX_CHARS = 3000;
 
   //파일 추가
@@ -71,6 +72,7 @@ export default function BoardNew() {
     // 내 정보 조회(부서명 세팅)
     getMyInfo(accessToken).then((data) => {
       setMyDepartmentName(data.departmentName);
+      setRole(data.role);
     });
   }, [boardId, postId, accessToken]);
 
@@ -126,7 +128,18 @@ export default function BoardNew() {
     <div className={s.root}>
       <div className={s.header}>
         <div className={s.headerLeft}>
-          <button onClick={() => navigate("/board")} className={s.backBtn}>
+          <button
+            onClick={() => {
+              if (
+                confirm(
+                  "페이지 이동 시 작성하신 수정 내용은 사라집니다. 이동하시겠습니까?",
+                )
+              ) {
+                navigate(-1);
+              }
+            }}
+            className={s.backBtn}
+          >
             <ArrowLeft size={16} />
           </button>
           <div>
@@ -149,10 +162,13 @@ export default function BoardNew() {
                 <div className={s.catRow}>
                   {CATEGORY_OPTIONS.map((opt) => {
                     const active = category === opt.value;
+                    const isNoticeOption = opt.label === "공지사항";
+                    const isDisabled = isNoticeOption && role !== "ADMIN";
+
                     return (
                       <button
                         key={opt.value}
-                        onClick={() => setCategory(opt.value)}
+                        onClick={() => !isDisabled && setCategory(opt.value)}
                         className={`${s.catBtn} ${active ? s.catBtnActive : ""}`}
                         style={{
                           "--cat-color": opt.color,
@@ -254,7 +270,17 @@ export default function BoardNew() {
               disabled={!isValid}
               className={s.submitBtn}
             />
-            <button onClick={() => navigate("/board")} className={s.cancelBtn}>
+            <button
+              onClick={() => {
+                if (
+                  confirm(
+                    "페이지 이동 시 작성하신 수정 내용은 사라집니다. 이동하시겠습니까?",
+                  )
+                )
+                  navigate(-1);
+              }}
+              className={s.cancelBtn}
+            >
               취소하고 돌아가기
             </button>
           </div>

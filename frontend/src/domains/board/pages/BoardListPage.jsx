@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import useAuthContext from "../../../store/AuthContext";
-import { getBoards, getPosts } from "../services/boardApi";
+import { getBoards, getMyInfo, getPosts } from "../services/boardApi";
 import { useNavigate } from "react-router-dom";
 import { Plus, Search, ChevronDown } from "lucide-react";
 import {
@@ -29,6 +29,7 @@ export default function Board() {
   ]); // 전체 -> 고정으로 유지
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [myDepartmentName, setMyDepartmentName] = useState("");
 
   // 카테고리 + 검색어 적용하여 정렬
   const filteredPosts = posts.filter((p) => {
@@ -37,7 +38,9 @@ export default function Board() {
       !search ||
       p.title.toLowerCase().includes(search.toLowerCase()) || // 제목에 검색어 포함되면 true
       p.content.toLowerCase().includes(search.toLowerCase()); // 내용에 검색어 포함되면 true
-    return matchCat && matchSearch;
+    const matchDept =
+      p.boardId === 2 ? p.departmentName === myDepartmentName : true;
+    return matchCat && matchSearch && matchDept;
   });
 
   // 공지사항을 상단으로
@@ -55,6 +58,11 @@ export default function Board() {
   // API에서 받아온 게시판 목록(드롭다운)
   useEffect(() => {
     if (!accessToken) return;
+
+    getMyInfo(accessToken).then((data) => {
+      if (!data) return;
+      setMyDepartmentName(data.departmentName);
+    });
 
     getBoards(accessToken).then((data) => {
       if (!data) return;

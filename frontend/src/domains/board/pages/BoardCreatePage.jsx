@@ -36,12 +36,13 @@ export default function BoardNew() {
   const [category, setCategory] = useState("");
   const [content, setContent] = useState("");
   const [files, setFiles] = useState([]);
-  const [role, setRole] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [boardId, setboardId] = useState("");
+  const [role, setRole] = useState(null);
   const [boardOptions, setBoardOptions] = useState([]);
   const [myDepartmentName, setMyDepartmentName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const MAX_CHARS = 3000;
   const { accessToken } = useAuthContext();
 
@@ -69,9 +70,9 @@ export default function BoardNew() {
   }
 
   async function handleSubmit() {
-    if (!accessToken) return;
-    if (!isValid) return;
+    if (!accessToken || !isValid || isLoading) return;
 
+    setIsLoading(true);
     try {
       await getCreatePosts(
         category,
@@ -87,6 +88,8 @@ export default function BoardNew() {
       setTimeout(() => navigate("/board"), 1800);
     } catch (err) {
       console.error("게시글 등록 실패", err);
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -114,7 +117,6 @@ export default function BoardNew() {
     if (!accessToken) return;
 
     getMyInfo(accessToken).then((data) => {
-      console.log("내 정보 전체", data);
       setMyDepartmentName(data.departmentName);
       setRole(data.role);
     });
@@ -265,10 +267,10 @@ export default function BoardNew() {
 
           <div className={s.actionsCol}>
             <WSButton
-              label="작업 등록"
+              label={isLoading ? "등록 중..." : "작업 등록"}
               icon={<Send size={16} />}
               onClick={handleSubmit}
-              disabled={!isValid}
+              disabled={!isValid || isLoading}
               className={s.submitBtn}
             />
             <button onClick={() => navigate("/board")} className={s.cancelBtn}>
