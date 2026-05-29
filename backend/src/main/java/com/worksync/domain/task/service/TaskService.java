@@ -129,18 +129,6 @@ public class TaskService {
                 .map(TaskResponse::from);
     }
 
-    //담당자 후보 목록
-    @Transactional
-    public List<Employee>getCandidates(Long departmentId, JobGrade jobGrade){
-        if(departmentId !=null && jobGrade !=null){
-            return employeeRepository.findByDepartmentIdAndJobGrade(departmentId,jobGrade);
-        }else if(departmentId !=null){
-            return employeeRepository.findByDepartmentId(departmentId);
-        }else if (jobGrade !=null){
-            return employeeRepository.findByJobGrade(jobGrade);
-        }
-        return employeeRepository.findAll();
-    }
 
     //업무 수정
     @Transactional

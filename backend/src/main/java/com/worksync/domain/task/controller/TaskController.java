@@ -1,7 +1,6 @@
 package com.worksync.domain.task.controller;
 
 
-import com.worksync.domain.employee.entity.JobGrade;
 import com.worksync.domain.task.dto.TaskCreateRequest;
 import com.worksync.domain.task.dto.TaskResponse;
 import com.worksync.domain.task.dto.TaskUpdateRequest;
@@ -16,10 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -86,23 +81,6 @@ public class TaskController {
         return ResponseEntity.ok(ApiResponse.ok(taskService.getByDepartment(departmentId,status,pageable)));
     }
 
-    //담당자 후보 목록(부서/직급 필터)
-    @GetMapping("/candidates")
-    public  ResponseEntity<ApiResponse<List<Map<String,Object>>>>getCandidates(
-            @RequestParam(required = false)Long departmentId,
-            @RequestParam(required = false)JobGrade jobGrade){
-                List<Map<String,Object>> result=taskService.getCandidates(departmentId,jobGrade)
-                        .stream()
-                        .map(e->Map.<String,Object>of(
-                                "id",e.getId(),
-                                "name",e.getName(),
-                                "jobGrade",e.getJobGrade().name(),
-                                "departmentId",e.getDepartment() !=null ? e.getDepartment().getId():"",
-                                "departmentName",e.getDepartment() !=null ? e.getDepartment().getName():""
-                        ))
-                        .collect(Collectors.toList());
-                return ResponseEntity.ok(ApiResponse.ok(result));
-    }
 
     //업무 수정(작성자 또는 담당자만)
 
