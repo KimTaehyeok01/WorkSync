@@ -82,7 +82,7 @@ public class ApprovalService {
 
         approvalDocRepository.save(doc);
 
-        // 결재선 생성
+        // 결재선 생성 — doc 컬렉션에 직접 추가 (cascade로 저장됨)
         for (ApprovalCreateRequest.ApprovalLineRequest lineReq : request.getApprovalLines()) {
             Employee approver = employeeRepository.findById(lineReq.getApproverId())
                     .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
@@ -99,13 +99,13 @@ public class ApprovalService {
                 line.process(ApprovalLineStatus.APPROVED, null);
             }
 
-            approvalLineRepository.save(line);
+            doc.getApprovalLines().add(line);
         }
 
-        // 문서 항목(폼 필드 값) 저장
+        // 문서 항목(폼 필드 값) 저장 — doc 컬렉션에 직접 추가
         if (request.getItems() != null) {
             for (Map.Entry<String, String> entry : request.getItems().entrySet()) {
-                approvalDocItemRepository.save(ApprovalDocItem.builder()
+                doc.getApprovalDocItems().add(ApprovalDocItem.builder()
                         .doc(doc)
                         .itemKey(entry.getKey())
                         .itemValue(entry.getValue())
@@ -114,25 +114,24 @@ public class ApprovalService {
         }
 
         // 첫 번째 결재 순서의 결재자에게 알림
-        ApprovalDoc saved = approvalDocRepository.findWithDetailsById(doc.getId()).orElseThrow();
-        int firstOrder = saved.getApprovalLines().stream()
+        int firstOrder = doc.getApprovalLines().stream()
                 .filter(l -> l.getStepType() == StepType.REVIEW || l.getStepType() == StepType.APPROVE)
                 .mapToInt(ApprovalLine::getStepOrder)
                 .min()
                 .orElse(Integer.MAX_VALUE);
 
-        saved.getApprovalLines().stream()
+        doc.getApprovalLines().stream()
                 .filter(l -> l.getStepOrder() == firstOrder)
                 .filter(l -> l.getStepType() == StepType.REVIEW || l.getStepType() == StepType.APPROVE)
                 .forEach(l -> notificationService.send(
                         l.getApprover().getId(),
                         NotificationType.APPROVAL,
-                        "'" + saved.getTitle() + "' 결재 요청이 도착했습니다.",
+                        "'" + doc.getTitle() + "' 결재 요청이 도착했습니다.",
                         "APPROVAL",
-                        saved.getId()
+                        doc.getId()
                 ));
 
-        return ApprovalDetailResponse.from(saved);
+        return ApprovalDetailResponse.from(doc);
     }
 
     // 내가 상신한 문서 목록
