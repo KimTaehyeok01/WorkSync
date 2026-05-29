@@ -1,6 +1,7 @@
 package com.worksync.domain.task.dto;
 
 import com.worksync.domain.employee.entity.JobGrade;
+import com.worksync.domain.task.entity.TaskStatus;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -19,8 +20,11 @@ public class TaskCreateRequest {
 
 
     private String description;
+    private TaskStatus status;
     private Long assigneeId;
     private Long departmentId;
+
+
 
 
     private JobGrade assigneeJobGrade;
