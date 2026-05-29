@@ -96,6 +96,22 @@ export async function getMessages(accessToken, roomId) {
     });
 }
 
+export async function sendMessage(accessToken, roomId, content) {
+  return await fetch(`${BASE_URL}/chat/rooms/${roomId}/messages`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ content, msgType: "TEXT" }),
+  })
+    .then((response) => response.json())
+    .then((json) => json)
+    .catch((error) => {
+      console.log("에러발생: " + error);
+    });
+}
+
 export async function getMyInfo(accessToken) {
   return await fetch(`${BASE_URL}/employees/me`, {
     method: "GET",

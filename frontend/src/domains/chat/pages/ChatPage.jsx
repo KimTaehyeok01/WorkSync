@@ -20,6 +20,7 @@ import {
   createChatRoom,
   getMember,
   getMessages,
+  sendMessage,
   getMyInfo,
 } from "../services/chatApi";
 import s from "./ChatPage.module.css";
@@ -36,54 +37,42 @@ const JOB_GRADE = {
 };
 
 // 파일명에서 확장자 추출 - "report.pdf" -> "pdf"
-// function getExt(filename) {
-//   return filename.split(".").pop().toLowerCase();
-// }
+function getExt(filename) {
+  return filename.split(".").pop().toLowerCase();
+}
 
 // 바이트 단위 파일 크기를 읽기 좋게 변환 - 1048576 -> "1.0MB"
-// function formatSize(bytes) {
-//   if (bytes < 1024) return `${bytes} B`;
-//   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-//   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-// }
+function formatSize(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 // 현재 시각을 "오전 9:05" 형식으로 반환 - 메세지 전송 시각 표시용
-// function nowTime() {
-//   const d = new Date();
-//   const h = d.getHours();
-//   const m = String(d.getMinutes()).padStart(2, "0");
-//   return h < 12 ? `오전 ${h}: ${m}` : ` 오후 ${h - 12 || 12}:${m}`;
-// }
+function nowTime() {
+  const d = new Date();
+  const h = d.getHours();
+  const m = String(d.getMinutes()).padStart(2, "0");
+  return h < 12 ? `오전 ${h}:${m}` : `오후 ${h - 12 || 12}:${m}`;
+}
 
-// 하드코딩 더미 데이터라 실제 업로드와 연동 안됨
-// const FILE_ATTACHMENTS = [
-//   { name: "design_mockup_v3.fig", size: "4.2 MB", type: "fig" },
-//   { name: "sprint7_backlog.xlsx", size: "1.1 MB", type: "xlsx" },
-//   { name: "api_docs.pdf", size: "2.8 MB", type: "pdf" },
-// ];
-
-// PDF / 워드 / 엑셀 / PPT / PNG
 // 확장자별 색상과 라벨 정의 - 파일 아이콘 뱃지에 사용
-// const EXT_MAP = {
-//   pdf: { color: "#F40F02", label: "PDF" },
-//   xlsx: { color: "#217346", label: "XLS" },
-//   xls: { color: "#217346", label: "XLS" },
-//   docx: { color: "#2B5797", label: "DOC" },
-//   pptx: { color: "#D04423", label: "PPT" },
-//   png: { color: "#0EA5E9", label: "IMG" },
-// };
+const EXT_MAP = {
+  pdf: { color: "#F40F02", label: "PDF" },
+  xlsx: { color: "#217346", label: "XLS" },
+  xls: { color: "#217346", label: "XLS" },
+  docx: { color: "#2B5797", label: "DOC" },
+  pptx: { color: "#D04423", label: "PPT" },
+  png: { color: "#0EA5E9", label: "IMG" },
+};
 
 // 파일명을 받아서 해당 확장자의 색상+라벨 반환
-// EXT_MAP에 없는 확장자면 회색 + 확장자 대문자로 표시
-// function getFileMeta(filename) {
-//   const ext = getExt(filename);
-//   return (
-//     EXT_MAP[ext] || { color: "#6B7280", label: ext.toUpperCase().slice(0, 4) }
-//   );
-// }
-
-// 기존
-// const TYPE_COLORS = { fig: "#F24E1E", xlsx: "#217346", pdf: "#F40F02" };
+function getFileMeta(filename) {
+  const ext = getExt(filename);
+  return (
+    EXT_MAP[ext] || { color: "#6B7280", label: ext.toUpperCase().slice(0, 4) }
+  );
+}
 
 function statusColor(status) {
   if (status === "ACTIVE") return "#48BB78";
@@ -95,8 +84,8 @@ function statusColor(status) {
 function ConvItem({ conv, active, onClick }) {
   const name = conv.name;
   const roomType = conv.roomType;
-  const avatar = conv.members?.profileImage;
-  const status = conv.members?.status;
+  const avatar = conv.thumbnailImage;
+  const status = conv.otherStatus;
   const unread = conv.unreadCount > 0;
 
   return (
@@ -368,41 +357,31 @@ export default function Messenger() {
   }, [activeConvId]);
   const TEAM_MEMBERS = Array.isArray(teamMember)
     ? teamMember.map((member) => ({
-        employeeId: member.id,
+        employeeId: member.employeeId,
         name: member.name,
         jobGrade: member.jobGrade,
         profileImage: member.profileImage,
+        status: member.status,
       }))
-    : [
-        {
-          employeeId: teamMember.id,
-          name: teamMember.name,
-          jobGrade: teamMember.jobGrade,
-          profileImage: teamMember.profileImage,
-        },
-      ];
+    : [];
 
   // 메시지 데이터 불러오기
   useEffect(() => {
     if (!accessToken || !activeConvId) return;
     getMessages(accessToken, activeConvId).then((data) => {
-      console.log(data.data[2].senderName);
-      console.log(data.data[2].id);
       const list = Array.isArray(data.data) ? data.data : [];
       setChatMessages(
-        list.map((message) => {
-          return {
-            id: message.id,
-            isMine: message.senderId,
-            sender: {
-              name: message.senderName,
-              avatar: message.senderProfileImage,
-            },
-            content: message.content,
-            time: message.sentAt,
-            type: message.msgType,
-          };
-        }),
+        list.map((msg) => ({
+          id: msg.id,
+          isMine: msg.senderId === my.id,
+          sender: {
+            name: msg.senderName,
+            avatar: msg.senderProfileImage,
+          },
+          content: msg.content,
+          time: msg.sentAt,
+          type: msg.msgType,
+        })),
       );
     });
   }, [accessToken, activeConvId]);
@@ -411,7 +390,7 @@ export default function Messenger() {
   useEffect(() => {
     if (!accessToken) return;
     getMyInfo(accessToken).then((data) => {
-      setMy(Array.isArray(data.data) ? data.data : []);
+      setMy(data.data || {});
     });
   }, [accessToken]);
 
@@ -427,8 +406,9 @@ export default function Messenger() {
     id: conv.id,
     roomType: conv.roomType,
     name: conv.name,
-    image: conv.thumbnailImage,
-    members: TEAM_MEMBERS.slice(0, 4),
+    thumbnailImage: conv.thumbnailImage,
+    otherStatus: conv.otherStatus,
+    members: TEAM_MEMBERS,
     lastMessage: conv.lastMessage,
     lastMessageAt: conv.lastMessageAt,
     unreadCount: conv.unreadCount,
@@ -481,21 +461,30 @@ export default function Messenger() {
     e.target.value = "";
   }
 
-  // 텍스트 메시지 전송 - 기존 setMessage("")만 하던 걸 실제 메시지 추가로 개선
-  function handleSend() {
-    if (!message.trim()) return; // 공백만 있으면 전송 못 하도록
-    setChatMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        isMine: my.id,
-        sender: { name: my.name, avatar: my.profileImage },
-        content: message.trim(),
-        time: nowTime(),
-        type: "text",
-      },
-    ]);
-    setMessage(""); // 전송 후 입력창 비우기
+  // 텍스트 메시지 전송 - POST 후 GET으로 메시지 목록 갱신
+  async function handleSend() {
+    if (!message.trim()) return;
+    const content = message.trim();
+    setMessage("");
+
+    try {
+      await sendMessage(accessToken, activeConvId, content);
+      // 전송 완료 후 메시지 목록 재조회
+      const data = await getMessages(accessToken, activeConvId);
+      const list = Array.isArray(data.data) ? data.data : [];
+      setChatMessages(
+        list.map((msg) => ({
+          id: msg.id,
+          isMine: msg.senderId === my.id,
+          sender: { name: msg.senderName, avatar: msg.senderProfileImage },
+          content: msg.content,
+          time: msg.sentAt,
+          type: msg.msgType,
+        })),
+      );
+    } catch (error) {
+      console.log("메시지 전송 에러: " + error);
+    }
   }
 
   const activeConv = CONVERSATIONS.find((c) => c.id === activeConvId);
@@ -506,11 +495,9 @@ export default function Messenger() {
 
   const activeName = activeConv?.name;
   const activeAvatar =
-    activeConv?.roomType === "DIRECT"
-      ? activeConv?.members?.profileImage
-      : null;
+    activeConv?.roomType === "DIRECT" ? activeConv?.thumbnailImage : null;
   const activeStatus =
-    activeConv?.roomType === "DIRECT" ? activeConv?.members?.status : null;
+    activeConv?.roomType === "DIRECT" ? activeConv?.otherStatus : null;
 
   return (
     <div className={s.root}>
