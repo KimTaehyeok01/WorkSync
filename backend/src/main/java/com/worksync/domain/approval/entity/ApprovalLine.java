@@ -42,4 +42,11 @@ public class ApprovalLine {
 
     @Column(name = "processed_at")
     private LocalDateTime processedAt;
+
+    // 결재 처리 (승인 or 반려)
+    public void process(ApprovalLineStatus status, String comment) {
+        this.status = status;
+        this.comment = comment;
+        this.processedAt = LocalDateTime.now();
+    }
 }

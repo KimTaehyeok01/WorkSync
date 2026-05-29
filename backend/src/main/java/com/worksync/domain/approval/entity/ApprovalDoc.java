@@ -60,4 +60,27 @@ public class ApprovalDoc {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    // 최종 승인
+    public void approve() {
+        this.status = ApprovalDocStatus.APPROVED;
+        this.completedAt = LocalDateTime.now();
+    }
+
+    // 반려
+    public void reject() {
+        this.status = ApprovalDocStatus.REJECTED;
+        this.completedAt = LocalDateTime.now();
+    }
+
+    // 제목 수정
+    public void updateTitle(String title) {
+        this.title = title;
+    }
+
+    // 문서 항목(items) 교체
+    public void replaceItems(List<ApprovalDocItem> newItems) {
+        this.approvalDocItems.clear();
+        this.approvalDocItems.addAll(newItems);
+    }
 }
