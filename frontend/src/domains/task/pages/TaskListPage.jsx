@@ -8,7 +8,7 @@ import {
   WSEmptyState,
   WSFilterBar,
   WSPagination,
-  WSTableHeader
+  WSTableHeader,
 } from "../../../components/common/CommonWidgets";
 import s from "./TaskListPage.module.css";
 
@@ -25,7 +25,7 @@ const STATUS_OPTIONS = [
   { key: "done", label: "완료" },
 ];
 
-const TH_COL = ["상태", "작업명", "진행률(%)", "담당자", "프로젝트 기간"]
+const TH_COL = ["상태", "작업명", "진행률(%)", "담당자", "프로젝트 기간"];
 
 export default function Tasks() {
   const [search, setSearch] = useState("");
@@ -41,7 +41,10 @@ export default function Tasks() {
 
   const filtered = allTasks.filter((task) => {
     const matchSearch =
-      task.title.toLowerCase().includes(search.toLowerCase()) ||
+      task.title
+        .replace(/\s/g, "")
+        .toLowerCase()
+        .includes(search.replace(/\s/g, "").toLowerCase()) ||
       task.id.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === "all" || task.status === statusFilter;
     return matchSearch && matchStatus;
@@ -55,12 +58,23 @@ export default function Tasks() {
       <WSFilterBar
         filters={[{ label: "상태", key: "status", options: STATUS_OPTIONS }]}
         filterValues={{ status: statusFilter }}
-        onFilterChange={(_key, value) => { setStatusFilter(value); setPage(1); }}
+        onFilterChange={(_key, value) => {
+          setStatusFilter(value);
+          setPage(1);
+        }}
         searchValue={search}
-        onSearchChange={(value) => { setSearch(value); setPage(1); }}
+        onSearchChange={(value) => {
+          setSearch(value);
+          setPage(1);
+        }}
         searchPlaceholder="검색어를 입력하세요"
         actions={[
-          { label: "업무 등록", onClick: () => navigate("/tasks/new"), icon: <Plus size={16} />, variant: "primary" },
+          {
+            label: "업무 등록",
+            onClick: () => navigate("/tasks/new"),
+            icon: <Plus size={16} />,
+            variant: "primary",
+          },
         ]}
       />
 
@@ -68,7 +82,7 @@ export default function Tasks() {
         <WSTableHeader
           columns={TH_COL}
           gridTemplate="100px 1fr 120px 150px 220px"
-         />
+        />
 
         {paginatedTasks.length === 0 ? (
           <div className={s.empty}>
@@ -93,10 +107,18 @@ export default function Tasks() {
                 <p className={s.title}>{task.title}</p>
                 <p className={s.progress}>{task.progress}%</p>
                 <div className={s.assignee}>
-                  <WSAvatar src={task.assignee.avatar} name={task.assignee.name} size={28} />
-                  <span className={s.assigneeName}>{task.assignee.name.split(" ")[0]}</span>
+                  <WSAvatar
+                    src={task.assignee.avatar}
+                    name={task.assignee.name}
+                    size={28}
+                  />
+                  <span className={s.assigneeName}>
+                    {task.assignee.name.split(" ")[0]}
+                  </span>
                 </div>
-                <p className={s.period}>{task.startDate} ~ {task.endDate}</p>
+                <p className={s.period}>
+                  {task.startDate} ~ {task.endDate}
+                </p>
               </div>
             );
           })
@@ -104,7 +126,12 @@ export default function Tasks() {
       </div>
 
       <div className={s.pagination}>
-        <WSPagination total={filtered.length} page={page} perPage={perPage} onPageChange={setPage} />
+        <WSPagination
+          total={filtered.length}
+          page={page}
+          perPage={perPage}
+          onPageChange={setPage}
+        />
       </div>
     </div>
   );

@@ -1,36 +1,63 @@
-.filterBar { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
-.dd { position: relative; }
+.filterBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.dd {
+  position: relative;
+}
 .ddBtn {
-  display: flex; align-items: center; gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 8px 16px;
   border: 1px solid var(--ws-border);
   border-radius: 8px;
   background: #fff;
   color: var(--ws-text-700);
-  font-size: 13px; font-weight: 500;
+  font-size: 13px;
+  font-weight: 500;
   transition: background 0.15s;
 }
-.ddBtn:hover { background: #F9FAFB; }
+.ddBtn:hover {
+  background: #f9fafb;
+}
 .ddMenu {
-  position: absolute; top: 100%; left: 0; margin-top: 4px;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
   background: #fff;
   border: 1px solid var(--ws-border);
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   z-index: 10;
   min-width: 120px;
   overflow: hidden;
 }
 .ddItem {
-  width: 100%; text-align: left;
+  width: 100%;
+  text-align: left;
   padding: 8px 16px;
   font-size: 13px;
   transition: background 0.15s;
 }
-.ddItem:hover { background: #F9FAFB; }
+.ddItem:hover {
+  background: #f9fafb;
+}
 
-.search { flex: 1; position: relative; }
-.searchIcon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--ws-text-400); }
+.search {
+  flex: 1;
+  position: relative;
+}
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ws-text-400);
+}
 .searchInput {
   width: 100%;
   padding: 8px 16px 8px 40px;
@@ -40,18 +67,25 @@
   outline: none;
   transition: border-color 0.15s;
 }
-.searchInput:focus { border-color: #93C5FD; }
+.searchInput:focus {
+  border-color: #93c5fd;
+}
 
 .newBtn {
-  display: flex; align-items: center; gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 8px 20px;
   background: var(--ws-primary);
   color: #fff;
   border-radius: 8px;
-  font-size: 13px; font-weight: 600;
+  font-size: 13px;
+  font-weight: 600;
   transition: opacity 0.15s;
 }
-.newBtn:hover { opacity: 0.9; }
+.newBtn:hover {
+  opacity: 0.9;
+}
 
 .table {
   background: #fff;
@@ -64,28 +98,62 @@
   grid-template-columns: 100px 1fr 120px 150px 220px;
   gap: 16px;
   padding: 16px 20px;
-  border-bottom: 1px solid #F3F4F6;
+  border-bottom: 1px solid #f3f4f6;
   align-items: center;
   cursor: pointer;
   transition: background 0.15s;
 }
-.row:hover { background: #F9FAFB; }
-.row:last-child { border-bottom: none; }
+.row:hover {
+  background: #f9fafb;
+}
+.row:last-child {
+  border-bottom: none;
+}
 
 .statusBadge {
   display: inline-flex;
   border-radius: 6px;
-  font-size: 11px; font-weight: 700;
+  font-size: 11px;
+  font-weight: 700;
   width: fit-content;
 }
-.title { color: var(--ws-text-900); font-size: 13px; font-weight: 600; margin: 0; }
-.progress { color: var(--ws-text-800); font-size: 13px; font-weight: 600; margin: 0; }
-.assignee { display: flex; align-items: center; gap: 8px; }
-.assigneeName { color: var(--ws-text-800); font-size: 12.5px; font-weight: 500; }
-.period { color: var(--ws-text-500); font-size: 12px; margin: 0; }
+.title {
+  color: var(--ws-text-900);
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+}
+.progress {
+  color: var(--ws-text-800);
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+}
+.assignee {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.assigneeName {
+  color: var(--ws-text-800);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.period {
+  color: var(--ws-text-500);
+  font-size: 12px;
+  margin: 0;
+}
 
 .empty {
-  display: flex; flex-direction: column; align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   padding: 56px 0;
 }
-.emptyText { color: var(--ws-text-500); font-size: 14px; font-weight: 600; margin: 0; }
+.emptyText {
+  color: var(--ws-text-500);
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+}
