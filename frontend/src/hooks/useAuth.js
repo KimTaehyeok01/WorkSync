@@ -4,7 +4,10 @@ export default function useAuth() {
   // 토큰 저장
   const [accessToken, setAccessToken] = useState(null);
   // 롤 저장
-  const [role, setRole] = useState(localStorage.getItem("role"));
+  const [role, setRole] = useState(() => {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem("role");
+  });
 
   // 로그인 (AccessToken 발급)
   const login = async (empNo, password) => {
@@ -41,7 +44,7 @@ export default function useAuth() {
     setRole(json.data.role);
     localStorage.setItem("refreshToken", json.data.refreshToken);
     localStorage.setItem("role", json.data.role);
-    return (json.data.accessToken, json.data.role);
+    return { accessToken: json.data.accessToken, role: json.data.role };
   };
 
   // 로그아웃
