@@ -97,4 +97,10 @@ public class AttendanceService {
             .map(AttendanceResponse::from)
             .toList();
   }
+  // 단건 조회
+  public AttendanceResponse findById(Long id) {
+    Attendance attendance = attendanceRepository.findById(id)
+            .orElseThrow(() -> new CustomException(ErrorCode.ATTENDANCE_NOT_FOUND));
+    return AttendanceResponse.from(attendance);
+  }
 }
