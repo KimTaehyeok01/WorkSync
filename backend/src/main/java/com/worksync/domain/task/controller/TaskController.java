@@ -15,7 +15,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -97,7 +96,7 @@ public class TaskController {
                         .map(e->Map.<String,Object>of(
                                 "id",e.getId(),
                                 "name",e.getName(),
-                                "jobgrade",e.getJobGrade().name(),
+                                "jobGrade",e.getJobGrade().name(),
                                 "departmentId",e.getDepartment() !=null ? e.getDepartment().getId():"",
                                 "departmentName",e.getDepartment() !=null ? e.getDepartment().getName():""
                         ))
@@ -106,7 +105,7 @@ public class TaskController {
     }
 
     //업무 수정(작성자 또는 담당자만)
-    @Transactional
+
     @PatchMapping("/{taskId}")
     public ResponseEntity<ApiResponse<TaskResponse>> update(
             @PathVariable Long taskId,
@@ -115,7 +114,7 @@ public class TaskController {
     }
 
     //업무 삭제
-    @Transactional
+
     @DeleteMapping("/{taskId}")
     public  ResponseEntity<Void>delete(@PathVariable Long taskId){
         taskService.delete(taskId,TEMP_USER_ID);
