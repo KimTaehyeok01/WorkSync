@@ -30,16 +30,22 @@ export default function Board() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [myDepartmentName, setMyDepartmentName] = useState("");
+  const [role, setRole] = useState(null);
 
   // 카테고리 + 검색어 적용하여 정렬
   const filteredPosts = posts.filter((p) => {
     const matchCat = category === "all" || p.boardId === category;
     const matchSearch =
       !search ||
-      p.title.toLowerCase().includes(search.toLowerCase()) || // 제목에 검색어 포함되면 true
+      p.title
+        .replace(/\s/g, "")
+        .toLowerCase()
+        .includes(search.replace(/\s/g, "").toLowerCase()) || // 제목에 검색어 포함되면 true
       p.content.toLowerCase().includes(search.toLowerCase()); // 내용에 검색어 포함되면 true
     const matchDept =
-      p.boardId === 2 ? p.departmentName === myDepartmentName : true;
+      p.boardId === 2
+        ? role === "ADMIN" || p.departmentName === myDepartmentName
+        : true;
     return matchCat && matchSearch && matchDept;
   });
 
@@ -62,6 +68,7 @@ export default function Board() {
     getMyInfo(accessToken).then((data) => {
       if (!data) return;
       setMyDepartmentName(data.departmentName);
+      setRole(data.role);
     });
 
     getBoards(accessToken).then((data) => {

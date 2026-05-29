@@ -172,7 +172,7 @@ export default function BoardNew() {
                       <button
                         key={opt.value}
                         onClick={() => !isDisabled && setCategory(opt.value)}
-                        className={`${s.catBtn} ${active ? s.catBtnActive : ""}`}
+                        className={`${s.catBtn} ${active ? s.catBtnActive : ""} ${isDisabled ? s.catBtnDisabled : ""}`}
                         style={{
                           "--cat-color": opt.color,
                           "--cat-bg": opt.color + "15",

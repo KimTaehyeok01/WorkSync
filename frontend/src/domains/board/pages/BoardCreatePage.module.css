@@ -374,3 +374,7 @@
   font-size: 13px;
   font-weight: 600;
 }
+.catBtnDisabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

@@ -108,7 +108,7 @@ export default function BoardDetail() {
               </button>
             </div>
           </WSCard>
-          {me && post && me.id === post.authorId && (
+          {me && post && (me.id === post.authorId || me.role === "ADMIN") && (
             <>
               <div className={s.actionsCol}>
                 <WSButton
