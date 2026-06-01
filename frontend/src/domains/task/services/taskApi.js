@@ -38,6 +38,33 @@ export async function getMyTaskList(accessToken, page = 0, size = 10) {
     });
 }
 
+// 부서별 업무 목록 조회
+export async function getTasksByDepartment(
+  accessToken,
+  departmentId,
+  page = 0,
+  size = 10,
+) {
+  return await fetch(
+    `${BASE_URL}/tasks/department/${departmentId}?page=${page}&size=${size}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  )
+    .then((response) => response.json())
+    .then((json) => {
+      console.log(json);
+      return json.data;
+    })
+    .catch((error) => {
+      console.log("에러발생: " + error);
+    });
+}
+
 // 업무 상세 조회
 export async function getTaskById(accessToken, taskId) {
   return await fetch(`${BASE_URL}/tasks/${taskId}`, {
@@ -129,6 +156,26 @@ export async function deleteTask(accessToken, taskId, data) {
     })
     .then((json) => {
       console.log("삭제 응답 : " + json);
+    })
+    .catch((error) => console.log("에러발생 : " + error));
+}
+
+// 내 정보 조회
+export async function getMyInfo(accessToken, data) {
+  return await fetch(`${BASE_URL}/employees/me`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+    .then((response) => {
+      console.log("상태코드 : " + response.status);
+      return response.json();
+    })
+    .then((json) => {
+      console.log(json);
+      return json.data;
     })
     .catch((error) => console.log("에러발생 : " + error));
 }

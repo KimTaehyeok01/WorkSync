@@ -2,7 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ClipboardList, Plus } from "lucide-react";
 import useAuthContext from "../../../store/AuthContext";
-import { getTaskList } from "../services/taskApi";
+import {
+  getTaskList,
+  getTasksByDepartment,
+  getMyInfo,
+} from "../services/taskApi";
 import {
   WSAvatar,
   WSBadge,
@@ -38,17 +42,39 @@ export default function Tasks() {
   const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(false);
   const { accessToken } = useAuthContext();
+  const [role, setRole] = useState(null);
+  const [departmentId, setDepartmentId] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
+  //내 정보 불러오기
+  useEfffect(() => {
     if (!accessToken) return;
 
-    getTaskList(accessToken, page - 1, 10).then((data) => {
+    getMyInfo(accessToken).then((data) => {
       if (!data) return;
-      setTasks(data.content);
-      setTotalElements(data.totalElements);
+      setRole(data.role);
+      setDepartmentId(data.departmentId);
     });
-  }, [accessToken, page]);
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (!accessToken || role === null) return;
+
+    if (role === "ADMIN") {
+      // ADMIN 이면 전체 목록 보이기
+      getTaskList(accessToken, page - 1, 10).then((data) => {
+        if (!data) return;
+        setTasks(data.content);
+        setTotalElements(data.totalElements);
+      });
+    } else {
+      getTasksByDepartment(accessToken).then((data) => {
+        if (!data) return;
+        setTasks(data.content);
+        setDepartmentId(data.departmentId);
+      });
+    }
+  }, [accessToken, role, departmentId, page]);
 
   const filtered = tasks.filter((task) => {
     const matchSearch =
