@@ -1,7 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, Pencil  } from "lucide-react";
+import { ArrowLeft, Download, Pencil } from "lucide-react";
 import { KANBAN_TASKS } from "../../../constants/mockData";
-import { WSAvatar, WSButton, WSCard, WSProgress } from "../../../components/common/CommonWidgets";
+import {
+  WSAvatar,
+  WSButton,
+  WSCard,
+  WSProgress,
+} from "../../../components/common/CommonWidgets";
 import s from "./TaskDetailPage.module.css";
 
 export default function TaskDetail() {
@@ -28,9 +33,9 @@ export default function TaskDetail() {
   return (
     <div>
       <div className={s.header}>
-      <button onClick={() => navigate("/tasks")} className={s.backBtn}>
-            <ArrowLeft size={16} />
-          </button>
+        <button onClick={() => navigate("/tasks")} className={s.backBtn}>
+          <ArrowLeft size={16} />
+        </button>
         <div>
           <div className={s.titleRow}>
             <h1 className={s.pageTitle}>업무 상세</h1>
@@ -49,7 +54,9 @@ export default function TaskDetail() {
                 </div>
                 <div className={s.infoCol}>
                   <p className={s.infoLabel}>기간</p>
-                  <p className={s.infoValue}>{task.startDate} ~ {task.endDate}</p>
+                  <p className={s.infoValue}>
+                    {task.startDate} ~ {task.endDate}
+                  </p>
                 </div>
                 <div className={s.infoCol}>
                   <p className={s.infoLabel}>진행률</p>
@@ -61,21 +68,34 @@ export default function TaskDetail() {
                   <p className={s.infoLabel}>담당자</p>
                   <div className={s.infoValue}>
                     <div className={s.assigneeValue}>
-                      <WSAvatar src={task.assignee.avatar} name={task.assignee.name} size={24} />
-                      <span>{task.assignee.name} ({task.assignee.dept}, {task.assignee.role})</span>
+                      <WSAvatar
+                        src={task.assignee.avatar}
+                        name={task.assignee.name}
+                        size={24}
+                      />
+                      <span>
+                        {task.assignee.name} ({task.assignee.dept},{" "}
+                        {task.assignee.role})
+                      </span>
                     </div>
-                  </div>                
+                  </div>
                   <p className={s.infoLabel}>작성자</p>
                   <div className={s.infoValue}>
                     <div className={s.assigneeValue}>
-                      <WSAvatar src={task.assignee.avatar} name={task.assignee.name} size={24} />
-                      <span>{task.assignee.name} ({task.assignee.dept}, {task.assignee.role})</span>
+                      <WSAvatar
+                        src={task.assignee.avatar}
+                        name={task.assignee.name}
+                        size={24}
+                      />
+                      <span>
+                        {task.assignee.name} ({task.assignee.dept},{" "}
+                        {task.assignee.role})
+                      </span>
                     </div>
                   </div>
                   <p className={s.infoLabel}>작성일</p>
                   <p className={s.infoValue}>2026-05-01</p>
                 </div>
-                
               </div>
               <div className={s.details}>
                 <div className={s.detailLines}>
@@ -125,7 +145,12 @@ export default function TaskDetail() {
               onClick={() => navigate(`/tasks/edit/${id}`)}
               className={s.draftBtn}
             />
-            <button onClick={() => {if (confirm("업무를 삭제하시겠습니까?")) navigate("/tasks");}} className={s.cancelBtn}>
+            <button
+              onClick={() => {
+                if (confirm("업무를 삭제하시겠습니까?")) navigate("/tasks");
+              }}
+              className={s.cancelBtn}
+            >
               삭제하기
             </button>
           </div>

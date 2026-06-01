@@ -1,20 +1,57 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  FileCheck, CheckSquare, MessageSquare,
-  ThumbsUp, MessageCircle,
-  ArrowRight, CalendarDays, Users,
-  Newspaper, CheckCircle2, Plus
+  FileCheck,
+  CheckSquare,
+  MessageSquare,
+  ThumbsUp,
+  MessageCircle,
+  ArrowRight,
+  CalendarDays,
+  Users,
+  Newspaper,
+  CheckCircle2,
+  Plus,
 } from "lucide-react";
-import { TEAM_MEMBERS, KANBAN_TASKS, APPROVAL_DOCS, BOARD_POSTS } from "../../../constants/mockData";
-import { WSCard, WSStatCard, WSAvatar, WSButton } from "../../../components/common/CommonWidgets";
+import {
+  TEAM_MEMBERS,
+  KANBAN_TASKS,
+  APPROVAL_DOCS,
+  BOARD_POSTS,
+} from "../../../constants/mockData";
+import {
+  WSCard,
+  WSStatCard,
+  WSAvatar,
+  WSButton,
+} from "../../../components/common/CommonWidgets";
 import s from "./DashboardPage.module.css";
 
 const ATTENDANCE = [
-  { member: TEAM_MEMBERS[0], checkIn: "08:45 AM", checkOut: null, status: "present" },
-  { member: TEAM_MEMBERS[1], checkIn: "09:02 AM", checkOut: null, status: "present" },
-  { member: TEAM_MEMBERS[2], checkIn: "09:15 AM", checkOut: null, status: "present" },
-  { member: TEAM_MEMBERS[3], checkIn: "08:30 AM", checkOut: null, status: "present" },
+  {
+    member: TEAM_MEMBERS[0],
+    checkIn: "08:45 AM",
+    checkOut: null,
+    status: "present",
+  },
+  {
+    member: TEAM_MEMBERS[1],
+    checkIn: "09:02 AM",
+    checkOut: null,
+    status: "present",
+  },
+  {
+    member: TEAM_MEMBERS[2],
+    checkIn: "09:15 AM",
+    checkOut: null,
+    status: "present",
+  },
+  {
+    member: TEAM_MEMBERS[3],
+    checkIn: "08:30 AM",
+    checkOut: null,
+    status: "present",
+  },
   { member: TEAM_MEMBERS[4], checkIn: null, checkOut: null, status: "absent" },
 ];
 
@@ -38,7 +75,8 @@ export default function Dashboard() {
         <div>
           <h2 className={s.bannerTitle}>안녕하세요, Marcus님! 👋</h2>
           <p className={s.bannerSub}>
-            오늘 <strong>결재 대기 3건</strong>과 <strong>새 메시지 5건</strong>이 있습니다.
+            오늘 <strong>결재 대기 3건</strong>과 <strong>새 메시지 5건</strong>
+            이 있습니다.
           </p>
         </div>
         <div className={s.bannerRight}>
@@ -53,10 +91,30 @@ export default function Dashboard() {
       </div>
 
       <div className={s.statsGrid}>
-        <WSStatCard label="결재 대기" value="3" icon={<FileCheck size={22} />} color="#F59E0B" />
-        <WSStatCard label="오늘 출근 현황" value="4/5" icon={<Users size={22} />} color="#10B981" />
-        <WSStatCard label="업무 완료율" value={`${doneTasks}/${totalTasks}`} icon={<CheckSquare size={22} />} color="#1A73E8" />
-        <WSStatCard label="읽지 않은 메시지" value="5" icon={<MessageSquare size={22} />} color="#8B5CF6" />
+        <WSStatCard
+          label="결재 대기"
+          value="3"
+          icon={<FileCheck size={22} />}
+          color="#F59E0B"
+        />
+        <WSStatCard
+          label="오늘 출근 현황"
+          value="4/5"
+          icon={<Users size={22} />}
+          color="#10B981"
+        />
+        <WSStatCard
+          label="업무 완료율"
+          value={`${doneTasks}/${totalTasks}`}
+          icon={<CheckSquare size={22} />}
+          color="#1A73E8"
+        />
+        <WSStatCard
+          label="읽지 않은 메시지"
+          value="5"
+          icon={<MessageSquare size={22} />}
+          color="#8B5CF6"
+        />
       </div>
 
       <div className={s.mainGrid}>
@@ -73,7 +131,13 @@ export default function Dashboard() {
                 >
                   {emptyPosts ? "목록 보기" : "빈 화면"}
                 </button>
-                <WSButton label="전체 보기" variant="secondary" size="sm" icon={<ArrowRight size={12} />} onClick={() => navigate("/board")} />
+                <WSButton
+                  label="전체 보기"
+                  variant="secondary"
+                  size="sm"
+                  icon={<ArrowRight size={12} />}
+                  onClick={() => navigate("/board")}
+                />
               </div>
             }
           >
@@ -85,12 +149,15 @@ export default function Dashboard() {
                 <div>
                   <p className={s.emptyTitle}>아직 게시물이 없습니다</p>
                   <p className={s.emptySub}>
-                    팀 소식, 공지사항, 자유로운 이야기를<br />첫 번째로 올려보세요.
+                    팀 소식, 공지사항, 자유로운 이야기를
+                    <br />첫 번째로 올려보세요.
                   </p>
                 </div>
-                <button onClick={() => navigate("/board/new")} className={s.emptyAction}>
-                  <Plus size={13} />
-                  첫 게시글 작성하기
+                <button
+                  onClick={() => navigate("/board/new")}
+                  className={s.emptyAction}
+                >
+                  <Plus size={13} />첫 게시글 작성하기
                 </button>
               </div>
             ) : (
@@ -98,15 +165,32 @@ export default function Dashboard() {
                 {BOARD_POSTS.slice(0, 4).map((post) => {
                   const isNotice = post.category === "notice";
                   return (
-                    <div key={post.id} onClick={() => navigate("/board")} className={s.postItem}>
-                      {isNotice && <span className={s.postNoticeBadge}>공지</span>}
+                    <div
+                      key={post.id}
+                      onClick={() => navigate("/board")}
+                      className={s.postItem}
+                    >
                       <div className={s.postBody}>
-                        <p className={s.postTitle}>{post.title}</p>
-                        <p className={s.postMeta}>{post.author.name} · {post.createdAt} · 조회 {post.views}</p>
-                      </div>
-                      <div className={s.postStats}>
-                        <span className={s.postStat}><ThumbsUp size={11} /> {post.likes}</span>
-                        <span className={s.postStat}><MessageCircle size={11} /> {post.comments}</span>
+                        <p className={s.postTitle}>
+                          {isNotice && (
+                            <span className={s.postNoticeBadge}>공지사항</span>
+                          )}
+                          {post.title}
+                        </p>
+                        <p className={s.postContent}>{post.content}</p>
+
+                        <div className={s.postMeta}>
+                          <span style={{ marginRight: 6 }}>
+                            <WSAvatar src={post.author.avatar} size={21} />
+                          </span>
+                          <span style={{ marginRight: 10 }}>
+                            {post.author.name}
+                          </span>
+                          ·{" "}
+                          <span style={{ marginLeft: 10 }}>
+                            {post.createdAt}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   );
@@ -127,14 +211,21 @@ export default function Dashboard() {
                 >
                   {emptyApprovals ? "목록 보기" : "빈 화면"}
                 </button>
-                <WSButton label="전체 보기" variant="secondary" size="sm" icon={<ArrowRight size={12} />} />
+                <WSButton
+                  label="전체 보기"
+                  variant="secondary"
+                  size="sm"
+                  icon={<ArrowRight size={12} />}
+                />
               </div>
             }
           >
             {emptyApprovals ? (
               <div className={s.emptyBlock}>
                 <div className={s.successIconStack}>
-                  <div className={`${s.emptyIconWrap} ${s.emptyIconWrapApprovals}`}>
+                  <div
+                    className={`${s.emptyIconWrap} ${s.emptyIconWrapApprovals}`}
+                  >
                     <FileCheck size={26} className={s.emptyIconApprovals} />
                   </div>
                   <span className={s.successDoneBadge}>
@@ -144,28 +235,35 @@ export default function Dashboard() {
                 <div>
                   <p className={s.emptyTitle}>모든 결재가 완료되었습니다</p>
                   <p className={s.emptySub}>
-                    현재 처리 대기 중인 문서가 없습니다.<br />새 결재 요청이 오면 여기에 표시됩니다.
+                    현재 처리 대기 중인 문서가 없습니다.
+                    <br />새 결재 요청이 오면 여기에 표시됩니다.
                   </p>
                 </div>
                 <div className={s.successBadgeRow}>
                   <CheckCircle2 size={14} className={s.successInlineIcon} />
-                  <span className={s.successBadgeStrong}>오늘 결재 처리 완료 ·</span>
+                  <span className={s.successBadgeStrong}>
+                    오늘 결재 처리 완료 ·
+                  </span>
                   <span className={s.successBadgeSub}>수고하셨습니다!</span>
                 </div>
               </div>
             ) : (
               <div className={s.approvalList}>
-                {APPROVAL_DOCS.filter((d) => d.status === "pending").map((doc) => (
-                  <div key={doc.id} className={s.approvalItem}>
-                    <div className={s.approvalIconBox}>
-                      <FileCheck size={16} className={s.approvalIcon} />
+                {APPROVAL_DOCS.filter((d) => d.status === "pending").map(
+                  (doc) => (
+                    <div key={doc.id} className={s.approvalItem}>
+                      <div className={s.approvalIconBox}>
+                        <FileCheck size={16} className={s.approvalIcon} />
+                      </div>
+                      <div className={s.approvalBody}>
+                        <p className={s.approvalTitle}>{doc.title}</p>
+                        <p className={s.approvalMeta}>
+                          {doc.requester.name} · {doc.date}
+                        </p>
+                      </div>
                     </div>
-                    <div className={s.approvalBody}>
-                      <p className={s.approvalTitle}>{doc.title}</p>
-                      <p className={s.approvalMeta}>{doc.id} · {doc.requester.name} · {doc.date}</p>
-                    </div>
-                  </div>
-                ))}
+                  ),
+                )}
               </div>
             )}
           </WSCard>
@@ -176,9 +274,15 @@ export default function Dashboard() {
             <div className={s.attendList}>
               {ATTENDANCE.map((a, i) => (
                 <div key={i} className={s.attendRow}>
-                  <WSAvatar src={a.member.avatar} name={a.member.name} size={28} />
+                  <WSAvatar
+                    src={a.member.avatar}
+                    name={a.member.name}
+                    size={28}
+                  />
                   <span className={s.attendName}>{a.member.name}</span>
-                  <span className={`${s.attendBadge} ${a.status === "present" ? s.attendPresent : s.attendAbsent}`}>
+                  <span
+                    className={`${s.attendBadge} ${a.status === "present" ? s.attendPresent : s.attendAbsent}`}
+                  >
                     {a.checkIn || "결근"}
                   </span>
                 </div>
@@ -192,12 +296,20 @@ export default function Dashboard() {
                 <div key={t.label}>
                   <div className={s.taskProgressTop}>
                     <span className={s.taskProgressLabel}>{t.label}</span>
-                    <span className={s.taskProgressValue} style={{ "--progress-color": t.color }}>{t.count}</span>
+                    <span
+                      className={s.taskProgressValue}
+                      style={{ "--progress-color": t.color }}
+                    >
+                      {t.count}
+                    </span>
                   </div>
                   <div className={s.taskProgressTrack}>
                     <div
                       className={s.taskProgressFill}
-                      style={{ "--progress-width": `${(t.count / totalTasks) * 100}%`, "--progress-color": t.color }}
+                      style={{
+                        "--progress-width": `${(t.count / totalTasks) * 100}%`,
+                        "--progress-color": t.color,
+                      }}
                     />
                   </div>
                 </div>

@@ -1,28 +1,55 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, Edit, ChevronDown } from "lucide-react";
-import { BOARD_POSTS } from "../../../constants/mockData";
-import { WSCard, WSAvatar } from "../../../components/common/CommonWidgets";
+import { ArrowLeft, Download, Edit, ChevronDown, Pencil } from "lucide-react";
+import {
+  WSCard,
+  WSAvatar,
+  WSButton,
+} from "../../../components/common/CommonWidgets";
 import s from "./BoardDetailPage.module.css";
-
-const CATEGORY_LABELS = {
-  notice: "공지 사항",
-  dept: "부서 게시판",
-  free: "자유 게시판",
-};
+import {
+  getPostById,
+  deletePost,
+  getMyInfo,
+  getPosts,
+} from "../services/boardApi";
+import useAuthContext from "../../../store/AuthContext";
 
 const MOCK_ATTACHMENTS = [
   { id: "a1", name: "03_제내_수정.xlsx", size: "1.2 MB", type: "XLSX" },
 ];
 
 export default function BoardDetail() {
-  const { id } = useParams();
+  const { accessToken } = useAuthContext();
+  const { boardId, postId } = useParams();
+  const [allPosts, setAllPosts] = useState([]);
   const navigate = useNavigate();
-
-  const postIndex = BOARD_POSTS.findIndex((p) => p.id === id);
-  const post = BOARD_POSTS[postIndex];
-
+  const [post, setPost] = useState(null);
+  const [me, setMe] = useState(null);
   const [attachments, setAttachments] = useState(MOCK_ATTACHMENTS);
+  // 현재 글의 위치 찾기
+  const postIndex = allPosts.findIndex((p) => p.id === Number(postId));
+  // 이전글
+  const prevPost = postIndex > 0 ? allPosts[postIndex - 1] : null;
+  // 다음글
+  const nextPost =
+    postIndex < allPosts.length - 1 ? allPosts[postIndex + 1] : null;
+
+  useEffect(() => {
+    if (!accessToken) return;
+    // 게시글 하나
+    getPostById(boardId, postId, accessToken).then((data) => {
+      setPost(data);
+    });
+    // 게시글 전체 목록
+    getPosts(boardId, accessToken).then((data) => {
+      setAllPosts(data);
+    });
+    // 내 정보
+    getMyInfo(accessToken).then((data) => {
+      setMe(data);
+    });
+  }, [boardId, postId, accessToken]);
 
   if (!post) {
     return (
@@ -36,30 +63,30 @@ export default function BoardDetail() {
     );
   }
 
-  const nextPost = postIndex < BOARD_POSTS.length - 1 ? BOARD_POSTS[postIndex + 1] : null;
-
-  function handleDeleteAttachment(attachmentId) {
-    if (confirm("첨부파일을 삭제하시겠습니까?")) {
-      setAttachments((prev) => prev.filter((a) => a.id !== attachmentId));
-    }
-  }
-
   return (
     <div className={s.root}>
-      <button onClick={() => navigate("/board")} className={s.backBtn}>
-        <ArrowLeft size={18} />
-        {CATEGORY_LABELS[post.category] || "게시판"}
-      </button>
+      <div className={s.header}>
+        <div className={s.headerLeft}>
+          <button onClick={() => navigate("/board")} className={s.backBtn}>
+            <ArrowLeft size={16} />
+          </button>
+          <div>
+            <h1 className={s.pageTitle}>{post.boardName || "게시판"}</h1>
+          </div>
+        </div>
+      </div>
 
       <div className={s.layout}>
         <div className={s.colMain}>
           <div className={s.contentCard}>
             <h1 className={s.title}>{post.title}</h1>
             <div className={s.metaRow}>
-              <WSAvatar src={post.author.avatar} name={post.author.name} size={32} />
+              <WSAvatar src={null} name={post.authorName} size={32} />
               <div>
-                <span className={s.metaName}>{post.author.name}</span>
-                <span className={s.metaDate}>{post.createdAt}</span>
+                <span className={s.metaName}>{post.authorName}</span>
+                <span className={s.metaDate}>
+                  {post.createdAt?.slice(0, 10)}
+                </span>
               </div>
             </div>
             <div className={s.content}>{post.content}</div>
@@ -67,50 +94,75 @@ export default function BoardDetail() {
         </div>
 
         <div className={s.colSide}>
-          <WSCard>
-            <h3 className={s.sideTitle}>첨부 파일</h3>
-            <p className={s.sideSub}>{attachments.length}개 파일 첨부됨</p>
-
-            <div className={s.fileList}>
-              {attachments.map((file) => (
-                <div key={file.id} className={s.fileRow}>
-                  <div className={s.fileIcon}>XLSX</div>
-                  <div className={s.fileBody}>
-                    <p className={s.fileName}>{file.name}</p>
-                    <p className={s.fileSize}>{file.size}</p>
-                  </div>
-                  <button className={s.fileDl} title="다운로드">
-                    <Download size={16} />
-                  </button>
+          <WSCard title="첨부 파일" subtitle="1개 파일 업로드">
+            <div className={s.attachRow}>
+              <div className={s.attachLeft}>
+                <div className={s.attachIcon}>XLSX</div>
+                <div>
+                  <p className={s.attachName}>Q3_예산_요청.xlsx</p>
+                  <p className={s.attachSize}>1.2 MB</p>
                 </div>
-              ))}
-            </div>
-
-            <div className={s.actionsCol}>
-              <button className={s.editBtn}>
-                <Edit size={14} /> 수정
-              </button>
-              <button
-                onClick={() => {
-                  if (attachments.length > 0) handleDeleteAttachment(attachments[0].id);
-                }}
-                className={s.delBtn}
-              >
-                삭제하기
+              </div>
+              <button className={s.attachDl}>
+                <Download size={18} />
               </button>
             </div>
           </WSCard>
+          {me && post && (me.id === post.authorId || me.role === "ADMIN") && (
+            <>
+              <div className={s.actionsCol}>
+                <WSButton
+                  label="수정"
+                  icon={<Pencil size={16} />}
+                  variant="secondary"
+                  onClick={() => navigate(`/board/edit/${boardId}/${postId}`)}
+                  className={s.draftBtn}
+                />
+                <button
+                  onClick={async () => {
+                    if (confirm("게시글을 삭제하시겠습니까?")) {
+                      await deletePost(boardId, postId, accessToken);
+                      navigate("/board");
+                    }
+                  }}
+                  className={s.cancelBtn}
+                >
+                  삭제하기
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
       {nextPost && (
-        <button onClick={() => navigate(`/board/${nextPost.id}`)} className={s.nextBtn}>
+        <button
+          onClick={() => navigate(`/board/${boardId}/${nextPost.id}`)}
+          className={s.nextBtn}
+        >
           <div className={s.nextLeft}>
             <span className={s.nextLabel}>다음글</span>
             <ChevronDown size={14} className={s.nextArrow} />
             <span className={s.nextTitle}>{nextPost.title}</span>
           </div>
-          <span className={s.nextDate}>{nextPost.createdAt}</span>
+          <span className={s.nextDate}>
+            {new Date(nextPost.createdAt).toLocaleDateString("ko-KR")}
+          </span>
+        </button>
+      )}
+      {prevPost && (
+        <button
+          onClick={() => navigate(`/board/${boardId}/${prevPost.id}`)}
+          className={s.nextBtn}
+        >
+          <div className={s.nextLeft}>
+            <span className={s.nextLabel}>이전글</span>
+            <ChevronDown size={14} className={s.nextArrow} />
+            <span className={s.nextTitle}>{prevPost.title}</span>
+          </div>
+          <span className={s.nextDate}>
+            {new Date(prevPost.createdAt).toLocaleDateString("ko-KR")}
+          </span>
         </button>
       )}
     </div>

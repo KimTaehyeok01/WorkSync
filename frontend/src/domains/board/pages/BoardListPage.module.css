@@ -1,7 +1,17 @@
-.root { display: flex; flex-direction: column; gap: 20px; }
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 
-.toolbar { display: flex; align-items: center; gap: 12px; }
-.selectWrap { position: relative; }
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.selectWrap {
+  position: relative;
+}
 .select {
   appearance: none;
   padding: 10px 36px 10px 12px;
@@ -15,16 +25,31 @@
   min-width: 140px;
   transition: border-color 0.15s;
 }
-.select:focus { border-color: #93C5FD; }
+.select:focus {
+  border-color: #93c5fd;
+}
 .selectChevron {
-  position: absolute; right: 12px; top: 50%;
-  transform: translateY(-50%); color: var(--ws-text-400); pointer-events: none;
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ws-text-400);
+  pointer-events: none;
 }
 
-.search { position: relative; flex: 1; }
-.searchIcon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--ws-text-400); }
+.search {
+  position: relative;
+  flex: 1;
+}
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ws-text-400);
+}
 .searchInput {
-  width: 100%;
+  width: 400px;
   padding: 10px 16px 10px 36px;
   border: 1px solid var(--ws-border);
   border-radius: 8px;
@@ -33,52 +58,113 @@
   font-size: 13px;
   transition: border-color 0.15s;
 }
-.searchInput:focus { border-color: #93C5FD; }
+.searchInput:focus {
+  border-color: #93c5fd;
+}
 
 .empty {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   padding: 64px 0;
   color: var(--ws-text-400);
 }
-.emptyTitle { font-size: 14px; font-weight: 600; margin: 0; }
-.emptyDesc { font-size: 13px; margin: 4px 0 0; }
+.emptyTitle {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+}
+.emptyDesc {
+  font-size: 13px;
+  margin: 4px 0 0;
+}
 
-.list { display: flex; flex-direction: column; }
+.list {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
 .row {
-  display: flex; align-items: flex-start; gap: 12px;
+  display: flex;
+  align-items: flex-start;
+  min-width: 0;
+  gap: 12px;
   padding: 16px 8px;
   cursor: pointer;
   border-radius: 8px;
   transition: background 0.15s;
-  border-bottom: 1px solid #F3F4F6;
+  border-bottom: 1px solid #f3f4f6;
 }
-.row:hover { background: rgba(235, 244, 255, 0.3); }
-.row:last-child { border-bottom: none; }
+.row:hover {
+  background: rgba(235, 244, 255, 0.3);
+}
+.row:last-child {
+  border-bottom: none;
+}
 
 .noticeBadge {
   flex-shrink: 0;
-  padding: 2px 8px;
+  padding: 4px 8px;
+  margin-right: 10px;
   border-radius: 4px;
-  background: #FEE2E2;
-  color: #DC2626;
+  background: #dc2626;
+  color: #ffffff;
   font-size: 10.5px;
   font-weight: 700;
 }
 
-.rowBody { flex: 1; min-width: 0; }
+.deptBadge {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  margin-right: 10px;
+  border-radius: 4px;
+  background: #e0e7ff;
+  color: #4338ca;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.rowBody {
+  flex: 1;
+  min-width: 0;
+}
+.rowHeader {
+  display: flex;
+}
 .rowTitle {
   color: var(--ws-text-900);
-  font-size: 14px; font-weight: 600;
+  font-size: 14px;
+  font-weight: 600;
   margin: 0;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .rowContent {
   color: var(--ws-text-500);
   font-size: 12.5px;
   margin: 4px 0 0;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.rowMeta { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
-.rowAuthor { color: var(--ws-text-600); font-size: 12px; font-weight: 500; }
-.rowDot { color: var(--ws-text-300); }
-.rowDate { color: var(--ws-text-400); font-size: 12px; }
+.rowMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+.rowAuthor {
+  color: var(--ws-text-600);
+  font-size: 12px;
+  font-weight: 500;
+}
+.rowDot {
+  color: var(--ws-text-300);
+}
+.rowDate {
+  color: var(--ws-text-400);
+  font-size: 12px;
+}

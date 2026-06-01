@@ -33,6 +33,7 @@ const ALLOWED_EXT = ['.pdf', '.pptx', '.xlsx', '.docx'];
 
 export default function TaskNew() {
   const navigate = useNavigate();
+  // 폼 상태 - 기존 데이터로 초기값
   const [form, setForm] = useState({
     title: "",
     description: "",

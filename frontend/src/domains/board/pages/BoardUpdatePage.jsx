@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Send } from "lucide-react";
-import { getCreatePosts, getBoards, getMyInfo, getDepartmentBoard } from "../services/boardApi";
 import { ArrowLeft, Paperclip, CheckCircle } from "lucide-react";
 import { WSCard, WSButton } from "../../../components/common/CommonWidgets";
 import {
@@ -9,13 +8,14 @@ import {
   WSFileList,
 } from "../../../components/common/FormComponents";
 import s from "./BoardCreatePage.module.css";
+import { getMyInfo, getPostById, getUpdatePosts } from "../services/boardApi";
 import useAuthContext from "../../../store/AuthContext";
 
-const BOARD_COLORS = {
-  1: "#EF4444", // 공지사항 - 빨강
-  2: "#8B5CF6", // 부서게시판 - 보라
-  3: "#10B981", // 자유게시판 - 초록
-};
+const CATEGORY_OPTIONS = [
+  { value: "notice", label: "공지사항", color: "#EF4444" },
+  { value: "dept", label: "부서게시판", color: "#8B5CF6" },
+  { value: "free", label: "자유게시판", color: "#10B981" },
+];
 
 const fileIconColor = {
   PDF: "#EF4444",
@@ -31,21 +31,17 @@ const TOOLBAR_ITEMS = ["굵게", "기울임", "밑줄", "목록"];
 
 export default function BoardNew() {
   const navigate = useNavigate();
-  const fileInputRef = useRef(null);
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState("free");
   const [content, setContent] = useState("");
   const [files, setFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [boardId, setboardId] = useState("");
   const [role, setRole] = useState(null);
-  const [boardOptions, setBoardOptions] = useState([]);
   const [myDepartmentName, setMyDepartmentName] = useState("");
-  const [deptBoardId, setDeptBoardId] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const MAX_CHARS = 3000;
   const { accessToken } = useAuthContext();
+  const { boardId, postId } = useParams();
+  const MAX_CHARS = 3000;
 
   //파일 추가
   const addFiles = (newFiles) => {
@@ -60,6 +56,26 @@ export default function BoardNew() {
   const isValid =
     title.trim().length > 0 && category !== "" && content.trim().length > 0;
 
+  const getCategoryValue = (boardName) => {
+    const found = CATEGORY_OPTIONS.find(
+      (opt) => opt.label.replace(/\s/g, "") === boardName.replace(/\s/g, ""),
+    );
+    return found ? found.value : "free";
+  };
+
+  useEffect(() => {
+    getPostById(boardId, postId, accessToken).then((data) => {
+      setTitle(data.title);
+      setContent(data.content);
+      setCategory(getCategoryValue(data.boardName));
+    });
+    // 내 정보 조회(부서명 세팅)
+    getMyInfo(accessToken).then((data) => {
+      setMyDepartmentName(data.departmentName);
+      setRole(data.role);
+    });
+  }, [boardId, postId, accessToken]);
+
   function handleFileDrop(e) {
     e.preventDefault();
     setIsDragging(false);
@@ -71,71 +87,25 @@ export default function BoardNew() {
   }
 
   async function handleSubmit() {
-    if (!accessToken || !isValid || isLoading) return;
+    if (!accessToken) return;
 
-    // 부서게시판 선택 시 실제 부서 board id 사용
-    const actualBoardId = category === "DEPARTMENT" ? deptBoardId : category;
-    if (!actualBoardId) return;
-
-    setIsLoading(true);
+    if (!isValid) return;
     try {
-      await getCreatePosts(
-        actualBoardId,
+      await getUpdatePosts(
+        boardId,
+        postId,
         {
-          boardId: actualBoardId,
           title: title,
           content: content,
         },
         accessToken,
       );
       setSubmitted(true);
-
       setTimeout(() => navigate("/board"), 1800);
     } catch (err) {
-      console.error("게시글 등록 실패", err);
-    } finally {
-      setIsLoading(false);
+      console.error("게시글 업데이트 실패", err);
     }
   }
-
-  // API에서 받아온 게시판 목록(드롭다운)
-  useEffect(() => {
-    if (!accessToken) return;
-
-    // 내 부서게시판 id 조회
-    getDepartmentBoard(accessToken).then((deptBoard) => {
-      if (deptBoard) setDeptBoardId(deptBoard.id);
-    });
-
-    getBoards(accessToken).then((data) => {
-      if (!data) return;
-
-      // DEPARTMENT 타입 개별 게시판 제외 → "부서게시판" 하나로 고정
-      const nonDeptBoards = data
-        .filter((board) => board.boardType !== "DEPARTMENT")
-        .sort((a, b) => a.id - b.id)
-        .map((board) => ({
-          value: board.id,
-          label: board.name,
-          color: BOARD_COLORS[board.id],
-        }));
-
-      // 부서게시판 고정 항목 추가 (value="DEPARTMENT")
-      setBoardOptions([
-        ...nonDeptBoards,
-        { value: "DEPARTMENT", label: "부서게시판", color: "#8B5CF6" },
-      ]);
-    });
-  }, [accessToken]);
-
-  useEffect(() => {
-    if (!accessToken) return;
-
-    getMyInfo(accessToken).then((data) => {
-      setMyDepartmentName(data.departmentName);
-      setRole(data.role);
-    });
-  }, [accessToken]);
 
   if (submitted) {
     return (
@@ -145,7 +115,7 @@ export default function BoardNew() {
             <CheckCircle size={40} className={s.successIconGlyph} />
           </div>
           <div className={s.successCopy}>
-            <p className={s.successTitle}>게시글이 등록되었습니다</p>
+            <p className={s.successTitle}>게시글이 수정되었습니다</p>
             <p className={s.successDesc}>게시판으로 이동합니다...</p>
           </div>
           <div className={s.successBadge}>게시판으로 이동 중...</div>
@@ -158,11 +128,22 @@ export default function BoardNew() {
     <div className={s.root}>
       <div className={s.header}>
         <div className={s.headerLeft}>
-          <button onClick={() => navigate("/board")} className={s.backBtn}>
+          <button
+            onClick={() => {
+              if (
+                confirm(
+                  "페이지 이동 시 작성하신 수정 내용은 사라집니다. 이동하시겠습니까?",
+                )
+              ) {
+                navigate(-1);
+              }
+            }}
+            className={s.backBtn}
+          >
             <ArrowLeft size={16} />
           </button>
           <div>
-            <h1 className={s.pageTitle}>게시글 작성 등록</h1>
+            <h1 className={s.pageTitle}>게시글 수정</h1>
           </div>
         </div>
       </div>
@@ -179,15 +160,16 @@ export default function BoardNew() {
                   게시판 분류 <span className={s.required}>*</span>
                 </label>
                 <div className={s.catRow}>
-                  {boardOptions.map((opt) => {
+                  {CATEGORY_OPTIONS.map((opt) => {
                     const active = category === opt.value;
                     const isNoticeOption = opt.label === "공지사항";
                     const isDisabled = isNoticeOption && role !== "ADMIN";
+
                     return (
                       <button
                         key={opt.value}
                         onClick={() => !isDisabled && setCategory(opt.value)}
-                        className={`${s.catBtn} ${active ? s.catBtnActive : ""} ${isDisabled ? s.catBtnDisabled : ""}`}
+                        className={`${s.catBtn} ${active ? s.catBtnActive : ""}`}
                         style={{
                           "--cat-color": opt.color,
                           "--cat-bg": opt.color + "15",
@@ -198,8 +180,7 @@ export default function BoardNew() {
                     );
                   })}
                 </div>
-                
-                {category === "DEPARTMENT" && (
+                {category === "dept" && (
                   <div>
                     <label className={s.label}>부서명</label>
                     <input
@@ -283,13 +264,23 @@ export default function BoardNew() {
 
           <div className={s.actionsCol}>
             <WSButton
-              label={isLoading ? "등록 중..." : "작업 등록"}
+              label="수정하기"
               icon={<Send size={16} />}
               onClick={handleSubmit}
-              disabled={!isValid || isLoading}
+              disabled={!isValid}
               className={s.submitBtn}
             />
-            <button onClick={() => navigate("/board")} className={s.cancelBtn}>
+            <button
+              onClick={() => {
+                if (
+                  confirm(
+                    "페이지 이동 시 작성하신 수정 내용은 사라집니다. 이동하시겠습니까?",
+                  )
+                )
+                  navigate(-1);
+              }}
+              className={s.cancelBtn}
+            >
               취소하고 돌아가기
             </button>
           </div>
