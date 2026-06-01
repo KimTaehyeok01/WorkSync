@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { getTaskById, updateTask, getEmployees } from "../services/taskApi";
+import {
+  getTaskById,
+  updateTask,
+  getEmployees,
+  getMyInfo,
+} from "../services/taskApi";
 import useAuthContext from "../../../store/AuthContext";
 import { ArrowLeft, Paperclip, CheckCircle, Pencil } from "lucide-react";
 import { WSCard, WSButton } from "../../../components/common/CommonWidgets";
@@ -46,7 +51,6 @@ export default function TaskNew() {
   const { id: taskId } = useParams();
   const { accessToken } = useAuthContext();
   const [members, setMembers] = useState([]);
-
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -61,6 +65,8 @@ export default function TaskNew() {
   const [isDragging, setIsDragging] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [role, setRole] = useState(null);
+  const [myDepartmentId, setMyDepartmentId] = useState(null);
 
   // function validationFile(file) {
   //   const errors = [];
@@ -68,6 +74,22 @@ export default function TaskNew() {
 
   //   return errors;
   // }
+
+  useEffect(() => {
+    if (!accessToken) return;
+
+    getMyInfo(accessToken).then((data) => {
+      if (!data) return;
+      setRole(data.role);
+      setMyDepartmentId(data.departmentId);
+    });
+
+    //직원 목록 불러오기
+    getEmployees(accessToken).then((data) => {
+      if (!data) return;
+      setMembers(data);
+    });
+  }, [accessToken]);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -86,12 +108,6 @@ export default function TaskNew() {
         startDate: data.startDate,
         dueDate: data.dueDate,
       });
-    });
-
-    //직원 목록 불러오기
-    getEmployees(accessToken).then((data) => {
-      if (!data) return;
-      setMembers(data);
     });
   }, [accessToken, taskId]);
 
@@ -187,8 +203,16 @@ export default function TaskNew() {
                       const selected = members.find(
                         (m) => m.id === Number(e.target.value),
                       );
+                      setForm((p) => ({
+                        ...p,
+                        assigneeId: Number(e.target.value),
+                        departmentId: selected?.departmentId ?? null,
+                      }));
                     }}
-                    options={members.map((m) => ({
+                    options={(role === "ADMIN"
+                      ? members
+                      : members.filter((m) => m.departmentId === myDepartmentId)
+                    ).map((m) => ({
                       value: m.id,
                       label: `${m.name} (${m.departmentName}, ${m.jobGrade})`,
                     }))}

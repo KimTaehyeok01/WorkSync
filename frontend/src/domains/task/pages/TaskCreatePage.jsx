@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Paperclip, CheckCircle, Send, X } from "lucide-react";
 import useAuthContext from "../../../store/AuthContext";
-import { createTask, getEmployees } from "../services/taskApi";
+import { createTask, getEmployees, getMyInfo } from "../services/taskApi";
 import { WSCard, WSButton } from "../../../components/common/CommonWidgets";
 import {
   WSInput,
@@ -42,6 +42,7 @@ export default function TaskNew() {
   const navigate = useNavigate();
   const { accessToken } = useAuthContext();
   const [members, setMembers] = useState([]);
+  const [role, setRole] = useState(null);
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -56,9 +57,16 @@ export default function TaskNew() {
   const [isDragging, setIsDragging] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [myDepartmentId, setMyDepartmentId] = useState(null);
 
   useEffect(() => {
     if (!accessToken) return;
+
+    getMyInfo(accessToken).then((data) => {
+      if (!data) return;
+      setRole(data.role);
+      setMyDepartmentId(data.departmentId);
+    });
 
     getEmployees(accessToken).then((data) => {
       if (!data) return;
@@ -185,7 +193,10 @@ export default function TaskNew() {
                         departmentId: selected?.departmentId ?? null,
                       }));
                     }}
-                    options={members.map((m) => ({
+                    options={(role === "ADMIN"
+                      ? members
+                      : members.filter((m) => m.departmentId === myDepartmentId)
+                    ).map((m) => ({
                       value: m.id,
                       label: `${m.name} (${m.departmentName}, ${m.jobGrade})`,
                     }))}

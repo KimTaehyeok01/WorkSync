@@ -47,7 +47,7 @@ export default function Tasks() {
   const navigate = useNavigate();
 
   //내 정보 불러오기
-  useEfffect(() => {
+  useEffect(() => {
     if (!accessToken) return;
 
     getMyInfo(accessToken).then((data) => {
@@ -68,11 +68,13 @@ export default function Tasks() {
         setTotalElements(data.totalElements);
       });
     } else {
-      getTasksByDepartment(accessToken).then((data) => {
-        if (!data) return;
-        setTasks(data.content);
-        setDepartmentId(data.departmentId);
-      });
+      getTasksByDepartment(accessToken, departmentId, page - 1, 10).then(
+        (data) => {
+          if (!data) return;
+          setTasks(data.content);
+          setTotalElements(data.totalElements);
+        },
+      );
     }
   }, [accessToken, role, departmentId, page]);
 
