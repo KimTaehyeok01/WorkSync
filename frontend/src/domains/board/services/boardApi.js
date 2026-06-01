@@ -19,9 +19,12 @@ export async function getBoards(accessToken) {
     });
 }
 
-//게시글 목록 조회
-export async function getPosts(boardId, accessToken) {
-  return await fetch(`${BASE_URL}/boards/${boardId}/posts`, {
+//게시글 목록 조회 (departmentId: ADMIN이 부서게시판에서 특정 부서만 필터링할 때)
+export async function getPosts(boardId, accessToken, departmentId) {
+  const url = departmentId
+    ? `${BASE_URL}/boards/${boardId}/posts?departmentId=${departmentId}`
+    : `${BASE_URL}/boards/${boardId}/posts`;
+  return await fetch(url, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -33,6 +36,22 @@ export async function getPosts(boardId, accessToken) {
       console.log(json);
       return json.data?.content ?? [];
     })
+    .catch((error) => {
+      console.log("에러발생: " + error);
+    });
+}
+
+//부서 목록 조회 (ADMIN 부서 필터 드롭다운용)
+export async function getDepartments(accessToken) {
+  return await fetch(`${BASE_URL}/departments`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+    .then((response) => response.json())
+    .then((json) => json.data ?? [])
     .catch((error) => {
       console.log("에러발생: " + error);
     });
