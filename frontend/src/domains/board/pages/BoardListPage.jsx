@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import useAuthContext from "../../../store/AuthContext";
-import { getBoards, getMyInfo, getPosts, getDepartmentBoard } from "../services/boardApi";
+import { getBoards, getMyInfo, getPosts, getDepartmentBoard, getDepartments } from "../services/boardApi";
 import { useNavigate } from "react-router-dom";
 import { Plus, Search, ChevronDown } from "lucide-react";
 import {
@@ -32,6 +32,8 @@ export default function Board() {
   const [myDepartmentName, setMyDepartmentName] = useState("");
   const [role, setRole] = useState(null);
   const [deptBoardId, setDeptBoardId] = useState(null); // 내 부서게시판 id
+  const [departments, setDepartments] = useState([]); // ADMIN 부서 필터 목록
+  const [deptFilter, setDeptFilter] = useState("all"); // ADMIN 선택한 부서 필터
 
   // 카테고리 + 검색어 적용하여 정렬
   const filteredPosts = posts.filter((p) => {
@@ -68,6 +70,12 @@ export default function Board() {
       if (!data) return;
       setMyDepartmentName(data.departmentName);
       setRole(data.role);
+      // ADMIN이면 부서 필터링 후 부서 목록 로드
+      if (data.role === "ADMIN") {
+        getDepartments(accessToken).then((depts) => {
+          setDepartments(depts ?? []);
+        });
+      }
     });
 
     // 부서게시판 id 조회 (로그인 사용자 부서 기준)
@@ -78,7 +86,7 @@ export default function Board() {
     getBoards(accessToken).then((data) => {
       if (!data) return;
 
-      // DEPARTMENT 타입 제외 후 드롭다운 구성 (부서게시판은 하나로 고정)
+      // Department 타입 제외 후 드롭다운 구성 (부서게시판은 하나로 고정)
       const apiCategories = data
         .filter((board) => board.boardType !== "DEPARTMENT")
         .sort((a, b) => a.id - b.id)
@@ -116,9 +124,12 @@ export default function Board() {
         );
       });
     } else if (category === "DEPARTMENT") {
-      // 부서게시판: 내 부서 게시판 id로만 조회
+      // 부서게시판: 내 부서 게시판 id로 조회
+      // ADMIN이면 deptFilter(특정 부서 or 전체) 전 부서 글 조회
       if (!deptBoardId) return;
-      getPosts(deptBoardId, accessToken).then((data) => {
+      const departmentId =
+        role === "ADMIN" && deptFilter !== "all" ? deptFilter : undefined;
+      getPosts(deptBoardId, accessToken, departmentId).then((data) => {
         setPosts(data ?? []);
       });
     } else {
@@ -127,7 +138,7 @@ export default function Board() {
         setPosts(data);
       });
     }
-  }, [category, accessToken, deptBoardId]);
+  }, [category, accessToken, deptBoardId, role, deptFilter]);
 
   return (
     <div className={s.root}>
@@ -154,6 +165,29 @@ export default function Board() {
           </select>
           <ChevronDown size={14} className={s.selectChevron} />
         </div>
+
+        {/* ADMIN + 부서게시판 선택 시 부서 필터 드롭다운 */}
+        {role === "ADMIN" && category === "DEPARTMENT" && (
+          <div className={s.selectWrap}>
+            <select
+              value={deptFilter}
+              onChange={(e) => {
+                const raw = e.target.value;
+                setDeptFilter(raw === "all" ? "all" : Number(raw));
+                setPage(1);
+              }}
+              className={s.select}
+            >
+              <option value="all">전체 부서</option>
+              {departments.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={14} className={s.selectChevron} />
+          </div>
+        )}
 
         <div className={s.search}>
           <Search size={15} className={s.searchIcon} />
@@ -200,6 +234,14 @@ export default function Board() {
                       {isNotice && (
                         <span className={s.noticeBadge}>공지사항</span>
                       )}
+                      {/* ADMIN이 부서게시판 볼 때 작성자 부서 뱃지 표시 */}
+                      {role === "ADMIN" &&
+                        category === "DEPARTMENT" &&
+                        post.authorDepartmentName && (
+                          <span className={s.deptBadge}>
+                            {post.authorDepartmentName}
+                          </span>
+                        )}
                       <p className={s.rowTitle}>{post.title}</p>
                     </div>
 
