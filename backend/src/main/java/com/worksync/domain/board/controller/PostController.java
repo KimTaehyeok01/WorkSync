@@ -26,8 +26,9 @@ public class PostController {
     public ResponseEntity<ApiResponse<Page<PostResponse>>> getPosts(
             @PathVariable Long boardId,
             @RequestParam(required = false) String keyword,
-            Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.ok(postService.getPosts(boardId, keyword, pageable)));
+            Pageable pageable,
+            @AuthenticationPrincipal CustomUserDetails user) {
+        return ResponseEntity.ok(ApiResponse.ok(postService.getPosts(boardId, keyword, pageable, user)));
     }
 
     //게시글 상세 조회
