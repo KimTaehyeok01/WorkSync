@@ -20,9 +20,6 @@ import LoginPage from "../domains/auth/pages/LoginPage";
 import AuditLogPage from "../domains/audit/pages/AuditLogPage";
 import styles from "./AppRouter.module.css";
 import useAuthContext from "../store/AuthContext";
-import OrganizationListPage from "../domains/organization/pages/OrganizationListPage";
-import EmployeeCreatePage from "../domains/organization/pages/EmployeeCreatePage";
-import EmployeeEditPage from "../domains/organization/pages/EmployeeEditPage";
 
 function NotFound() {
   return (
