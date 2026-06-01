@@ -86,7 +86,7 @@ export default function Board() {
     getBoards(accessToken).then((data) => {
       if (!data) return;
 
-      // DEPARTMENT 타입 제외 후 드롭다운 구성 (부서게시판은 하나로 고정)
+      // Department 타입 제외 후 드롭다운 구성 (부서게시판은 하나로 고정)
       const apiCategories = data
         .filter((board) => board.boardType !== "DEPARTMENT")
         .sort((a, b) => a.id - b.id)
@@ -125,7 +125,7 @@ export default function Board() {
       });
     } else if (category === "DEPARTMENT") {
       // 부서게시판: 내 부서 게시판 id로 조회
-      // ADMIN이면 deptFilter(특정 부서 or 전체)를 서버에 전달 → 전 부서 글 조회
+      // ADMIN이면 deptFilter(특정 부서 or 전체) 전 부서 글 조회
       if (!deptBoardId) return;
       const departmentId =
         role === "ADMIN" && deptFilter !== "all" ? deptFilter : undefined;
