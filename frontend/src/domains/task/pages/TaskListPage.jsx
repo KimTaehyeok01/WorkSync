@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ClipboardList, Plus } from "lucide-react";
+import useAuthContext from "../../../store/AuthContext";
 import { KANBAN_TASKS } from "../../../constants/mockData";
 import {
   WSAvatar,
