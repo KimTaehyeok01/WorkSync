@@ -35,7 +35,7 @@ public class Task {
     @JoinColumn(name = "department_id")
     private Department department;
 
-    @Column(nullable = false, length = 200)
+    @Column(nullable = false, length = 30)
     private String title;
 
     @Column(columnDefinition = "TEXT")
@@ -66,4 +66,21 @@ public class Task {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    public void update(String title,String description,Employee assignee,Department department
+            ,TaskStatus status, Integer progress,LocalDate startDate,LocalDate dueDate){
+        if(title !=null) this.title=title;
+        if(description !=null) this.description=description;
+        if(assignee !=null) this.assignee=assignee;
+        if(department !=null) this.department=department;
+        if(status !=null){
+            this.status=status;
+            if(status == TaskStatus.DONE && this.completedAt== null){
+                this.completedAt=LocalDateTime.now();
+            }
+        }
+        if(progress != null)this.progress=progress;
+        if(startDate !=null)this.startDate=startDate;
+        if(dueDate !=null) this.dueDate=dueDate;
+    }
 }
