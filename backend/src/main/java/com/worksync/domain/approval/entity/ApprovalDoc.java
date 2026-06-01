@@ -3,10 +3,7 @@ package com.worksync.domain.approval.entity;
 import com.worksync.domain.employee.entity.Employee;
 import jakarta.persistence.*;
 import lombok.*;
-<<<<<<< HEAD
 import org.hibernate.annotations.BatchSize;
-=======
->>>>>>> feature/backend-task
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
