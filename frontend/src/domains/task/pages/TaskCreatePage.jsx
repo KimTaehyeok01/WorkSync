@@ -58,12 +58,14 @@ export default function TaskNew() {
   const [submitted, setSubmitted] = useState(false);
   const [saved, setSaved] = useState(false);
   const [myDepartmentId, setMyDepartmentId] = useState(null);
+  const [myId, setMyId] = useState(null);
 
   useEffect(() => {
     if (!accessToken) return;
 
     getMyInfo(accessToken).then((data) => {
       if (!data) return;
+      setMyId(data.id);
       setRole(data.role);
       setMyDepartmentId(data.departmentId);
     });
@@ -149,10 +151,10 @@ export default function TaskNew() {
             <CheckCircle size={40} className={s.successIconGlyph} />
           </div>
           <div>
-            <p className={s.successTitle}>작업이 등록되었습니다</p>
-            <p className={s.successDesc}>업무 보드로 이동합니다...</p>
+            <p className={s.successTitle}>업무 등록되었습니다</p>
+            <p className={s.successDesc}>업무 목록으로 이동합니다...</p>
           </div>
-          <div className={s.successBadge}>업무 보드로 이동 중...</div>
+          <div className={s.successBadge}>업무 목록으로 이동 중...</div>
         </div>
       </div>
     );
@@ -166,7 +168,7 @@ export default function TaskNew() {
             <ArrowLeft size={16} />
           </button>
           <div>
-            <h1 className={s.pageTitle}>새 작업 등록</h1>
+            <h1 className={s.pageTitle}>새 업무 등록</h1>
           </div>
         </div>
       </div>
@@ -174,7 +176,7 @@ export default function TaskNew() {
       <div className={s.layout}>
         <div className={`${s.col} ${s.colMain}`}>
           <WSCard
-            title="작업 기본 정보"
+            title="업무 기본 정보"
             subtitle="새로운 업무 항목의 기본 정보를 입력하세요"
           >
             <div className={s.formGrid}>
@@ -195,8 +197,11 @@ export default function TaskNew() {
                       }));
                     }}
                     options={(role === "ADMIN"
-                      ? members
-                      : members.filter((m) => m.departmentId === myDepartmentId)
+                      ? members.filter((m) => m.id !== myId)
+                      : members.filter(
+                          (m) =>
+                            m.departmentId === myDepartmentId && m.id !== myId,
+                        )
                     ).map((m) => ({
                       value: m.id,
                       label: `${m.name} (${m.departmentName}, ${m.jobGrade})`,
@@ -220,10 +225,10 @@ export default function TaskNew() {
 
               <div>
                 <label className={s.label}>
-                  작업 제목 <span className={s.required}>*</span>
+                  업무 제목 <span className={s.required}>*</span>
                 </label>
                 <WSInput
-                  placeholder="작업 제목을 입력하세요"
+                  placeholder="업무 제목을 입력하세요"
                   value={form.title}
                   onChange={(e) =>
                     setForm((p) => ({ ...p, title: e.target.value }))
@@ -280,7 +285,7 @@ export default function TaskNew() {
 
           <WSCard
             title="상세 설명"
-            subtitle="작업에 대한 상세 내용을 작성하세요"
+            subtitle="업무에 대한 상세 내용을 작성하세요"
           >
             <div className={s.toolbar}>
               {TOOLBAR_ITEMS.map((btn, i) =>
@@ -294,7 +299,7 @@ export default function TaskNew() {
               )}
             </div>
             <WSTextarea
-              placeholder="작업에 대한 상세 설명을 입력하세요.&#10;예) 작업 배경, 목표, 완료 조건 등을 상세하게 기술해 주세요."
+              placeholder="업무에 대한 상세 설명을 입력하세요.&#10;예) 업무 배경, 목표, 완료 조건 등을 상세하게 기술해 주세요."
               value={form.description}
               onChange={(e) =>
                 setForm((p) => ({
@@ -327,7 +332,7 @@ export default function TaskNew() {
 
           <div className={s.actionsCol}>
             <WSButton
-              label="작업 등록"
+              label="업무 등록"
               icon={<Send size={16} />}
               onClick={handleSubmit}
               disabled={!isValid}

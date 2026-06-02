@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { ArrowLeft, Download, Pencil } from "lucide-react";
 import useAuthContext from "../../../store/AuthContext";
-import { getTaskById, deleteTask } from "../services/taskApi";
+import { getTaskById, deleteTask, getMyInfo } from "../services/taskApi";
 import {
   WSAvatar,
   WSButton,
@@ -16,12 +16,25 @@ export default function TaskDetail() {
   const navigate = useNavigate();
   const { accessToken } = useAuthContext();
   const [task, setTask] = useState(null);
+  const [myId, setMyId] = useState(null);
+  const [role, setRole] = useState(null);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    getMyInfo(accessToken).then((data) => {
+      if (!data) return;
+
+      setRole(data.role);
+      setMyId(data.id);
+    });
+  });
 
   useEffect(() => {
     if (!accessToken) return;
 
     getTaskById(accessToken, id).then((data) => {
       if (!data) return;
+
       setTask(data);
     });
   }, [accessToken, id]);
@@ -109,24 +122,30 @@ export default function TaskDetail() {
           </WSCard>
 
           <div className={s.actionsCol}>
-            <WSButton
-              label="수정"
-              icon={<Pencil size={16} />}
-              variant="secondary"
-              onClick={() => navigate(`/tasks/edit/${id}`)}
-              className={s.draftBtn}
-            />
-            <button
-              onClick={async () => {
-                if (confirm("업무를 삭제하시겠습니까?")) {
-                  await deleteTask(accessToken, id);
-                  navigate("/tasks/");
-                }
-              }}
-              className={s.cancelBtn}
-            >
-              삭제하기
-            </button>
+            {(role === "ADMIN" ||
+              task.creatorId === myId ||
+              task.assigneeId === myId) && (
+              <>
+                <WSButton
+                  label="수정"
+                  icon={<Pencil size={16} />}
+                  variant="secondary"
+                  onClick={() => navigate(`/tasks/edit/${id}`)}
+                  className={s.draftBtn}
+                />
+                <button
+                  onClick={async () => {
+                    if (confirm("업무를 삭제하시겠습니까?")) {
+                      await deleteTask(accessToken, id);
+                      navigate("/tasks/");
+                    }
+                  }}
+                  className={s.cancelBtn}
+                >
+                  삭제하기
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

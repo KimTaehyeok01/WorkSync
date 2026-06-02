@@ -30,7 +30,7 @@ const STATUS_OPTIONS = [
   { key: "DONE", value: "DONE", label: "완료" },
 ];
 
-const TH_COL = ["상태", "작업명", "진행률(%)", "담당자", "프로젝트 기간"];
+const TH_COL = ["상태", "업무명", "진행률(%)", "담당자", "프로젝트 기간"];
 export default function Tasks() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -151,11 +151,11 @@ export default function Tasks() {
                 <div className={s.assignee}>
                   <WSAvatar
                     src={null}
-                    name={task.assigneeName ?? "미배정"}
+                    name={task.assigneeName}
                     size={28}
                   />
                   <span className={s.assigneeName}>
-                    {task.assigneeName?.split(" ")[0] ?? "미배정"}
+                    {task.assigneeName?.split(" ")[0]}
                   </span>
                 </div>
                 <p className={s.period}>

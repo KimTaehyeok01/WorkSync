@@ -67,6 +67,7 @@ export default function TaskNew() {
   const [saved, setSaved] = useState(false);
   const [role, setRole] = useState(null);
   const [myDepartmentId, setMyDepartmentId] = useState(null);
+  const [myId, setMyId] = useState(null);
 
   // function validationFile(file) {
   //   const errors = [];
@@ -81,6 +82,7 @@ export default function TaskNew() {
     getMyInfo(accessToken).then((data) => {
       if (!data) return;
       setRole(data.role);
+      setMyId(data.id);
       setMyDepartmentId(data.departmentId);
     });
 
@@ -211,8 +213,11 @@ export default function TaskNew() {
                       }));
                     }}
                     options={(role === "ADMIN"
-                      ? members
-                      : members.filter((m) => m.departmentId === myDepartmentId)
+                      ? members.filter((m) => m.id !== myId)
+                      : members.filter(
+                          (m) =>
+                            m.departmentId === myDepartmentId && m.id !== myId,
+                        )
                     ).map((m) => ({
                       value: m.id,
                       label: `${m.name} (${m.departmentName}, ${m.jobGrade})`,
