@@ -1,13 +1,16 @@
 import { useParams, useNavigate } from "react-router-dom";
+import useAuthContext from "../../../store/AuthContext";
 import { CheckCircle, XCircle, ChevronRight, Download, X } from "lucide-react";
 import { APPROVAL_DOCS, TEAM_MEMBERS } from "../../../constants/mockData";
 import { WSAvatar } from "../../../components/common/CommonWidgets";
+import { getMyInfo, getApprovalById } from "../services/approvalApi";
 import s from "./ApprovalDetailPage.module.css";
+import { useEffect } from "react";
 
 const STATUS_CONFIG = {
-  pending:  { label: "대기", bg: "#FEF3C7", text: "#92400E" },
-  approved: { label: "승인", bg: "#D1FAE5", text: "#065F46" },
-  rejected: { label: "반려", bg: "#FEE2E2", text: "#991B1B" },
+  PENDING: { label: "대기", bg: "#FEF3C7", text: "#92400E" },
+  APPROVED: { label: "승인", bg: "#D1FAE5", text: "#065F46" },
+  REJECTED: { label: "반려", bg: "#FEE2E2", text: "#991B1B" },
 };
 
 const APPROVAL_STEPS = [
@@ -31,6 +34,20 @@ function stepLabelColor(status) {
 export default function ApprovalDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { accessToken } = useAuthContext();
+  const [status, setStatus] = useState(null);
+  const [approvalLines, setApprovalLines] = useState([]);
+  const [approval, setApproval] = useState([]);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    getApprovalById(accessToken).then((data) => {
+      if (!data) return;
+      setApproval(data);
+      setStatus(data.status);
+      setApprovalLines(data.approvalLines);
+    });
+  });
 
   const doc = APPROVAL_DOCS.find((d) => d.id === id);
 
@@ -49,15 +66,21 @@ export default function ApprovalDetail() {
       <div className={s.section}>
         <div className={s.headerRow}>
           <div className={s.headerLeft}>
-            <div className={s.statusBadge} style={{ "--status-bg": statusConfig.bg, "--status-color": statusConfig.text }}>
+            <div
+              className={s.statusBadge}
+              style={{
+                "--status-bg": statusConfig.bg,
+                "--status-color": statusConfig.text,
+              }}
+            >
               {statusConfig.label}
             </div>
             <h1 className={s.title}>{doc.title}</h1>
             <div className={s.requesterRow}>
-              <WSAvatar src={doc.requester.avatar} name={doc.requester.name} size={32} />
+              <WSAvatar src={null} name={doc.drafterName} size={32} />
               <div>
-                <p className={s.requesterName}>{doc.requester.name}</p>
-                <p className={s.requesterDate}>{doc.date}</p>
+                <p className={s.requesterName}>{doc.drafterName}</p>
+                <p className={s.requesterDate}>{doc.createdAt}</p>
               </div>
             </div>
           </div>
@@ -72,21 +95,34 @@ export default function ApprovalDetail() {
         <p className={s.sectionSub}>ws-apv-approval-line</p>
 
         <div className={s.stepsRow}>
-          {APPROVAL_STEPS.map((step, idx) => (
+          {approvalLines.map((step, idx) => (
             <div key={idx} className={s.stepGroup}>
               <div className={`${s.step} ${stepClass(step.status)}`}>
                 <div className={s.stepStatusRow}>
-                  {step.status === "approved" && <CheckCircle size={14} color="#16A34A" />}
-                  {step.status === "rejected" && <XCircle size={14} color="#DC2626" />}
-                  <span className={s.stepStatusLabel} style={{ "--step-color": stepLabelColor(step.status) }}>
-                    {step.status === "approved" ? "승인" : step.status === "rejected" ? "반려" : "대기"}
+                  {step.status === "APPROVED" && (
+                    <CheckCircle size={14} color="#16A34A" />
+                  )}
+                  {step.status === "REJECTED" && (
+                    <XCircle size={14} color="#DC2626" />
+                  )}
+                  <span
+                    className={s.stepStatusLabel}
+                    style={{ "--step-color": stepLabelColor(step.status) }}
+                  >
+                    {step.status === "APPROVED"
+                      ? "승인"
+                      : step.status === "REJECTED"
+                        ? "반려"
+                        : "대기"}
                   </span>
                 </div>
-                <WSAvatar src={step.member.avatar} name={step.member.name} size={40} />
-                <p className={s.stepName}>{step.member.name}</p>
-                <p className={s.stepRole}>{step.role}</p>
+                <WSAvatar src={null} name={step.drafterName} size={40} />
+                <p className={s.stepName}>{step.drafterName}</p>
+                {/* <p className={s.stepRole}>{step.role}</p> */}
               </div>
-              {idx < APPROVAL_STEPS.length - 1 && <ChevronRight size={16} className={s.stepArrow} />}
+              {idx < approvalLines.length - 1 && (
+                <ChevronRight size={16} className={s.stepArrow} />
+              )}
             </div>
           ))}
         </div>
@@ -113,7 +149,9 @@ export default function ApprovalDetail() {
             </div>
             <div className={s.infoFull}>
               <p className={s.infoLabel}>지출사유</p>
-              <p className={s.infoValue}>2026년 4월 근무 중 발생한 사내 비품을 지출합니다.</p>
+              <p className={s.infoValue}>
+                2026년 4월 근무 중 발생한 사내 비품을 지출합니다.
+              </p>
             </div>
             <div>
               <p className={s.infoLabel}>금액</p>

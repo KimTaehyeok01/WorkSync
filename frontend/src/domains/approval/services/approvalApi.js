@@ -42,6 +42,26 @@ export async function getMyApprovals(accessToken, status = "all") {
       return json.data ?? [];
     })
     .catch((error) => {
-      console.log("에러발생: " + error);
+      console.log("에러발생 : " + error);
+    });
+}
+
+export async function getApprovalById(accessToken, id) {
+  return await fetch(`${BASE_URL}/approvals/${id}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+    .then((response) => {
+      return response.json();
+    })
+    .then((json) => {
+      console.log(json);
+      return json.data;
+    })
+    .catch((error) => {
+      console.log("에러발생 : " + error);
     });
 }

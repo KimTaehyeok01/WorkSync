@@ -2,7 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, MoreVertical, ChevronDown, Search } from "lucide-react";
 import { APPROVAL_DOCS } from "../../../constants/mockData";
-import { getMyApprovals } from "../services/approvalApi";
+import {
+  getMyInfo,
+  getMyApprovals,
+  getApprovalById,
+} from "../services/approvalApi";
 import {
   WSAvatar,
   WSPagination,
@@ -122,7 +126,7 @@ export default function Approval() {
             <div
               key={doc.id}
               className={s.card}
-              onClick={() => navigate(`/approval/${doc.id}`)}
+              onClick={() => navigate(`/approvals/${doc.id}`)}
             >
               <div className={s.cardMore}>
                 <button
