@@ -30,7 +30,7 @@ import { NewConvModal } from "../components/NewConvModal";
 import s from "./ChatPage.module.css";
 
 export default function Messenger() {
-  const { accessToken } = useAuthContext();
+  const { accessToken, myStatus } = useAuthContext();
   const [activeConvId, setActiveConvId] = useState(0);
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
@@ -425,7 +425,12 @@ export default function Messenger() {
                       <span
                         className={s.statusDot}
                         style={{
-                          "--status-color": statusColor(member.status),
+                          // 본인 멤버는 전역 myStatus로 즉시 반영, 나머지는 서버값
+                          "--status-color": statusColor(
+                            member.employeeId === my.id && myStatus
+                              ? myStatus
+                              : member.status
+                          ),
                         }}
                       />
                     </div>

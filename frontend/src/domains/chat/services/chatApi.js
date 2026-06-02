@@ -131,3 +131,23 @@ export async function readMessage(accessToken, roomId) {
       console.log("에러발생: " + error);
     });
 }
+
+// 내 정보 조회 (본인 employeeId 등)
+export async function getMyInfo(accessToken) {
+  return await fetch(`${BASE_URL}/employees/me`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+    .then((response) => {
+      return response.json();
+    })
+    .then((json) => {
+      return json;
+    })
+    .catch((error) => {
+      console.log("에러발생: " + error);
+    });
+}

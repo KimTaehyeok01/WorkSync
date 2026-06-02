@@ -76,12 +76,13 @@ const JOB_GRADE = {
 };
 
 export function TopBar({ pathname }) {
-  const { accessToken, logout } = useAuthContext();
+  // 상태(status)를 전역 Context와 연결 — 메신저 등 다른 화면에 즉시 반영
+  const { accessToken, logout, myStatus: status, setMyStatus: setStatus } =
+    useAuthContext();
   const [my, setMy] = useState({});
   const [showNotifs, setShowNotifs] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("");
   const page = PAGE_TITLES[pathname] || {
     title: "WorkSync",
     breadcrumb: ["홈"],

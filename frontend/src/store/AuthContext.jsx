@@ -10,6 +10,8 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const { accessToken, login, refresh, logout, role } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
+  // 내 상태(ACTIVE/AWAY) 전역 관리 — TopBar에서 변경, 메신저 등에서 즉시 반영
+  const [myStatus, setMyStatus] = useState("");
 
   // 인증 헤더 토큰 추가
   const authFetch = async (url, options = {}) => {
@@ -69,6 +71,8 @@ export function AuthProvider({ children }) {
     refresh,
     logout,
     authFetch,
+    myStatus,
+    setMyStatus,
   };
 
   return (
