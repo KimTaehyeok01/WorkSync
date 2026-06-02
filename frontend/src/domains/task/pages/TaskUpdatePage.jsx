@@ -46,7 +46,7 @@ const TOOLBAR_ITEMS = ["굵게", "기울임", "밑줄", "|", "목록"];
 const MAX_SIZE_MB = 50;
 const ALLOWED_EXT = [".pdf", ".pptx", ".xlsx", ".docx"];
 
-export default function TaskNew() {
+export default function TaskUpdate() {
   const navigate = useNavigate();
   const { id: taskId } = useParams();
   const { accessToken } = useAuthContext();
@@ -69,12 +69,12 @@ export default function TaskNew() {
   const [myDepartmentId, setMyDepartmentId] = useState(null);
   const [myId, setMyId] = useState(null);
 
-  // function validationFile(file) {
-  //   const errors = [];
-  //   const ext = "." + file.name.split(".").pop().toLowerCase();
+  function validationFile(file) {
+    const errors = [];
+    const ext = "." + file.name.split(".").pop().toLowerCase();
 
-  //   return errors;
-  // }
+    return errors;
+  }
 
   useEffect(() => {
     if (!accessToken) return;
@@ -167,10 +167,10 @@ export default function TaskNew() {
             <CheckCircle size={40} className={s.successIconGlyph} />
           </div>
           <div>
-            <p className={s.successTitle}>작업이 등록되었습니다</p>
-            <p className={s.successDesc}>업무 보드로 이동합니다...</p>
+            <p className={s.successTitle}>업무가 수정되었습니다</p>
+            <p className={s.successDesc}>업무 목록으로 이동합니다...</p>
           </div>
-          <div className={s.successBadge}>업무 보드로 이동 중...</div>
+          <div className={s.successBadge}>업무 목록으로 이동 중...</div>
         </div>
       </div>
     );

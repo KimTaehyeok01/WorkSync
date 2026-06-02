@@ -27,7 +27,7 @@ export default function TaskDetail() {
       setRole(data.role);
       setMyId(data.id);
     });
-  });
+  }, [accessToken]);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -88,7 +88,7 @@ export default function TaskDetail() {
                   <p className={s.infoLabel}>작성자</p>
                   <div className={s.infoValue}>
                     <div className={s.assigneeValue}>
-                      <WSAvatar src={null} name={task.assigneeName} size={24} />
+                      <WSAvatar src={null} name={task.creatorName} size={24} />
                       <span>{task.creatorName}</span>
                     </div>
                   </div>
