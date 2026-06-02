@@ -54,8 +54,8 @@ public class AuthService {
 
         // 로그인 성공 — 실패 횟수 초기화 및 상태 변경
         employee.resetLoginFailCount();
-        // 상태 확인 로직
-        employee.changeStatus(request.getStatus() != null ? request.getStatus() : EmployeeStatus.ACTIVE);
+        // 상태 변경
+        employee.changeStatus(EmployeeStatus.ACTIVE);
 
         String accessToken = jwtTokenProvider.generateAccessToken(
                 employee.getId(), employee.getEmail(), employee.getRole().name());
@@ -106,6 +106,7 @@ public class AuthService {
         Long employeeId = jwtTokenProvider.getEmployeeId(request.getRefreshToken());
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
-        employee.changeStatus(EmployeeStatus.INACTIVE);
+        // 로그아웃 = 오프라인(AWAY). INACTIVE(퇴직)로 만들면 재로그인이 차단됨
+        employee.changeStatus(EmployeeStatus.AWAY);
     }
 }
