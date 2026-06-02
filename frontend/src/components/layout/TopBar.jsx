@@ -13,12 +13,13 @@ import {
   FileCheck,
   AlertCircle,
   Coffee,
+  UserRound,
 } from "lucide-react";
 import { WSAvatar } from "../../components/common/CommonWidgets";
 import { NOTIFICATIONS } from "../../constants/mockData";
-import { getMyInfo } from "../../domains/auth/services/authApi";
 import styles from "./TopBar.module.css";
 import useAuthContext from "../../store/AuthContext";
+import { getMyInfo, patchStatus } from "../service/TopBarApi";
 
 const PAGE_TITLES = {
   "/": { title: "대시보드", breadcrumb: ["홈", "대시보드"] },
@@ -75,26 +76,57 @@ const JOB_GRADE = {
 };
 
 export function TopBar({ pathname }) {
-  const { accessToken } = useAuthContext();
+  const { accessToken, logout } = useAuthContext();
   const [my, setMy] = useState({});
   const [showNotifs, setShowNotifs] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [search, setSearch] = useState("");
-  const [isAway, setIsAway] = useState(false);
+  const [status, setStatus] = useState("");
   const page = PAGE_TITLES[pathname] || {
     title: "WorkSync",
     breadcrumb: ["홈"],
   };
   const unreadCount = NOTIFICATIONS.filter((n) => !n.read).length;
-  const { logout } = useAuthContext();
 
   // 내 데이터 불러오기
   useEffect(() => {
     if (!accessToken) return;
     getMyInfo(accessToken).then((data) => {
       setMy(data.data || {});
+      setStatus(data.data.status || "");
     });
   }, [accessToken]);
+
+  // AWAYS 상태 변경
+  function handleAwayStatus() {
+    try {
+      patchStatus(accessToken, "AWAY");
+      setStatus("AWAY");
+      setShowProfile(false); // 클릭했을 때 드롭다운 자동 닫힘
+    } catch (errors) {
+      console.log(errors);
+    }
+  }
+
+  // ACTIVE 상태 변경
+  function handleActiveStatus() {
+    try {
+      patchStatus(accessToken, "ACTIVE");
+      setStatus("ACTIVE");
+      setShowProfile(false); // 클릭했을 때 드롭다운 자동 닫힘
+    } catch (errors) {
+      console.log(errors);
+    }
+  }
+
+  // INACTIVE 상태 변경
+  function handleInactiveStatus() {
+    try {
+      logout();
+    } catch (errors) {
+      console.log(errors);
+    }
+  }
 
   return (
     <header className={styles.header}>
@@ -140,7 +172,7 @@ export function TopBar({ pathname }) {
       <div className={styles.bellWrap}>
         <button
           onClick={() => {
-            setShowNotifs(!showNotifs);
+            setShowNotifs(true);
             setShowProfile(false);
           }}
           className={styles.iconBtn}
@@ -194,7 +226,7 @@ export function TopBar({ pathname }) {
       <div className={styles.profileWrap}>
         <button
           onClick={() => {
-            setShowProfile(!showProfile);
+            setShowProfile(true);
             setShowNotifs(false);
           }}
           className={styles.profileBtn}
@@ -206,15 +238,15 @@ export function TopBar({ pathname }) {
             <WSAvatar src={my.profileImage} name={my.name} size={36} />
             {/* 프로필이미지 상태표시(온라인)  */}
             <span
-              className={`${styles.profileStatus} ${isAway ? styles.profileStatusAway : ""}`}
+              className={`${styles.profileStatus} ${status === "AWAY" ? styles.profileStatusAway : ""}`}
             />
           </div>
           <div className={styles.profileMeta}>
             <div className={styles.profileName}>{my.name}</div>
             <div
-              className={`${styles.profileSub} ${isAway ? styles.profileSubAway : ""}`}
+              className={`${styles.profileSub} ${status === "AWAY" ? styles.profileSubAway : ""}`}
             >
-              {isAway ? "자리 비움" : JOB_GRADE[my.jobGrade]}
+              {status === "AWAY" ? "자리 비움" : JOB_GRADE[my.jobGrade]}
             </div>
           </div>
           <ChevronDown size={14} className={styles.profileChevron} />
@@ -222,45 +254,29 @@ export function TopBar({ pathname }) {
 
         {showProfile && (
           <div className={`${styles.dropdown} ${styles.profileDropdown}`}>
-            {/* <div className={styles.profileDropdownHeader}>
-              <div className={styles.profileDropdownName}>{me.name}</div>
-              <div className={styles.profileDropdownEmail}>{me.email}</div>
-              {isAway && <div className={styles.profileAwayBadge}></div>}
-            </div> */}
-            {/* {[
-              { icon: User, label: "내 프로필" },
-              { icon: Settings, label: "계정 설정" },
-              { icon: HelpCircle, label: "도움말 및 지원" },
-            ].map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.label}
-                  className={styles.menuItem}
-                  type="button"
-                >
-                  <Icon size={15} className={styles.menuIcon} />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })} */}
-
-            <button
-              className={`${styles.menuItem} ${styles.profileAwayBadge}`}
-              onClick={() => {
-                setIsAway(!isAway);
-                setShowProfile(false); // 자리비움 클릭했을 때 드롭다운 자동 닫힘
-                console.log("isAway 변경:", !isAway);
-              }}
-              type="button"
-            >
-              <Coffee size={15} />
-              {isAway ? "온라인으로 변경" : "자리비움"}
-            </button>
+            {status === "ACTIVE" ? (
+              <button
+                className={`${styles.menuItem} ${styles.profileAwayBadge}`}
+                onClick={handleAwayStatus}
+                type="button"
+              >
+                <Coffee size={15} />
+                자리 비움
+              </button>
+            ) : (
+              <button
+                className={`${styles.menuItem} ${styles.profileAwayBadge}`}
+                onClick={handleActiveStatus}
+                type="button"
+              >
+                <UserRound size={15} />
+                온라인
+              </button>
+            )}
             <button
               className={`${styles.menuItem} ${styles.logoutItem}`}
               type="button"
-              onClick={logout}
+              onClick={handleInactiveStatus}
             >
               <LogOut size={15} />
               <span>로그아웃</span>

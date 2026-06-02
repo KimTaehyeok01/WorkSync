@@ -22,6 +22,7 @@ import {
   getMessages,
   sendMessage,
   getMyInfo,
+  readMessage,
 } from "../services/chatApi";
 import s from "./ChatPage.module.css";
 
@@ -98,6 +99,7 @@ function isToday(isoString) {
 function statusColor(status) {
   if (status === "ACTIVE") return "#48BB78";
   if (status === "AWAY") return "#F6AD55";
+  if (status === "INACTIVE") return "#A0AEC0";
   return "#A0AEC0";
 }
 
@@ -363,15 +365,17 @@ export default function Messenger() {
   const [teamMember, setTeamMember] = useState([]);
   const [chatMessages, setChatMessages] = useState([]);
   const [my, setMy] = useState([]);
+  const bottomRef = useRef(null);
+  const ws = new WebSocket("ws://localhost:8080/api/chat/rooms");
 
   // 새 메신저 아래로 스트롤 이동
-  const bottomRef = useRef(null);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
 
   // 멤버 데이터 불러오기
   useEffect(() => {
+    console.log(ws);
     if (!accessToken || !activeConvId) return;
     getMember(accessToken, activeConvId).then((data) => {
       setTeamMember(Array.isArray(data.data) ? data.data : []);
@@ -437,6 +441,15 @@ export default function Messenger() {
     unreadCount: conv.unreadCount,
     pinned: false,
   }));
+
+  function handleConvClick(convId) {
+    setConversation((prev) =>
+      prev.map((conv) =>
+        conv.id === convId ? { ...conv, unreadCount: 0 } : conv,
+      ),
+    );
+    setActiveConvId(convId);
+  }
 
   // 기존 MESSAGES 더미 + 이후 전송한 텍스트/파일 메시지 통합 관리
   // sharedFiles : 오른쪽 패널에 보여줄 파일 목록
@@ -561,7 +574,9 @@ export default function Messenger() {
                   key={conv.id}
                   conv={conv}
                   active={activeConvId === conv.id}
-                  onClick={() => setActiveConvId(conv.id)}
+                  onClick={() => {
+                    handleConvClick(conv.id);
+                  }}
                 />
               ))}
           </div>
@@ -654,7 +669,9 @@ export default function Messenger() {
                       className={`${s.msgMeta} ${msg.isMine ? s.msgMetaMine : ""}`}
                     >
                       <span className={s.msgTime}>{formatTime(msg.time)}</span>
-                      {msg.isMine && <CheckCheck size={12} color="#60A5FA" />}
+                      {msg.unreadCount && (
+                        <CheckCheck size={12} color="#60A5FA" />
+                      )}
                     </div>
                   </div>
                 </div>
