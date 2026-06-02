@@ -96,6 +96,5 @@ public class AuthService {
     }
 
     public void logout() {
-        // 클라이언트에서 토큰 삭제 — 서버는 별도 처리 없음(팀원과 상의해야함)
     }
 }
