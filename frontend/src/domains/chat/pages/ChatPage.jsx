@@ -15,9 +15,9 @@ import {
   getMember,
   getMessages,
   sendMessage,
-  getMyInfo,
   readMessage,
 } from "../services/chatApi";
+import { getMyInfo } from "../../../components/service/TopBarApi";
 import {
   statusColor,
   JOB_GRADE,
