@@ -14,12 +14,14 @@ import com.worksync.global.exception.ErrorCode;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +31,7 @@ public class EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
+    private final SimpMessagingTemplate messagingTemplate;
 
     // 직원 목록 조회 (이름·부서·상태 필터링)
     public List<EmployeeResponse> getEmployees(String name, Long departmentId, EmployeeStatus status) {
@@ -142,6 +145,12 @@ public class EmployeeService {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
         employee.changeStatus(status);
+
+        // 상태 변경을 사용자에게 실시간 전파 (WebSocket)
+        messagingTemplate.convertAndSend(
+                "/topic/status",
+                Map.of("employeeId", employee.getId(), "status", status));
+
         return EmployeeResponse.from(employee);
     }
 }
