@@ -79,6 +79,40 @@ public class AttendanceService {
     return AttendanceResponse.from(attendance);
   }
 
+  // 로그인 연동 출근 — 오늘 기록 없으면 출근 생성
+  @Transactional
+  public void checkInOnLogin(Long employeeId, String clientIp) {
+    LocalDate today = LocalDate.now();
+    LocalDateTime now = LocalDateTime.now();
+
+    // 이미 출근 기록 있으면 아무것도 안 함 (재로그인 허용)
+    if (attendanceRepository.findByEmployeeIdAndWorkDate(employeeId, today).isPresent()) {
+      return;
+    }
+
+    Employee employee = employeeRepository.findById(employeeId)
+            .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
+
+    AttendanceStatus status = now.getHour() >= 9 ? AttendanceStatus.LATE : AttendanceStatus.NORMAL;
+
+    Attendance attendance = Attendance.builder()
+            .employee(employee)
+            .workDate(today)
+            .checkInTime(now)
+            .status(status)
+            .clientIp(clientIp)
+            .build();
+    attendanceRepository.save(attendance);
+  }
+
+  // 로그아웃 연동 퇴근 — 오늘 출근 기록 있으면 퇴근시각 갱신, 없으면 통과
+  @Transactional
+  public void checkOutOnLogout(Long employeeId) {
+    LocalDate today = LocalDate.now();
+    attendanceRepository.findByEmployeeIdAndWorkDate(employeeId, today)
+            .ifPresent(attendance -> attendance.checkOut(LocalDateTime.now()));
+  }
+
   // 내 근태 조회
   public List<AttendanceResponse> getMyAttendance(Long employeeId, int year, int month){
     LocalDate start = LocalDate.of(year, month, 1); // 해당월 첫째날 조회
