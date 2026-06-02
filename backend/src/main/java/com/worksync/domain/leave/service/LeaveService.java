@@ -35,7 +35,7 @@ public class LeaveService {
                 .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
 
         Employee approver = employeeRepository.findById(req.getApproverId())
-                .orElseTHrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
 
         //잔여 연차 부족 검증
         short currentYear = (short) LocalDate.now().getYear();
@@ -53,7 +53,6 @@ public class LeaveService {
                 .leaveType(req.getLeaveType())
                 .startDate(req.getStartDate())
                 .endDate(req.getEndDate())
-                .daysCount(req.getDayCount())
                 .daysCount(req.getDayCount())
                 .reason(req.getReason())
                 .build();
@@ -77,7 +76,7 @@ public class LeaveService {
 
         AnnualLeaveBalance balance=annualLeaveBalanceRepository
                 .findByEmployeeIdAndYear(employeeId, currentYear)
-                .orElseThrow(()->new CustomException(ErrorCode.LEAVE_REQUEST_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ErrorCode.LEAVE_BALANCE_NOT_FOUND));
 
         return LeaveBalanceResponse.from(balance);
     }
