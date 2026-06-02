@@ -89,7 +89,7 @@ export default function ApprovalDetail() {
               </div>
             </div>
           </div>
-          <button onClick={() => navigate("/approval")} className={s.closeBtn}>
+          <button onClick={() => navigate("/approvals")} className={s.closeBtn}>
             <X size={20} />
           </button>
         </div>

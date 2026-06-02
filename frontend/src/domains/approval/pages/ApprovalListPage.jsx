@@ -109,7 +109,7 @@ export default function Approval() {
           />
         </div>
 
-        <button onClick={() => navigate("/approval/new")} className={s.newBtn}>
+        <button onClick={() => navigate("/approvals/new")} className={s.newBtn}>
           <Plus size={16} />
           <span>전체 문서 등록</span>
         </button>
