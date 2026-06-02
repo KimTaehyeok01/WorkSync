@@ -19,8 +19,11 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     // 읽지 않은 메시지 수
     long countByRoomIdAndIdGreaterThanAndSenderIdNot(Long roomId, Long lastReadMessageId, Long senderId);
 
-    // 마지막 메시지
+    // 마지막 메시지 (목록 표시용 - 시각 기준)
     Optional<Message> findTopByRoomIdOrderBySentAtDesc(Long roomId);
+
+    // 마지막 메시지 (읽음 처리용 - id 기준, unread 계산과 정렬 기준 통일)
+    Optional<Message> findTopByRoomIdOrderByIdDesc(Long roomId);
 
     // 읽지 않은 메시지 수 (lastReadMessageId가 null인 경우 — 전체)
     long countByRoomIdAndSenderIdNot(Long roomId, Long senderId);

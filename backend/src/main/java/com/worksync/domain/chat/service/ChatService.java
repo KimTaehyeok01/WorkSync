@@ -244,7 +244,9 @@ public class ChatService {
                 .findByRoomIdAndEmployeeId(roomId, myId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_CHAT_MEMBER));
 
-        messageRepository.findTopByRoomIdOrderBySentAtDesc(roomId)
+        // unread 계산이 id 기준이므로 읽음 처리도 id 기준 최신 메시지로 통일
+        // 일 그만 시켜...ㅠㅠ
+        messageRepository.findTopByRoomIdOrderByIdDesc(roomId)
                 .ifPresent(latest -> myMember.updateLastRead(latest.getId()));
     }
 
