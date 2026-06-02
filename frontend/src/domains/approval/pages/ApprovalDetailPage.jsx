@@ -5,7 +5,7 @@ import { APPROVAL_DOCS, TEAM_MEMBERS } from "../../../constants/mockData";
 import { WSAvatar } from "../../../components/common/CommonWidgets";
 import { getMyInfo, getApprovalById } from "../services/approvalApi";
 import s from "./ApprovalDetailPage.module.css";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 
 const STATUS_CONFIG = {
   PENDING: { label: "대기", bg: "#FEF3C7", text: "#92400E" },
@@ -20,14 +20,14 @@ const APPROVAL_STEPS = [
 ];
 
 function stepClass(status) {
-  if (status === "approved") return s.stepApproved;
-  if (status === "rejected") return s.stepRejected;
+  if (status === "APPROVED") return s.stepApproved;
+  if (status === "REJECTED") return s.stepRejected;
   return s.stepPending;
 }
 
 function stepLabelColor(status) {
-  if (status === "approved") return "#16A34A";
-  if (status === "rejected") return "#DC2626";
+  if (status === "APPROVED") return "#16A34A";
+  if (status === "REJECTED") return "#DC2626";
   return "#9CA3AF";
 }
 
@@ -37,21 +37,26 @@ export default function ApprovalDetail() {
   const { accessToken } = useAuthContext();
   const [status, setStatus] = useState(null);
   const [approvalLines, setApprovalLines] = useState([]);
-  const [approval, setApproval] = useState([]);
+  const [approval, setApproval] = useState(null);
+  const fallbackStatusConfig = {
+    label: "알 수 없음",
+    bg: "#E5E7EB",
+    text: "#374151",
+  };
+  
+  
 
   useEffect(() => {
     if (!accessToken) return;
-    getApprovalById(accessToken).then((data) => {
+    getApprovalById(accessToken, id).then((data) => {
       if (!data) return;
       setApproval(data);
       setStatus(data.status);
-      setApprovalLines(data.approvalLines);
+      setApprovalLines(data.approvalLines ?? []);
     });
-  });
+  }, [accessToken, id]);
 
-  const doc = APPROVAL_DOCS.find((d) => d.id === id);
-
-  if (!doc) {
+  if (!approval) {
     return (
       <div className={s.notFound}>
         <p>문서를 찾을 수 없습니다</p>
@@ -59,7 +64,7 @@ export default function ApprovalDetail() {
     );
   }
 
-  const statusConfig = STATUS_CONFIG[doc.status];
+  const statusConfig = STATUS_CONFIG[approval.status] ?? fallbackStatusConfig;
 
   return (
     <div className={s.root}>
@@ -75,12 +80,12 @@ export default function ApprovalDetail() {
             >
               {statusConfig.label}
             </div>
-            <h1 className={s.title}>{doc.title}</h1>
+            <h1 className={s.title}>{approval.title}</h1>
             <div className={s.requesterRow}>
-              <WSAvatar src={null} name={doc.drafterName} size={32} />
+              <WSAvatar src={null} name={approval.drafterName} size={32} />
               <div>
-                <p className={s.requesterName}>{doc.drafterName}</p>
-                <p className={s.requesterDate}>{doc.createdAt}</p>
+                <p className={s.requesterName}>{approval.drafterName}</p>
+                <p className={s.requesterDate}>{approval.createdAt}</p>
               </div>
             </div>
           </div>
@@ -129,59 +134,7 @@ export default function ApprovalDetail() {
       </div>
 
       <div className={s.section}>
-        <h2 className={s.sectionTitle}>법인카드 지출결의서</h2>
-        <p className={s.sectionSub}>제출된 문서 미리보기</p>
-
-        <div className={s.previewStack}>
-          <div className={s.infoGrid}>
-            <div>
-              <p className={s.infoLabel}>제목</p>
-              <p className={s.infoValue}>2026년 4월 지출결의서입니다.</p>
-            </div>
-            <div></div>
-            <div>
-              <p className={s.infoLabel}>소속</p>
-              <p className={s.infoValue}>기획팀</p>
-            </div>
-            <div>
-              <p className={s.infoLabel}>작성자</p>
-              <p className={s.infoValue}>Marcus Lee</p>
-            </div>
-            <div className={s.infoFull}>
-              <p className={s.infoLabel}>지출사유</p>
-              <p className={s.infoValue}>
-                2026년 4월 근무 중 발생한 사내 비품을 지출합니다.
-              </p>
-            </div>
-            <div>
-              <p className={s.infoLabel}>금액</p>
-              <p className={`${s.infoValue} ${s.infoValueBold}`}>20,000</p>
-            </div>
-          </div>
-
-          <div className={s.tableWrap}>
-            <table className={s.tbl}>
-              <thead>
-                <tr>
-                  <th>일자</th>
-                  <th>분류</th>
-                  <th>사용내역</th>
-                  <th>금액</th>
-                  <th>비고</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>2026-04-09</td>
-                  <td>물품구입비</td>
-                  <td>필기구 외 물품구입</td>
-                  <td className={s.tdAmount}>20,000</td>
-                  <td></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+        {/* 양식 */}
       </div>
 
       <div className={s.section}>
