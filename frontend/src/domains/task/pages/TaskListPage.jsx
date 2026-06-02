@@ -90,7 +90,6 @@ export default function Tasks() {
   });
 
   const perPage = 10;
-  const paginatedTasks = filtered.slice((page - 1) * perPage, page * perPage);
 
   return (
     <div>
@@ -123,7 +122,7 @@ export default function Tasks() {
           gridTemplate="100px 1fr 120px 150px 220px"
         />
 
-        {paginatedTasks.length === 0 ? (
+        {tasks.length === 0 ? (
           <div className={s.empty}>
             <WSEmptyState
               icon={<ClipboardList size={32} />}
@@ -132,7 +131,7 @@ export default function Tasks() {
             />
           </div>
         ) : (
-          paginatedTasks.map((task) => {
+          tasks.map((task) => {
             const config = STATUS_CONFIG[task.status];
             return (
               <div
@@ -159,10 +158,9 @@ export default function Tasks() {
           })
         )}
       </div>
-
       <div className={s.pagination}>
         <WSPagination
-          total={filtered.length}
+          total={totalElements}
           page={page}
           perPage={perPage}
           onPageChange={setPage}
