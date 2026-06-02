@@ -3,7 +3,6 @@ package com.worksync.domain.file.controller;
 import com.worksync.domain.file.dto.FileUploadResponse;
 import com.worksync.domain.file.service.FileService;
 import com.worksync.global.response.ApiResponse;
-import com.worksync.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,12 +21,12 @@ public class FileController {
   // 파일 업로드
   @PostMapping("/upload")
   public ResponseEntity<ApiResponse<FileUploadResponse>> upload(
-          @AuthenticationPrincipal CustomUserDetails userDetails,
+          @AuthenticationPrincipal (expression = "id") Long userId,
           @RequestParam("file") MultipartFile file,
           @RequestParam("refType") String refType,
           @RequestParam("refId") Long refId) {
     return ResponseEntity.status(201)
-            .body(ApiResponse.created(fileService.upload(file, userDetails.getId(), refType, refId)));
+            .body(ApiResponse.created(fileService.upload(file, userId, refType, refId)));
   }
 
   // 파일 단건 조회
