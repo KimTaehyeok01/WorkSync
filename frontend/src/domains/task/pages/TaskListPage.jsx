@@ -155,7 +155,7 @@ export default function Tasks() {
                     size={28}
                   />
                   <span className={s.assigneeName}>
-                    {task.assigneeName.split(" ")[0] ?? "미배정"}
+                    {task.assigneeName?.split(" ")[0] ?? "미배정"}
                   </span>
                 </div>
                 <p className={s.period}>
