@@ -109,8 +109,9 @@ export default function Messenger() {
         client.subscribe(`/topic/room/${activeConvId}`, (frame) => {
           const msg = JSON.parse(frame.body);
           setChatMessages((prev) => {
+            const exists = prev.some((m) => m.id === msg.id);
             // 이미 있는 메시지면 무시 (중복 방지)
-            if (prev.some((m) => m.id === msg.id)) return prev;
+            if (exists) return prev;
             return [
               ...prev,
               {
