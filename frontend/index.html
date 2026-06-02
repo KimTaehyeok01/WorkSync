@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WorkSync</title>
+    <!-- sockjs-client가 참조하는 global 객체를 브라우저 환경에 정의 -->
+    <script>
+      window.global = window;
+    </script>
   </head>
   <body>
     <div id="root"></div>
