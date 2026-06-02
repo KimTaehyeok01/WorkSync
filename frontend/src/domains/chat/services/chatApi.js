@@ -112,25 +112,6 @@ export async function sendMessage(accessToken, roomId, content) {
     });
 }
 
-export async function getMyInfo(accessToken) {
-  return await fetch(`${BASE_URL}/employees/me`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
-  })
-    .then((response) => {
-      return response.json();
-    })
-    .then((json) => {
-      return json;
-    })
-    .catch((error) => {
-      console.log("에러발생: " + error);
-    });
-}
-
 export async function readMessage(accessToken, roomId) {
   return await fetch(`${BASE_URL}/chat/rooms/${roomId}/read`, {
     method: "PUT",
