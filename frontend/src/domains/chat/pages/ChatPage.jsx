@@ -57,6 +57,28 @@ export default function Messenger() {
       setTeamMember(Array.isArray(data.data) ? data.data : []);
     });
   }, [activeConvId]);
+
+  // 구성원 상태 실시간 구독 — 누군가 온라인/자리비움 변경 시 점 즉시 갱신
+  useEffect(() => {
+    const client = new Client({
+      webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
+      reconnectDelay: 5000,
+      onConnect: () => {
+        client.subscribe("/topic/status", (frame) => {
+          const data = JSON.parse(frame.body);
+          setTeamMember((prev) =>
+            prev.map((m) =>
+              m.employeeId === data.employeeId
+                ? { ...m, status: data.status }
+                : m,
+            ),
+          );
+        });
+      },
+    });
+    client.activate();
+    return () => client.deactivate();
+  }, []);
   const TEAM_MEMBERS = Array.isArray(teamMember)
     ? teamMember.map((member) => ({
         employeeId: member.employeeId,
