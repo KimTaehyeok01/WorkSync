@@ -47,9 +47,9 @@ export const router = createBrowserRouter([
     element: <AuthRouter Component={Layout} />,
     children: [
       { index: true, Component: DashboardPage },
-      { path: "approvals", Component: ApprovalListPage },
-      { path: "approvals/new", Component: ApprovalCreatePage },
-      { path: "approvals/:id", Component: ApprovalDetailPage },
+      { path: "approval", Component: ApprovalListPage },
+      { path: "approval/new", Component: ApprovalCreatePage },
+      { path: "approval/:id", Component: ApprovalDetailPage },
       { path: "board", Component: BoardListPage },
       { path: "board/new", Component: BoardCreatePage },
       { path: "board/notice", Component: BoardListPage },
