@@ -65,6 +65,7 @@ public class AuthService {
                 .name(employee.getName())
                 .email(employee.getEmail())
                 .role(employee.getRole())
+                .status(employee.getStatus())
                 .departmentName(employee.getDepartment() != null ?
                         employee.getDepartment().getName() : null)
                 .profileImage(employee.getProfileImage())
