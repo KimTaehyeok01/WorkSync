@@ -5,6 +5,7 @@ import com.worksync.domain.auth.dto.LoginResponse;
 import com.worksync.domain.auth.dto.ReissueRequest;
 import com.worksync.domain.auth.service.AuthService;
 import com.worksync.global.response.ApiResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,12 +20,14 @@ public class AuthController {
 
     private final AuthService authService;
 
-    // 로그인 — 이메일/비밀번호 검증 후 JWT 토큰 발급
+    // 로그인 — 사번/비밀번호 검증 후 JWT 토큰 발급 (로그인 시 출근 자동 기록)
     @PostMapping("/token")
     public ResponseEntity<ApiResponse<LoginResponse>> login(
-            @RequestBody @Valid LoginRequest request) {
+            @RequestBody @Valid LoginRequest request,
+            HttpServletRequest httpRequest) {
 
-        return ResponseEntity.ok(ApiResponse.ok(authService.login(request)));
+        String clientIp = httpRequest.getRemoteAddr();
+        return ResponseEntity.ok(ApiResponse.ok(authService.login(request, clientIp)));
     }
 
     // 토큰 재발급 — 리프레시 토큰으로 새 액세스/리프레시 토큰 발급

@@ -1,5 +1,6 @@
 package com.worksync.domain.auth.service;
 
+import com.worksync.domain.attendance.service.AttendanceService;
 import com.worksync.domain.auth.dto.LoginRequest;
 import com.worksync.domain.auth.dto.LoginResponse;
 import com.worksync.domain.auth.dto.ReissueRequest;
@@ -26,12 +27,13 @@ public class AuthService {
     private final EmployeeRepository employeeRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final AttendanceService attendanceService;
 
     private static final int MAX_LOGIN_FAIL = 5;
     private static final int LOCK_MINUTES = 30;
 
     @Transactional(noRollbackFor = CustomException.class)
-    public LoginResponse login(LoginRequest request) {
+    public LoginResponse login(LoginRequest request, String clientIp) {
         Employee employee = employeeRepository.findByEmpNo(request.getEmpNo())
                 .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CREDENTIALS));
 
@@ -56,6 +58,9 @@ public class AuthService {
         employee.resetLoginFailCount();
         // 상태 변경
         employee.changeStatus(EmployeeStatus.ACTIVE);
+
+        // 로그인 = 출근 처리
+        attendanceService.checkInOnLogin(employee.getId(), clientIp);
 
         String accessToken = jwtTokenProvider.generateAccessToken(
                 employee.getId(), employee.getEmail(), employee.getRole().name());
@@ -108,5 +113,8 @@ public class AuthService {
                 .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
         // 로그아웃 = 오프라인(AWAY). INACTIVE(퇴직)로 만들면 재로그인이 차단됨
         employee.changeStatus(EmployeeStatus.AWAY);
+
+        // 로그아웃 = 퇴근 처리
+        attendanceService.checkOutOnLogout(employee.getId());
     }
 }
