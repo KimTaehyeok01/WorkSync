@@ -15,6 +15,7 @@ import com.worksync.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +35,7 @@ public class ChatService {
     private final MessageRepository messageRepository;
     private final EmployeeRepository employeeRepository;
     private final NotificationService notificationService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     // 채팅방 생성
     @Transactional
@@ -229,7 +231,11 @@ public class ChatService {
                         roomId
                 ));
 
-        return MessageResponse.from(message);
+        // 채팅방 구독자에게 실시간 메시지 전송 (WebSocket)
+        MessageResponse response = MessageResponse.from(message);
+        messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
+
+        return response;
     }
 
     // 읽음 처리
