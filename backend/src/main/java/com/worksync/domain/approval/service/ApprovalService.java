@@ -83,7 +83,7 @@ public class ApprovalService {
                 .anyMatch(l -> l.getStepType() == StepType.REVIEW
                         || l.getStepType() == StepType.APPROVE);
         if (!hasReviewOrApprove) {
-            throw new CustomException(ErrorCode.ALREADY_PROCESSED);
+            throw new CustomException(ErrorCode.INVALID_APPROVAL_LINE);
         }
 
         approvalDocRepository.save(doc);
@@ -202,7 +202,7 @@ public class ApprovalService {
                 .filter(l -> l.getStepType() == StepType.REVIEW || l.getStepType() == StepType.APPROVE)
                 .anyMatch(l -> l.getStatus() == ApprovalLineStatus.APPROVED);
         if (alreadyStarted) {
-            throw new CustomException(ErrorCode.ALREADY_PROCESSED);
+            throw new CustomException(ErrorCode.APPROVAL_EDIT_FORBIDDEN);
         }
 
         doc.updateTitle(request.getTitle());
@@ -239,7 +239,7 @@ public class ApprovalService {
                 .filter(l -> l.getStepType() == StepType.REVIEW || l.getStepType() == StepType.APPROVE)
                 .anyMatch(l -> l.getStatus() == ApprovalLineStatus.APPROVED);
         if (alreadyStarted) {
-            throw new CustomException(ErrorCode.ALREADY_PROCESSED);
+            throw new CustomException(ErrorCode.APPROVAL_EDIT_FORBIDDEN);
         }
 
         approvalDocRepository.delete(doc);
@@ -259,7 +259,7 @@ public class ApprovalService {
         // APPROVED / REJECTED 만 허용 (WAITING 상태 차단)
         if (request.getStatus() != ApprovalLineStatus.APPROVED
                 && request.getStatus() != ApprovalLineStatus.REJECTED) {
-            throw new CustomException(ErrorCode.ALREADY_PROCESSED);
+            throw new CustomException(ErrorCode.INVALID_APPROVAL_STATUS);
         }
 
         // 나의 WAITING 결재선 찾기
