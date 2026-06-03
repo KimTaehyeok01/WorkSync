@@ -27,7 +27,11 @@ public enum ErrorCode {
     APPROVAL_DOC_NOT_FOUND(404, "존재하지 않는 결재 문서입니다."),
     APPROVAL_FORM_NOT_FOUND(404, "존재하지 않는 결재 양식입니다."),
     NOT_YOUR_APPROVAL(403, "결재 권한이 없습니다."),
-    ALREADY_PROCESSED(400, "이미 처리된 결재입니다."),
+    ALREADY_PROCESSED(400, "이미 완결된 결재 문서입니다."),
+    APPROVAL_EDIT_FORBIDDEN(403, "결재가 진행 중이어서 수정 또는 삭제할 수 없습니다."),
+    INVALID_APPROVAL_LINE(400, "결재선에 결재자(검토/승인)가 최소 1명 이상 필요합니다."),
+    INVALID_APPROVAL_STATUS(400, "승인 또는 반려 상태만 처리할 수 있습니다."),
+    INVALID_DRAFT_LINE(400, "기안자 본인만 DRAFT 결재선에 등록할 수 있습니다."),
 
     // 업무
     TASK_NOT_FOUND(404, "존재하지 않는 업무입니다."),
