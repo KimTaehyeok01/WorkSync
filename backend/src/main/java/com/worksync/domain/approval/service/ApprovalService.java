@@ -13,7 +13,6 @@ import com.worksync.domain.approval.entity.ApprovalForm;
 import com.worksync.domain.approval.entity.ApprovalLine;
 import com.worksync.domain.approval.entity.ApprovalLineStatus;
 import com.worksync.domain.approval.entity.StepType;
-import com.worksync.domain.approval.repository.ApprovalDocItemRepository;
 import com.worksync.domain.approval.repository.ApprovalDocRepository;
 import com.worksync.domain.approval.repository.ApprovalFormRepository;
 import com.worksync.domain.approval.repository.ApprovalLineRepository;
@@ -40,7 +39,6 @@ public class ApprovalService {
     private final ApprovalDocRepository approvalDocRepository;
     private final ApprovalLineRepository approvalLineRepository;
     private final ApprovalFormRepository approvalFormRepository;
-    private final ApprovalDocItemRepository approvalDocItemRepository;
     private final EmployeeRepository employeeRepository;
     private final NotificationService notificationService;
 
@@ -80,6 +78,14 @@ public class ApprovalService {
                 .submittedAt(LocalDateTime.now())
                 .build();
 
+        // 결재선 유효성 검증 — REVIEW/APPROVE 라인 최소 1개 필수
+        boolean hasReviewOrApprove = request.getApprovalLines().stream()
+                .anyMatch(l -> l.getStepType() == StepType.REVIEW
+                        || l.getStepType() == StepType.APPROVE);
+        if (!hasReviewOrApprove) {
+            throw new CustomException(ErrorCode.ALREADY_PROCESSED);
+        }
+
         approvalDocRepository.save(doc);
 
         // 결재선 생성 — doc 컬렉션에 직접 추가
@@ -94,8 +100,11 @@ public class ApprovalService {
                     .stepType(lineReq.getStepType())
                     .build();
 
-            // DRAFT 타입(기안자 본인)은 제출 시 자동 승인
+            // DRAFT 타입은 기안자 본인만 등록 가능, 제출 시 자동 승인
             if (lineReq.getStepType() == StepType.DRAFT) {
+                if (!lineReq.getApproverId().equals(drafterId)) {
+                    throw new CustomException(ErrorCode.NOT_YOUR_APPROVAL);
+                }
                 line.process(ApprovalLineStatus.APPROVED, null);
             }
 
@@ -188,7 +197,7 @@ public class ApprovalService {
             throw new CustomException(ErrorCode.ALREADY_PROCESSED);
         }
 
-        // 이미 승인한 경우 수정 불가
+        // 이미 한 명이라도 승인한 경우 수정 불가
         boolean alreadyStarted = doc.getApprovalLines().stream()
                 .filter(l -> l.getStepType() == StepType.REVIEW || l.getStepType() == StepType.APPROVE)
                 .anyMatch(l -> l.getStatus() == ApprovalLineStatus.APPROVED);
@@ -212,16 +221,24 @@ public class ApprovalService {
         return ApprovalDetailResponse.from(doc);
     }
 
-    // 결재 문서 취소/삭제 (기안자 본인 + IN_PROGRESS 상태만 가능)
+    // 결재 문서 취소/삭제 (기안자 본인 + IN_PROGRESS + 아직 아무도 승인 안 한 경우만 가능)
     @Transactional
     public void deleteDoc(Long id, Long drafterId) {
-        ApprovalDoc doc = approvalDocRepository.findById(id)
+        ApprovalDoc doc = approvalDocRepository.findWithDetailsById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.APPROVAL_DOC_NOT_FOUND));
 
         if (!doc.getDrafter().getId().equals(drafterId)) {
             throw new CustomException(ErrorCode.NOT_YOUR_APPROVAL);
         }
         if (doc.getStatus() != ApprovalDocStatus.IN_PROGRESS) {
+            throw new CustomException(ErrorCode.ALREADY_PROCESSED);
+        }
+
+        // 이미 한 명이라도 승인한 경우 삭제 불가
+        boolean alreadyStarted = doc.getApprovalLines().stream()
+                .filter(l -> l.getStepType() == StepType.REVIEW || l.getStepType() == StepType.APPROVE)
+                .anyMatch(l -> l.getStatus() == ApprovalLineStatus.APPROVED);
+        if (alreadyStarted) {
             throw new CustomException(ErrorCode.ALREADY_PROCESSED);
         }
 
@@ -236,6 +253,12 @@ public class ApprovalService {
 
         // 이미 완결된 문서는 처리 불가
         if (doc.getStatus() != ApprovalDocStatus.IN_PROGRESS) {
+            throw new CustomException(ErrorCode.ALREADY_PROCESSED);
+        }
+
+        // APPROVED / REJECTED 만 허용 (WAITING 상태 차단)
+        if (request.getStatus() != ApprovalLineStatus.APPROVED
+                && request.getStatus() != ApprovalLineStatus.REJECTED) {
             throw new CustomException(ErrorCode.ALREADY_PROCESSED);
         }
 
