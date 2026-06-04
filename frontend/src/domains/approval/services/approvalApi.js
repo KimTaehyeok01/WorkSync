@@ -1,5 +1,6 @@
 const BASE_URL = "http://localhost:8080/api";
 
+// 내 정보 조회
 export async function getMyInfo(accessToken) {
   return await fetch(`${BASE_URL}/employees/me`, {
     method: "GET",
@@ -18,6 +19,44 @@ export async function getMyInfo(accessToken) {
     .catch((error) => {
       console.log("에러발생: " + error);
     });
+}
+
+// 직원 목록 조회
+export async function getEmployees(accessToken) {
+  return await fetch(`${BASE_URL}/employees`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "appliction/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+    .then((response) => {
+      console.log("status : ", response.status);
+      return response.json();
+    })
+    .then((text) => {
+      console.log("employees 응답 : " + text);
+      return text.data ?? [];
+    })
+    .catch((error) => console.log("에러발생 : " + error));
+}
+
+// 전자결재 등록
+export async function createApproval(accessToken, body) {
+  return await fetch(`${BASE_URL}/approvals`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(body),
+  })
+    .then((response) => response.json())
+    .then((json) => {
+      console.log("등록 결과 : ", json);
+      return json;
+    })
+    .catch((error) => console.log("에러 발생 : " + error));
 }
 
 export async function getMyApprovals(accessToken, status = "all") {
