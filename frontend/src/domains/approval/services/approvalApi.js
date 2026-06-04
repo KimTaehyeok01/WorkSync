@@ -65,3 +65,23 @@ export async function getApprovalById(accessToken, id) {
       console.log("에러발생 : " + error);
     });
 }
+
+export async function getApprovalByForm(accessToken) {
+  return await fetch(`${BASE_URL}/approvals/forms`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+    .then((response) => {
+      return response.json();
+    })
+    .then((json) => {
+      console.log("data : " + json);
+      return json.data;
+    })
+    .catch((error) => {
+      console.log("에러발생 : " + error);
+    });
+}

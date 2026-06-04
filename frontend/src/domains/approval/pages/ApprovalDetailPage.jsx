@@ -43,8 +43,6 @@ export default function ApprovalDetail() {
     bg: "#E5E7EB",
     text: "#374151",
   };
-  
-  
 
   useEffect(() => {
     if (!accessToken) return;
@@ -55,6 +53,14 @@ export default function ApprovalDetail() {
       setApprovalLines(data.approvalLines ?? []);
     });
   }, [accessToken, id]);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    getApprovalByForm(accessToken).then((data) => {
+      if (!data) return;
+      
+    });
+  }, [accessToken]);
 
   if (!approval) {
     return (
@@ -82,7 +88,7 @@ export default function ApprovalDetail() {
             </div>
             <h1 className={s.title}>{approval.title}</h1>
             <div className={s.requesterRow}>
-              <WSAvatar src={null} name={approval.drafterName} size={32} />
+              <WSAvatar src={null} name={approvaldrafterName} size={32} />
               <div>
                 <p className={s.requesterName}>{approval.drafterName}</p>
                 <p className={s.requesterDate}>{approval.createdAt}</p>
@@ -134,7 +140,31 @@ export default function ApprovalDetail() {
       </div>
 
       <div className={s.section}>
-        {/* 양식 */}
+        <h2 className={s.sectionTitle}>{approval.formName}</h2>
+        <p className={s.sectionSub}>제출된 문서 미리보기</p>
+
+        <div className={s.previewStack}>
+          <div className={s.infoGrid}>
+            <div>
+              <p className={s.infoLabel}>제목</p>
+              <p className={s.infoValue}>{approval.title}</p>
+            </div>
+            <div>
+              <p className={s.infoLabel}>작성자</p>
+              <p className={s.infoValue}>{approval.drafterName}</p>
+            </div>
+            <div>
+              <p className={s.infoLabel}>작성일</p>
+              <p className={s.infoValue}>{approval.createdAt?.slice(0, 10)}</p>
+            </div>
+            <div>
+              <p className={s.infoLabel}>제출일</p>
+              <p className={s.infoValue}>
+                {approval.submittedAt?.slice(0, 10) ?? "미제출"}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className={s.section}>
