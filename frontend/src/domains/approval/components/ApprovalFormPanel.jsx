@@ -3,10 +3,10 @@ import { Plus, Trash2 } from "lucide-react";
 import { WSCard } from "../../../components/common/CommonWidgets";
 import s from "./ApprovalFormPanel.module.css";
 
-// 지출 결의서
+// 지출 결의서 양식 컴포넌트
 // formValues: 현재 입력값 객체
 // setFormValues: 입력값 업데이트 함수
-function ExpenseForm({ formValues, setFormValues }) {
+function ExpenseForm({ formValues, setFormValues, myInfo, title, setTitle }) {
   // 사용 내역 행 목록 (처음엔 빈 행 1개)
   const [rows, setRows] = useState([
     {
@@ -50,67 +50,312 @@ function ExpenseForm({ formValues, setFormValues }) {
   const CATEGORIES = ["물품구입비", "교통비", "식비", "숙박비", "기타"];
 
   return (
+    <>
+      {/* 기본 정보 */}
+      <WSCard title="기본 정보" subtitle="결재 문서의 기본 정보를 입력하세요">
+        <div className={s.formGrid}>
+          <div className={s.row2}>
+            <div>
+              <label className={s.label}>
+                소속<span className={s.required}>*</span>
+              </label>
+              <input
+                type="text"
+                value={myInfo?.departmentName ?? ""}
+                readOnly
+                className={s.input}
+              />
+            </div>
+          </div>
+          <div>
+            <label className={s.label}>
+              제목 <span className={s.required}>*</span>
+            </label>
+            <input
+              type="text"
+              placeholder="결재 문서 제목을 입력하세요"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className={s.input}
+            />
+          </div>
+          <div>
+            <label className={s.label}>
+              지출 사유 <span className={s.required}>*</span>
+            </label>
+            <textarea
+              placeholder="지출 사유를 입력하세요."
+              value={formValues.reason ?? ""}
+              onChange={(e) =>
+                setFormValues((prev) => ({ ...prev, reason: e.target.value }))
+              }
+              className={s.textarea}
+            ></textarea>
+          </div>
+          <div>
+            <label className={s.label}>
+              금액 합계<span className={s.required}>*</span>
+            </label>
+            <input
+              type="number"
+              value={formValues.amount ?? ""}
+              readOnly
+              className={s.input}
+            />
+          </div>
+        </div>
+      </WSCard>
+
+      <WSCard
+        title="사용 내역"
+        subtitle="영수증은 첨부파일 또는 별도로 제출하세요"
+      >
+        {/* 행 추가 버튼 */}
+        <button onClick={addRow} className={s.addRowBtn} type="button">
+          <Plus size={14} />
+          사용 내역 추가
+        </button>
+
+        {/* 행 목록 렌더링 */}
+        {rows.map((row) => (
+          <div key={row.id} className={s.tableRow}>
+            {/* 일자 */}
+            <input
+              type="date"
+              value={row.date}
+              onChange={(e) => updateRow(row.id, "date", e.target.value)}
+              className={s.tableInput}
+              style={{ width: 130, flex: "none" }}
+            />
+            {/* 분류 선택 */}
+            <select
+              value={row.category}
+              onChange={(e) => updateRow(row.id, "category", e.target.value)}
+              className={s.tableSelect}
+              style={{ width: 110, flex: "none" }}
+            >
+              <option value="">분류 선택</option>
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+            {/* 사용 내역 */}
+            <input
+              type="text"
+              placeholder="사용 내역"
+              value={row.description}
+              onChange={(e) => updateRow(row.id, "description", e.target.value)}
+              className={s.tableInput}
+              style={{ flex: 1 }}
+            />
+            {/* 금액 */}
+            <input
+              type="number"
+              placeholder="0"
+              value={row.amount}
+              onChange={(e) => updateRow(row.id, "amount", e.target.value)}
+              className={s.tableInput}
+              style={{ width: 90, flex: "none" }}
+            />
+            {/* 비고 */}
+            <input
+              type="text"
+              placeholder="비고"
+              value={row.note}
+              onChange={(e) => updateRow(row.id, "note", e.target.value)}
+              className={s.tableInput}
+              style={{ width: 80, flex: "none" }}
+            />
+            {/* 행 삭제 버튼 */}
+            <button
+              onClick={() => delRow(row.id)}
+              className={s.delRowBtn}
+              type="button"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        ))}
+        {/* 합계 표시 */}
+        <div className={s.totalRow}>
+          <span className={s.totalLabel}>금액 합계</span>
+          <span className={s.totalValue}>{total.toLocaleString()}원</span>
+        </div>
+      </WSCard>
+    </>
+  );
+}
+
+// 연차 신청서 양식 컴포넌트
+function LeaveForm({ formValues, setFormValues }) {
+  // 특정 key의 값만 업데이트하는 함수
+  // ex: update("reason", "개인 사유") -> formValues.reason = "개인 사유"
+  const update = (key, value) =>
+    setFormValues((prev) => ({ ...prev, [key]: value }));
+
+  return (
+    <WSCard title="연차 신청서" subtitle="휴가 정보를 입력하세요">
+      <div className={s.formGrid}>
+        <div className={s.row2}>
+          {/* 휴가 종류 선택 */}
+          <div>
+            <label className={s.label}>
+              휴가 종류 <span className={s.required}>*</span>
+            </label>
+            <select
+              value={formValues.leaveType ?? ""}
+              onChange={(e) => update("leaveType", e.target.value)}
+              className={s.select}
+            >
+              <option value="">선택</option>
+              <option value="연차">연차</option>
+              <option value="반차">반차</option>
+              <option value="병가">병가</option>
+              <option value="휴가">휴가</option>
+            </select>
+          </div>
+          {/* 휴가 기간(날짜 선택) */}
+          <div>
+            <label className={s.label}>
+              휴가 기간 <span className={s.required}>*</span>
+            </label>
+            <input
+              type="date"
+              value={formValues.days ?? ""}
+              onChange={(e) => update("days", e.target.value)}
+              className={s.dateInput}
+            />
+          </div>
+        </div>
+        {/* 휴가 사유 텍스트 입력 */}
+        <div>
+          <label className={s.label}>
+            휴가 사유 <span className={s.required}>*</span>
+          </label>
+          <textarea
+            placeholder="휴가 사유를 입력하세요."
+            value={formValues.reason ?? ""}
+            onChange={(e) => update("reason", e.target.value)}
+            className={s.textarea}
+          ></textarea>
+        </div>
+      </div>
+    </WSCard>
+  );
+}
+
+// 구매 요청서 양식 컴포넌트
+function PurchaseForm({ formValues, setFormValues }) {
+  // 구매 요청 행 목록
+  const [rows, setRows] = useState([
+    {
+      id: Date.now(),
+      item: "",
+      quantity: "",
+      unitPrice: "",
+      amount: "",
+      note: "",
+    },
+  ]);
+
+  const addRow = () =>
+    setRows((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        item: "",
+        quantity: "",
+        unitPrice: "",
+        amount: "",
+        note: "",
+      },
+    ]);
+
+  const delRow = (id) => setRows((prev) => prev.filter((r) => r.id !== id));
+
+  // 수량 또는 단가 변경 시 금액 자동 계산
+  const updateRow = (id, key, value) => {
+    const updated = rows.map((r) => {
+      if (r.id !== id) return r;
+      const newRow = { ...r, [key]: value };
+      // 수량 * 단가 = 금액 자동 계산
+      if (key === " quantity" || key === "unitPrice") {
+        newRow.amount =
+          (Number(newRow.quantity) || 0) * (Number(newRow.quantity) || 0);
+      }
+      return newRow;
+    });
+    setRows(updated);
+    setFormValues((prev) => ({ ...prev, items: updated }));
+  };
+
+  const total = rows.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+
+  return (
     <WSCard
-      title="사용 내역"
+      title="구매 요청 내역"
       subtitle="영수증은 첨부파일 또는 별도로 제출하세요"
     >
-      {/* 행 추가 버튼 */}
       <button onClick={addRow} className={s.addRowBtn} type="button">
         <Plus size={14} />
-        사용 내역 추가
+        구매 요청 내역 추가
       </button>
-
-      {/* 행 목록 렌더링 */}
       {rows.map((row) => (
         <div key={row.id} className={s.tableRow}>
-          {/* 일자 */}
-          <input
-            type="date"
-            value={row.date}
-            onChange={(e) => updateRow(row.id, "date", e.target.value)}
-            className={s.tableInput}
-            style={{ maxWidth: 140 }}
-          />
-          {/* 분류 선택 */}
-          <select
-            value={row.category}
-            onChange={(e) => updateRow(row.id, "category", e.target.value)}
-            className={s.tableSelect}
-          >
-            <option value="">분류 선택</option>
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-          {/* 사용 내역 */}
+          {/* 요청 내역 */}
           <input
             type="text"
-            placeholder="사용 내역"
-            value={row.description}
-            onChange={(e) => updateRow(row.id, "description", e.target.value)}
+            placeholer="요청 내역"
+            value={row.item}
+            onChange={(e) => updateRow(row.id, "item", e.target.value)}
             className={s.tableInput}
           />
-          {/* 금액 */}
+          {/* 수량 */}
           <input
             type="number"
-            placeholder="0"
-            value={row.amount}
-            onChange={(e) => updateRow(row.id, "amount", e.target.value)}
+            placeholer="수량"
+            value={row.quantity}
+            onChange={(e) => updateRow(row.id, "quantity", e.target.value)}
+            className={s.tableInput}
+            style={{ maxWidth: 80 }}
+          />
+          {/* 단가 */}
+          <input
+            type="number"
+            placeholer="단가"
+            value={row.unitPrice}
+            onChange={(e) => updateRow(row.id, "unitPrice", e.target.value)}
             className={s.tableInput}
             style={{ maxWidth: 100 }}
           />
-          {/* 비고 */}
+          {/* 금액 (수량 * 단가 자동 계산, 읽기 전용) */}
+          <input
+            type="number"
+            placeholer="금액"
+            value={row.amount}
+            readOnly
+            className={s.tableInput}
+            style={{ maxWidth: 100 }}
+          />
+          {/* 날짜 */}
+          <input
+            type="date"
+            value={row.date ?? ""}
+            onChange={(e) => updateRow(row.id, "date", e.target.value)}
+            className={s.tableInput}
+            style={{ maxWidth: 100 }}
+          />
+          {/* 비고
+           */}
           <input
             type="text"
-            placeholder="비고"
             value={row.note}
             onChange={(e) => updateRow(row.id, "note", e.target.value)}
             className={s.tableInput}
             style={{ maxWidth: 100 }}
           />
-          {/* 행 삭제 버튼 */}
           <button
             onClick={() => delRow(row.id)}
             className={s.delRowBtn}
@@ -120,23 +365,165 @@ function ExpenseForm({ formValues, setFormValues }) {
           </button>
         </div>
       ))}
-      {/* 합계 표시 */}
+
       <div className={s.totalRow}>
         <span className={s.totalLabel}>금액 합계</span>
-        <span className={s.totalValue}>{total.toLocaleString()}원</span>
+        <span className={s.totalLabel}>{total.toLocaleString()}원</span>
       </div>
     </WSCard>
   );
 }
 
-function BusinessTripForm() {
-  return <div>출장 신청서 준비 중</div>;
-}
-function PurchaseForm() {
-  return <div>구매 요청서 준비 중</div>;
-}
-function LeaveForm() {
-  return <div>연차 신청서 준비 중</div>;
+// 출장 신청서 양식 컴포넌트
+
+function BusinessTripForm({ formValues, setFormValues }) {
+  // 출장자 행 목록
+  const [rows, setRows] = useState([
+    { id: Date.now(), name: "", dept: "", grade: "", empNo: "" },
+  ]);
+  // 출장비 행 목록
+  const [expenses, setExpenses] = useState([
+    { id: Date.now(), category: "", amount: "", note: "" },
+  ]);
+
+  // 단순 텍스트 필드 업데이트 헬퍼
+  const update = (key, value) => {
+    setFormValues((prev) => ({ ...prev, [key]: value }));
+  };
+
+  // 출장자 행 추가/삭제/수정
+  const addTraveler = () =>
+    setRows((prev) => [
+      ...prev,
+      { id: Date.now(), name: "", dept: "", grade: "", empNo: "" },
+    ]);
+  const delTraveler = (id) =>
+    setRows((prev) => prev.filter((r) => r.id !== id));
+  const updateTraveler = (id, key, value) =>
+    setRows((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, [key]: value } : r)),
+    );
+
+  // 출장비 행 추가/삭제/수정
+  const addExpense = () =>
+    setExpenses((prev) => [
+      ...prev,
+      { id: Date.now(), category: "", amount: "", note: "" },
+    ]);
+  const delExpense = (id) =>
+    setExpenses((prev) => prev.filter((r) => r.id !== id));
+  const updateExpense = (id, key, value) =>
+    setExpenses((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, [key]: value } : r)),
+    );
+
+  const EXPENSE_CATEGORIES = ["교통비", "숙박비", "식비", "기타"];
+
+  return (
+    <>
+      {/* 출장자 섹션 */}
+      <WSCard title="출장자" subtitle="출장자 성명과 부서를 입력해 주세요">
+        <button onClick={addTraveler} className={s.addRowBtn} type="button">
+          <Plus size={14} />
+          출장 인원 추가
+        </button>
+        {rows.map((row) => (
+          <div key={row.id} className={s.tableRow}>
+            <input
+              type="text"
+              placeholder="성명"
+              value={row.name}
+              onChange={(e) => updateTraveler(row.id, "name", e.target.value)}
+            />
+            <input
+              type="text"
+              placeholder="소속"
+              value={row.dept}
+              onChange={(e) => updateTraveler(row.id, "dept", e.target.value)}
+            />
+            <input
+              type="text"
+              placeholder="직급"
+              value={row.grade}
+              onChange={(e) => updateTraveler(row.id, "grade", e.target.value)}
+            />
+            <input
+              type="text"
+              placeholder="사번"
+              value={row.empNo}
+              onChange={(e) => updateTraveler(row.id, "empNo", e.target.value)}
+            />
+            <button
+              onClick={() => delTraveler(row.id)}
+              className={s.delRowBtn}
+              type="button"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        ))}
+      </WSCard>
+      {/* 출장지 및 일정 섹션 */}
+      <WSCard
+        title="출장지 및 일정별"
+        subtitle="출장지, 일자별 방문처 및 해당 일자의 업무 내용을 작성해주세요."
+        placeholder="출장지를 입력하세요."
+        value={formValues.destination ?? ""}
+        onChange={(e) => update("destination", e.target.value)}
+        className={s.textarea}
+      ></WSCard>
+      {/* 출장비 섹션 */}
+      <WSCard
+        title="출장비"
+        subtitle="항목별 금액과 산출 내역을 상세히 입력해주세요"
+      >
+        <button onClick={addExpense} className={s.addRowBtn} type="button">
+          <Plus size={14} />
+          항목 추가
+        </button>
+        {expenses.map((row) => (
+          <div key={row.id} className={s.tableRow}>
+            <select
+              value={row.category}
+              onChange={(e) =>
+                updateExpense(row.id, "category", e.target.value)
+              }
+              className={s.tableSelect}
+            >
+              <option value="">항목 선택</option>
+              {EXPENSE_CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+            <input
+              type="number"
+              placeholder="금액"
+              value={row.amount}
+              onChange={(e) => updateExpense(row.id, "amount", e.target.value)}
+              className={s.tableInput}
+              style={{ maxWidth: 120 }}
+            />
+            <input
+              type="text"
+              placeholder="산출 내역"
+              value={row.note}
+              onChange={(e) => updateExpense(row.id, "note", e.target.value)}
+              className={s.tableInput}
+            />
+            <button
+              onClick={() => delExpense(row.id)}
+              className={s.delRowBtn}
+              type="button"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        ))}
+      </WSCard>
+    </>
+  );
 }
 
 // 메인 패널
@@ -144,6 +531,9 @@ export default function ApprovalFormPanel({
   selectedForm,
   formValues,
   setFormValues,
+  myInfo,
+  title,
+  setTitle,
 }) {
   if (!selectedForm) return null;
 
@@ -151,12 +541,18 @@ export default function ApprovalFormPanel({
 
   return (
     <div className={s.panel}>
-      <div className={s.panelHeader}>
-        <h2 className={s.panelTitle}>{formName}</h2>
+      {/* <div className={s.panelHeader}>
+        <h2 className={s.panelTitle}>{selectedForm.formName}</h2>
         <p className={s.panelSub}>양식 내용을 입력하세요.</p>
-      </div>
+      </div> */}
       {formType === "EXPENSE" && (
-        <ExpenseForm formValues={formValues} setFormValues={setFormValues} />
+        <ExpenseForm
+          formValues={formValues}
+          setFormValues={setFormValues}
+          myInfo={myInfo}
+          title={title}
+          setTitle={setTitle}
+        />
       )}
       {formType === "LEAVE" && (
         <LeaveForm formValues={formValues} setFormValues={setFormValues} />

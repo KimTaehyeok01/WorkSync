@@ -252,100 +252,13 @@ export default function ApprovalNew() {
 
       <div className={s.layout}>
         <div className={`${s.col} ${s.colMain}`}>
-          <WSCard
-            title="문서 기본 정보"
-            subtitle="결재 문서의 기본 정보를 입력하세요"
-          >
-            <div className={s.formGrid}>
-              <div>
-                <div className={s.row2}>
-                  <div className={s.labelMargin}>
-                    <label className={s.label}>
-                      소속 <span className={s.required}>*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={myInfo?.departmentName ?? ""}
-                      readOnly
-                      className={s.input}
-                    />
-                  </div>
-                  <div className={s.labelMargin}>
-                    <label className={s.label}>
-                      작성자 <span className={s.required}>*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={myInfo?.name ?? ""}
-                      readOnly
-                      className={s.input}
-                    />
-                  </div>
-                </div>
-                <div className={s.row2}>
-                  <div className={s.labelMargin}>
-                    <label className={s.label}>
-                      휴가 종류 <span className={s.required}>*</span>
-                    </label>
-                    <div className={s.selectWrap}>
-                      <select
-                        value={docType}
-                        onChange={(e) => setDocType(e.target.value)}
-                        className={s.select}
-                      >
-                        <option value="">유형 선택...</option>
-                        {DOC_TYPES.map((t) => (
-                          <option key={t} value={t}>
-                            {t}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown size={14} className={s.selectChevron} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className={s.label}>
-                      {" "}
-                      요청일 <span className={s.required}>*</span>
-                    </label>
-
-                    <input
-                      type="date"
-                      defaultValue={new Date().toISOString().split("T")[0]}
-                      className={s.dateInput}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className={s.label}>
-                    제목 <span className={s.required}>*</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="결재 문서 제목을 입력하세요"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className={s.input}
-                  />
-                </div>
-                {/* <label className={s.label}>
-                  휴가 사유 <span className={s.required}>*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="결재 문서 제목을 입력하세요"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className={s.input}
-                /> */}
-              </div>
-            </div>
-          </WSCard>
           <ApprovalFormPanel
             selectedForm={selectedForm}
             formValues={formValues}
             setFormValues={setFormValues}
+            myInfo={myInfo}
+            title={title}
+            setTitle={setTitle}
           />
           <WSCard
             title="첨부 파일"
