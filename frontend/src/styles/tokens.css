@@ -1,0 +1,59 @@
+:root {
+  /* Brand */
+  --ws-primary: #1A73E8;
+  --ws-primary-hover: #1557B0;
+  --ws-primary-soft: rgba(26, 115, 232, 0.1);
+  --ws-primary-ring: rgba(26, 115, 232, 0.35);
+
+  /* Sidebar / Dark surface */
+  --ws-dark: #1E2A3B;
+
+  /* Status */
+  --ws-danger: #E53E3E;
+  --ws-warning: #F59E0B;
+  --ws-success: #48BB78;
+  --ws-info: #10B981;
+  --ws-purple: #8B5CF6;
+
+  /* Neutrals */
+  --ws-bg: #F5F6FA;
+  --ws-surface: #FFFFFF;
+  --ws-border: #E5E7EB;
+  --ws-border-light: #F3F4F6;
+
+  --ws-text-900: #111827;
+  --ws-text-800: #1F2937;
+  --ws-text-700: #374151;
+  --ws-text-600: #4B5563;
+  --ws-text-500: #6B7280;
+  --ws-text-400: #9CA3AF;
+  --ws-text-300: #D1D5DB;
+
+  /* Layout */
+  --ws-sidebar-w: 240px;
+  --ws-topbar-h: 64px;
+
+  /* Radius */
+  --ws-radius-sm: 6px;
+  --ws-radius-md: 8px;
+  --ws-radius-lg: 12px;
+  --ws-radius-xl: 16px;
+
+  /* Shadow */
+  --ws-shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --ws-shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --ws-shadow-lg: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Pretendard",
+    "Apple SD Gothic Neo", "Noto Sans KR", Roboto, sans-serif;
+  color: var(--ws-text-800);
+  background: var(--ws-bg);
+  -webkit-font-smoothing: antialiased;
+}
+button { font-family: inherit; cursor: pointer; border: none; background: none; padding: 0; }
+input, textarea, select { font-family: inherit; }
+a { color: inherit; text-decoration: none; }

@@ -1,0 +1,154 @@
+.aside {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: var(--ws-sidebar-w);
+  height: 100vh;
+  background: var(--ws-dark);
+  display: flex;
+  flex-direction: column;
+  z-index: 30;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.brandLogo {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--ws-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.brandName {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.brandSub {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.nav {
+  flex: 1;
+  padding: 16px 12px;
+  overflow-y: auto;
+}
+.sectionLabel {
+  margin: 0 8px 8px;
+  color: rgba(255, 255, 255, 0.3);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+}
+.sectionLabel + .sectionLabel,
+.navGroup + .sectionLabel { margin-top: 24px; }
+.navGroup { display: flex; flex-direction: column; gap: 4px; }
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.6);
+  transition: background 0.15s, color 0.15s;
+}
+.navItem:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+.navItem.active {
+  color: #fff;
+  background: var(--ws-primary);
+}
+.navIcon { flex-shrink: 0; }
+.navLabel { font-size: 13.5px; font-weight: 500; }
+
+.badge {
+  margin-left: auto;
+  color: #fff;
+  border-radius: 999px;
+  padding: 0 6px;
+  min-width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--ws-danger);
+}
+.navItem.active .badge { background: rgba(255, 255, 255, 0.25); }
+
+.chevron { margin-left: auto; opacity: 0.7; }
+
+.footer { padding: 0 12px 16px; }
+
+.loginShortcut {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 8px;
+  transition: background 0.15s, color 0.15s;
+}
+.loginShortcut:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+.loginShortcut span { font-size: 12px; font-weight: 500; }
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.profile:hover { background: rgba(255, 255, 255, 0.08); }
+.avatarWrap { position: relative; flex-shrink: 0; }
+.avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; display: block; }
+.status {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ws-success);
+  border: 2px solid var(--ws-dark);
+}
+.profileMeta { flex: 1; min-width: 0; }
+.profileName {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profileRole {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profileIcon { color: rgba(255, 255, 255, 0.3); flex-shrink: 0; }

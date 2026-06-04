@@ -1,0 +1,10 @@
+.shell {
+  background: var(--ws-bg);
+  min-height: 100vh;
+}
+.main {
+  margin-left: var(--ws-sidebar-w);
+  padding-top: var(--ws-topbar-h);
+  min-height: 100vh;
+}
+.padded { padding: 24px; }
