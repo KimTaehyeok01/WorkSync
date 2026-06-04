@@ -1,6 +1,7 @@
 package com.worksync.domain.file.dto;
 
 import com.worksync.domain.file.entity.FileAttachment;
+import com.worksync.domain.file.entity.RefType;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -14,7 +15,7 @@ public class FileUploadResponse {
     private String filePath;
     private Long fileSize;
     private String mimeType;
-    private String refType;
+    private RefType refType;
     private Long refId;
     private Integer version;
     private LocalDateTime createdAt;

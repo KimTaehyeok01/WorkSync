@@ -85,9 +85,8 @@ public class FileService {
         // 공개 URL 생성
         String publicUrl = supabaseUrl + "/storage/v1/object/public/" + BUCKET + "/" + objectPath;
 
-        // 메뉴명으로 refId 찾기
+        // String refType -> RefType refType 타입 변환
         RefType refTypeName = RefType.fromTypeName(refType);
-        Long refId = refTypeName.getRefId();
 
         // DB에 파일 정보 저장
         FileAttachment fileAttachment = FileAttachment.builder()
@@ -97,7 +96,6 @@ public class FileService {
                 .fileSize(file.getSize())
                 .mimeType(file.getContentType())
                 .refType(refTypeName)
-                .refId(refId)
                 .build();
 
         return FileUploadResponse.from(fileAttachmentRepository.save(fileAttachment));
@@ -112,7 +110,10 @@ public class FileService {
 
     // 첨부 위치별 파일 목록 조회
     public List<FileUploadResponse> findByRef(String refType, Long refId) {
-        return fileAttachmentRepository.findByRefTypeAndRefId(refType, refId)
+        // String refType -> RefType refType 타입 변환
+        RefType refTypeName = RefType.fromTypeName(refType);
+
+        return fileAttachmentRepository.findByRefTypeAndRefId(refTypeName, refId)
                 .stream()
                 .map(FileUploadResponse::from)
                 .collect(Collectors.toList());
