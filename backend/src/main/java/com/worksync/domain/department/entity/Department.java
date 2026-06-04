@@ -18,7 +18,7 @@ public class Department {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 30)
     private String name;
 
     @CreatedDate
@@ -28,4 +28,8 @@ public class Department {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    public void updateName(String name){
+        this.name = name;
+    }
 }

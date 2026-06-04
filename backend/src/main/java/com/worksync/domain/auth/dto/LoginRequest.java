@@ -1,6 +1,6 @@
 package com.worksync.domain.auth.dto;
 
-import jakarta.validation.constraints.Email;
+import com.worksync.domain.employee.entity.EmployeeStatus;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,9 +9,10 @@ import lombok.Setter;
 public class LoginRequest {
 
     @NotBlank
-    @Email
-    private String email;
+    private String empNo;
 
     @NotBlank
     private String password;
+
+    private EmployeeStatus status;
 }

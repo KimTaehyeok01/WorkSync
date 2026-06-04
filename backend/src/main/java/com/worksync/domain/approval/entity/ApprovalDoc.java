@@ -3,6 +3,7 @@ package com.worksync.domain.approval.entity;
 import com.worksync.domain.employee.entity.Employee;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
@@ -45,10 +46,12 @@ public class ApprovalDoc {
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
+    @BatchSize(size = 100)
     @OneToMany(mappedBy = "doc", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ApprovalLine> approvalLines = new ArrayList<>();
 
+    @BatchSize(size = 100)
     @OneToMany(mappedBy = "doc", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ApprovalDocItem> approvalDocItems = new ArrayList<>();
@@ -60,4 +63,27 @@ public class ApprovalDoc {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    // 최종 승인
+    public void approve() {
+        this.status = ApprovalDocStatus.APPROVED;
+        this.completedAt = LocalDateTime.now();
+    }
+
+    // 반려
+    public void reject() {
+        this.status = ApprovalDocStatus.REJECTED;
+        this.completedAt = LocalDateTime.now();
+    }
+
+    // 제목 수정
+    public void updateTitle(String title) {
+        this.title = title;
+    }
+
+    // 문서 항목(items) 교체
+    public void replaceItems(List<ApprovalDocItem> newItems) {
+        this.approvalDocItems.clear();
+        this.approvalDocItems.addAll(newItems);
+    }
 }

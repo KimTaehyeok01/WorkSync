@@ -1,4 +1,7 @@
 package com.worksync.domain.approval.repository;
 
-public interface ApprovalDocItemRepository {
+import com.worksync.domain.approval.entity.ApprovalDocItem;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface ApprovalDocItemRepository extends JpaRepository<ApprovalDocItem, Long> {
 }

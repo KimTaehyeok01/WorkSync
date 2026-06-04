@@ -14,6 +14,7 @@ public class PostResponse {
     private String boardName;
     private Long authorId;
     private String authorName;
+    private String authorDepartmentName;
     private String title;
     private String content;
     private LocalDateTime createdAt;
@@ -26,6 +27,8 @@ public class PostResponse {
                 .boardName(post.getBoard().getName())
                 .authorId(post.getAuthor().getId())
                 .authorName(post.getAuthor().getName())
+                .authorDepartmentName(post.getAuthor().getDepartment() != null
+                        ? post.getAuthor().getDepartment().getName() : null)
                 .title(post.getTitle())
                 .content(post.getContent())
                 .createdAt(post.getCreatedAt())

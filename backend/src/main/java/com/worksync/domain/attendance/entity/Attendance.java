@@ -48,4 +48,9 @@ public class Attendance {
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    // 퇴근시간 메서드 추가
+    public void checkOut(LocalDateTime checkOutTime){
+        this.checkOutTime = checkOutTime;
+    }
 }

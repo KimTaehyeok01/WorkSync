@@ -40,4 +40,11 @@ public class Post {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    public void update(String title,String content){
+        if(title !=null){this.title=title;
+        }
+        if(content !=null){this.content=content;
+        }
+    }
 }
