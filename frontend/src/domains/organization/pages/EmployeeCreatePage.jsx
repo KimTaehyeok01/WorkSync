@@ -10,6 +10,7 @@ import EmployeeForm from "../components/EmployeeForm";
 
 export default function EmployeeAdd() {
   const { accessToken } = useAuthContext();
+  const { addFiles } = useFileUpload(accessToken, "ORGANIZATION");
   const navigate = useNavigate();
   const [pwDisabled, setPwDisabled] = useState(false);
   const [departments, setDepartments] = useState([]);
@@ -54,10 +55,22 @@ export default function EmployeeAdd() {
     form.departmentId > 0,
   ].every(Boolean);
 
+  // 파일 선언
+  const {
+    files,
+    isDragging,
+    setIsDragging,
+    uploadUrls,
+    addFiles,
+    removeFiles,
+    clearFiles,
+  } = useFileUpload(accessToken, "ORGANIZATION");
+
   // 저장
   async function handleSubmit() {
     try {
-      await createEmployee(accessToken, form);
+      await createEmployee(accessToken, { ...form, profileImage: uploadUrls });
+      clearFiles();
     } catch (error) {
       console.log("저장 실패: " + error);
       alert("저장에 실패했습니다.");
@@ -95,6 +108,12 @@ export default function EmployeeAdd() {
         submitLabel="직원 등록"
         textBtnLabel="취소하고 돌아가기"
         pageTitle="직원 등록"
+        files={files}
+        isDragging={isDragging}
+        setIsDragging={setIsDragging}
+        uploadUrls={uploadUrls}
+        addFiles={addFiles}
+        removeFiles={removeFiles}
       />
     </>
   );

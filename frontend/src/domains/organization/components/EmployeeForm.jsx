@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import useAuthContext from "../../../store/AuthContext";
 import { ArrowLeft, Upload, User, Send, Paperclip } from "lucide-react";
 import {
   WSAvatar,
@@ -16,8 +15,8 @@ import {
   WSFileUploadZone,
   WSFileList,
 } from "../../../components/common/FormComponents";
-import { uploadFile } from "../../file/services/fileApi";
 import s from "../pages/EmployeeCreatePage.module.css";
+import useFileUpload from "../../../hooks/useFileUpload";
 
 // 직급
 const JOB_GRADE_OPTIONS = [
@@ -47,30 +46,16 @@ export default function EmployeeForm({
   submitLabel,
   textBtnLabel,
   pageTitle,
+  files,
+  isDragging,
+  setIsDragging,
+  uploadUrls,
+  addFiles,
+  removeFiles,
+  clearFiles,
 }) {
   const { accessToken } = useAuthContext();
   const navigate = useNavigate();
-
-  // 파일 업로드
-  const [files, setFiles] = useState([]);
-  const [isDragging, setIsDragging] = useState(false);
-
-  // 파일 추가
-  const addFiles = (newFiles) => {
-    const mapfiles = newFiles.map((file) => ({ file })); //fileLise에서 객체 배열로 전달하기위해
-    setFiles((prev) => [...prev, ...mapfiles]);
-
-    // FormData형식으로 fileData 추가
-    const fileData = new FormData();
-    newFiles.forEach((file) => fileData.append("file", file));
-
-    uploadFile(accessToken, fileData, "ORGANIZATION");
-  };
-
-  // 파일 삭제
-  const removeFiles = (indexToRemove) => {
-    setFiles((prev) => prev.filter((_, idx) => idx !== indexToRemove));
-  };
 
   // 입력폼 형식 오류 메시지
   const errors = {
@@ -270,7 +255,7 @@ export default function EmployeeForm({
         <div>
           <WSCard title="프로필 이미지" className={`${s.card} ${s.colSide}`}>
             <WSFileUploadZone
-              onFilesAdded={addFiles}
+              onFilesAdded={addFiles} //파일추가
               isDragging={isDragging}
               onDragStateChange={setIsDragging}
               icon={<Paperclip size={28} />}
@@ -280,7 +265,7 @@ export default function EmployeeForm({
             />
 
             <WSFileList
-              files={files.map(({ file }) => file)} //file 형태 객체 배열로 전달
+              files={files.map(({ file }) => file)} //화면에 파일 리스트 보여줌
               onRemove={removeFiles}
             />
           </WSCard>

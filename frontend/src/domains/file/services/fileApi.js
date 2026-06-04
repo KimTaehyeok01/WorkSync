@@ -1,6 +1,6 @@
 const BASE_URL = "http://localhost:8080/api";
 
-export async function uploadFile(accessToken, fileData, refType, refId) {
+export async function uploadFile(accessToken, fileData, refType) {
   return await fetch(`${BASE_URL}/files/upload?refType=${refType}`, {
     method: "POST",
     headers: {
