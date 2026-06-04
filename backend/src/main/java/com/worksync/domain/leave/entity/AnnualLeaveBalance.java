@@ -40,4 +40,8 @@ public class AnnualLeaveBalance {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    public void useLeave(BigDecimal days){
+        this.usedDays=this.usedDays.add(days);
+    }
 }

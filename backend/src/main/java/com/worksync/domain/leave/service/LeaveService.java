@@ -1,5 +1,11 @@
 package com.worksync.domain.leave.service;
 
+import com.worksync.domain.approval.entity.ApprovalDoc;
+import com.worksync.domain.approval.entity.ApprovalLine;
+import com.worksync.domain.approval.entity.ApprovalLineStatus;
+import com.worksync.domain.approval.entity.StepType;
+import com.worksync.domain.approval.repository.ApprovalDocRepository;
+import com.worksync.domain.approval.repository.ApprovalFormRepository;
 import com.worksync.domain.employee.entity.Employee;
 import com.worksync.domain.employee.repository.EmployeeRepository;
 import com.worksync.domain.leave.dto.LeaveBalanceResponse;
@@ -18,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +34,8 @@ public class LeaveService {
     private final AnnualLeaveBalanceRepository annualLeaveBalanceRepository;
     private final EmployeeRepository employeeRepository;
     private final NotificationService notificationService;
+    private final ApprovalDocRepository approvalDocRepository;
+    private  final ApprovalFormRepository approvalFormRepository;
 
     //휴가신청
     @Transactional
@@ -41,15 +50,45 @@ public class LeaveService {
         short currentYear = (short) LocalDate.now().getYear();
         AnnualLeaveBalance balance = annualLeaveBalanceRepository
                 .findByEmployeeIdAndYear(employeeId, currentYear)
-                .orElseThrow(() -> new CustomException(ErrorCode.INSUFFICIENT_LEAVE_BALANCE));
+                .orElseThrow(() -> new CustomException(ErrorCode.LEAVE_BALANCE_NOT_FOUND));
 
         if (balance.getRemainingDays().compareTo(req.getDayCount()) < 0) {
             throw new CustomException(ErrorCode.INSUFFICIENT_LEAVE_BALANCE);
         }
 
+        //approval_doc 생성
+        ApprovalDoc approvalDoc=ApprovalDoc.builder()
+                .drafter(employee)
+                .form(approvalFormRepository.findByFormType("LEAVE")
+                        .orElseThrow(()->new CustomException(ErrorCode.APPROVAL_FORM_NOT_FOUND)))
+                .title(req.getLeaveType().name()+"신청 -"+employee.getName())
+                .submittedAt(LocalDateTime.now())
+                .build();
+
+        ApprovalLine draftLine=ApprovalLine.builder()
+                .doc(approvalDoc)
+                .approver(employee)
+                .stepOrder(1)
+                .stepType(StepType.DRAFT)
+                .build();
+        draftLine.process(ApprovalLineStatus.APPROVED,null);
+
+        ApprovalLine approvalLine=ApprovalLine.builder()
+                .doc(approvalDoc)
+                .approver(approver)
+                .stepOrder(2)
+                .stepType(StepType.APPROVE)
+                .build();
+
+        approvalDoc.getApprovalLines().add(draftLine);
+        approvalDoc.getApprovalLines().add(approvalLine);
+        approvalDocRepository.save(approvalDoc);
+
+
         LeaveRequest leaveRequest = LeaveRequest.builder()
                 .employee(employee)
                 .approver(approver)
+                .approvalDoc(approvalDoc)
                 .leaveType(req.getLeaveType())
                 .startDate(req.getStartDate())
                 .endDate(req.getEndDate())
