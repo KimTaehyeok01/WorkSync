@@ -4,6 +4,7 @@ import com.worksync.domain.employee.entity.Employee;
 import com.worksync.domain.employee.repository.EmployeeRepository;
 import com.worksync.domain.file.dto.FileUploadResponse;
 import com.worksync.domain.file.entity.FileAttachment;
+import com.worksync.domain.file.entity.RefType;
 import com.worksync.domain.file.repository.FileAttachmentRepository;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
@@ -44,7 +45,7 @@ public class FileService {
 
     // 파일 업로드
     @Transactional
-    public FileUploadResponse upload(MultipartFile file, Long uploaderId, String refType, Long refId) {
+    public FileUploadResponse upload(MultipartFile file, Long uploaderId, String refType) {
 
         // 업로드 사원 조회
         Employee uploader = employeeRepository.findById(uploaderId)
@@ -84,6 +85,10 @@ public class FileService {
         // 공개 URL 생성
         String publicUrl = supabaseUrl + "/storage/v1/object/public/" + BUCKET + "/" + objectPath;
 
+        // 메뉴명으로 refId 찾기
+        RefType refTypeName = RefType.fromTypeName(refType);
+        Long refId = refTypeName.getRefId();
+
         // DB에 파일 정보 저장
         FileAttachment fileAttachment = FileAttachment.builder()
                 .uploader(uploader)
@@ -91,7 +96,7 @@ public class FileService {
                 .filePath(publicUrl)
                 .fileSize(file.getSize())
                 .mimeType(file.getContentType())
-                .refType(refType)
+                .refType(refTypeName)
                 .refId(refId)
                 .build();
 

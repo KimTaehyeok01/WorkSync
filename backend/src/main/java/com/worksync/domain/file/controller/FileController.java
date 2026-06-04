@@ -1,8 +1,10 @@
 package com.worksync.domain.file.controller;
 
 import com.worksync.domain.file.dto.FileUploadResponse;
+import com.worksync.domain.file.entity.RefType;
 import com.worksync.domain.file.service.FileService;
 import com.worksync.global.response.ApiResponse;
+import com.worksync.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,12 +23,11 @@ public class FileController {
   // 파일 업로드
   @PostMapping("/upload")
   public ResponseEntity<ApiResponse<FileUploadResponse>> upload(
-          @AuthenticationPrincipal (expression = "id") Long userId,
+          @AuthenticationPrincipal CustomUserDetails userDetails,
           @RequestParam("file") MultipartFile file,
-          @RequestParam("refType") String refType,
-          @RequestParam("refId") Long refId) {
+          @RequestParam("refType") String refType) {
     return ResponseEntity.status(201)
-            .body(ApiResponse.created(fileService.upload(file, userId, refType, refId)));
+            .body(ApiResponse.created(fileService.upload(file, userDetails.getId(), refType)));
   }
 
   // 파일 단건 조회
@@ -38,9 +39,8 @@ public class FileController {
   // 첨부 위치별 파일 목록 조회
   @GetMapping
   public ResponseEntity<ApiResponse<List<FileUploadResponse>>> findByRef(
-          @RequestParam("refType") String refType,
-          @RequestParam("refId") Long refId) {
-    return ResponseEntity.ok(ApiResponse.ok(fileService.findByRef(refType, refId)));
+          @RequestParam("refType") String refType) {
+    return ResponseEntity.ok(ApiResponse.ok(fileService.findByRef(refType)));
   }
 
   // 파일 삭제

@@ -2,7 +2,12 @@ package com.worksync.domain.file.entity;
 
 import com.worksync.domain.employee.entity.Employee;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -35,10 +40,11 @@ public class FileAttachment {
     @Column(name = "mime_type", length = 100)
     private String mimeType;
 
-    @Column(name = "ref_type", length = 30)
-    private String refType;
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "ref_type", nullable = false, columnDefinition = "ref_type")
+    private RefType refType = RefType.APPROVAL;
 
-    @Column(name = "ref_id")
+    @Column(name = "ref_id", nullable = false)
     private Long refId;
 
     @Column(nullable = false)
