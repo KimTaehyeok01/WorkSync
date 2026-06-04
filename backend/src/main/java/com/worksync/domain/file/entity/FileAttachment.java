@@ -54,4 +54,8 @@ public class FileAttachment {
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    public void updateRefId (Long refId) {
+        this.refId = refId;
+    }
 }

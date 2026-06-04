@@ -9,6 +9,7 @@ import com.worksync.domain.employee.entity.Employee;
 import com.worksync.domain.employee.entity.EmployeeRole;
 import com.worksync.domain.employee.entity.EmployeeStatus;
 import com.worksync.domain.employee.repository.EmployeeRepository;
+import com.worksync.domain.file.service.FileService;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
 import jakarta.persistence.criteria.Predicate;
@@ -32,6 +33,7 @@ public class EmployeeService {
     private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
     private final SimpMessagingTemplate messagingTemplate;
+    private final FileService fileService;
 
     // 직원 목록 조회 (이름·부서·상태 필터링)
     public List<EmployeeResponse> getEmployees(String name, Long departmentId, EmployeeStatus status) {
@@ -98,6 +100,9 @@ public class EmployeeService {
                 .profileImage(request.getProfileImage())
                 .hireDate(request.getHireDate())
                 .build();
+
+        // 첨부파일 경로 List 타입 변환, 파일 refId 업데이트 (직원 ID)
+        fileService.updateRefId(List.of(request.getProfileImage()), employee.getId());
 
         return EmployeeResponse.from(employeeRepository.save(employee));
     }

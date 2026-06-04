@@ -96,9 +96,22 @@ public class FileService {
                 .fileSize(file.getSize())
                 .mimeType(file.getContentType())
                 .refType(refTypeName)
+                .refId(null)
                 .build();
 
         return FileUploadResponse.from(fileAttachmentRepository.save(fileAttachment));
+    }
+
+    @Transactional
+    public void updateRefId(List<String> fileUrls, Long refId) {
+        // 파일 경로가 null이거나 비어있으면 돌려보냄
+        if (fileUrls == null || fileUrls.isEmpty()) return;
+
+        // refId 최종 저장
+        fileUrls.forEach(url -> {
+            FileAttachment file = fileAttachmentRepository.findByFilePath(url).orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
+            file.updateRefId(refId);
+        });
     }
 
     // 파일 단건 조회
