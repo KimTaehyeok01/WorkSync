@@ -51,16 +51,9 @@ export default function ApprovalDetail() {
       setApproval(data);
       setStatus(data.status);
       setApprovalLines(data.approvalLines ?? []);
+      console.log("items 찐 : " + JSON.stringify(data.items, null, 2));
     });
   }, [accessToken, id]);
-
-  useEffect(() => {
-    if (!accessToken) return;
-    getApprovalByForm(accessToken).then((data) => {
-      if (!data) return;
-      
-    });
-  }, [accessToken]);
 
   if (!approval) {
     return (
@@ -88,7 +81,7 @@ export default function ApprovalDetail() {
             </div>
             <h1 className={s.title}>{approval.title}</h1>
             <div className={s.requesterRow}>
-              <WSAvatar src={null} name={approvaldrafterName} size={32} />
+              <WSAvatar src={null} name={approval.drafterName} size={32} />
               <div>
                 <p className={s.requesterName}>{approval.drafterName}</p>
                 <p className={s.requesterDate}>{approval.createdAt}</p>

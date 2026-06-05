@@ -88,12 +88,11 @@ export default function ApprovalNew() {
   useEffect(() => {
     if (!accessToken) return;
 
-    console.log("페이지 employees:", JSON.stringify(employees));
-
     getMyInfo(accessToken).then((data) => setMyInfo(data));
     getForms(accessToken).then((data) => setTemplates(data ?? []));
-    getEmployees(accessToken).then((data) => setEmployees(data ?? []));
-    console.log("employees 전체 : " + employees);
+    getEmployees(accessToken).then((data) => {
+      setEmployees(data ?? []);
+    });
   }, [accessToken]);
 
   const [approvers, setApprovers] = useState([]);
@@ -290,6 +289,7 @@ export default function ApprovalNew() {
             myInfo={myInfo}
             title={title}
             setTitle={setTitle}
+            employees={employees}
           />
           <WSCard
             title="첨부 파일"

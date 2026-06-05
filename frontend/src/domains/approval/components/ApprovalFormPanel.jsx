@@ -632,8 +632,6 @@ function BusinessTripForm({
         {rows.map((row) => (
           <div key={row.id} className={s.tableRow}>
             <select
-              type="text"
-              placeholder="성명"
               value={row.empNo}
               onChange={(e) => {
                 const selected = employees.find(
@@ -648,7 +646,16 @@ function BusinessTripForm({
                 }
               }}
               className={s.input}
-            />
+            >
+              <option value="">성명 선택</option>
+              {employees
+                .filter((emp) => emp.departmentName === myInfo?.departmentName)
+                .map((emp) => (
+                  <option key={emp.id} value={emp.empNo}>
+                    {emp.name}
+                  </option>
+                ))}
+            </select>
             <input
               type="text"
               placeholder="소속"

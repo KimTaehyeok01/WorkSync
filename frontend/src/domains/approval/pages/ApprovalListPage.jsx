@@ -16,7 +16,7 @@ import s from "./ApprovalListPage.module.css";
 
 const STATUS_CONFIG = {
   IN_PROGRESS: { label: "대기", bg: "#FEF3C7", text: "#92400E" },
-  APPROVES: { label: "승인", bg: "#D1FAE5", text: "#065F46" },
+  APPROVED: { label: "승인", bg: "#D1FAE5", text: "#065F46" },
   REJECTED: { label: "반려", bg: "#FEE2E2", text: "#991B1B" },
 };
 
@@ -69,50 +69,55 @@ export default function Approval() {
   return (
     <div>
       <div className={s.filterBar}>
-        <div className={s.dd}>
-          <button
-            onClick={() =>
-              setOpenDropdown(openDropdown === "status" ? null : "status")
-            }
-            className={s.ddBtn}
-          >
-            <span>{statusLabel}</span>
-            <ChevronDown size={14} color="#9CA3AF" />
-          </button>
-          {openDropdown === "status" && (
-            <div className={s.ddMenu}>
-              {STATUS_OPTIONS.map((item) => (
-                <button
-                  key={item.key}
-                  onClick={() => {
-                    setStatus(item.key);
-                    setOpenDropdown(null);
-                    setPage(1);
-                  }}
-                  className={s.ddItem}
-                >
-                  {item.label}
-                </button>
-              ))}
+        <div className={s.searchSpace}>
+          <div className={s.leftGroup}>
+            <div className={s.dd}>
+              <button
+                onClick={() =>
+                  setOpenDropdown(openDropdown === "status" ? null : "status")
+                }
+                className={s.ddBtn}
+              >
+                <span>{statusLabel}</span>
+                <ChevronDown size={14} color="#9CA3AF" />
+              </button>
+              {openDropdown === "status" && (
+                <div className={s.ddMenu}>
+                  {STATUS_OPTIONS.map((item) => (
+                    <button
+                      key={item.key}
+                      onClick={() => {
+                        setStatus(item.key);
+                        setOpenDropdown(null);
+                        setPage(1);
+                      }}
+                      className={s.ddItem}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+            <div className={s.search}>
+              <Search size={16} className={s.searchIcon} />
+              <input
+                type="text"
+                placeholder="검색어를 입력하세요"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className={s.searchInput}
+              />
+            </div>
+          </div>
+          <button
+            onClick={() => navigate("/approval/new")}
+            className={s.newBtn}
+          >
+            <Plus size={16} />
+            <span>전체 문서 등록</span>
+          </button>
         </div>
-
-        <div className={s.search}>
-          <Search size={16} className={s.searchIcon} />
-          <input
-            type="text"
-            placeholder="검색어를 입력하세요"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className={s.searchInput}
-          />
-        </div>
-
-        <button onClick={() => navigate("/approval/new")} className={s.newBtn}>
-          <Plus size={16} />
-          <span>전체 문서 등록</span>
-        </button>
       </div>
 
       <div className={s.grid}>
@@ -126,7 +131,7 @@ export default function Approval() {
             <div
               key={doc.id}
               className={s.card}
-              onClick={() => navigate(`/approvals/${doc.id}`)}
+              onClick={() => navigate(`/approval/${doc.id}`)}
             >
               <div className={s.cardMore}>
                 <button
