@@ -5,6 +5,7 @@ import com.worksync.domain.approval.entity.ApprovalLine;
 import com.worksync.domain.approval.entity.ApprovalLineStatus;
 import com.worksync.domain.approval.entity.StepType;
 import com.worksync.domain.approval.event.ApprovalApprovedEvent;
+import com.worksync.domain.approval.event.ApprovalRejectedEvent;
 import com.worksync.domain.approval.repository.ApprovalDocRepository;
 import com.worksync.domain.approval.repository.ApprovalFormRepository;
 import com.worksync.domain.employee.entity.Employee;
@@ -170,5 +171,25 @@ public class LeaveService {
 
         balance.useLeave(leaveRequest.getDaysCount());
         leaveRequest.approve();
+    }
+
+    // 휴가 결재가 반려되면 휴가 신청도 반려 처리한다 (ApprovalRejectedEvent 구독)
+    @EventListener
+    @Transactional
+    public void onApprovalRejected(ApprovalRejectedEvent event) {
+        // 휴가 결재가 아니면 무시
+        if (!"LEAVE".equals(event.formType())) {
+            return;
+        }
+
+        // 연결된 휴가 신청이 아직 대기 중일 때만 반려 처리
+        LeaveRequest leaveRequest = leaveRequestRepository.findByApprovalDocId(event.docId())
+                .orElse(null);
+        if (leaveRequest == null || leaveRequest.getStatus() != LeaveStatus.PENDING) {
+            return;
+        }
+
+        // 신청 시점에 차감하지 않았으므로 연차 복원은 불필요 — 상태만 REJECTED로 변경
+        leaveRequest.reject();
     }
 }

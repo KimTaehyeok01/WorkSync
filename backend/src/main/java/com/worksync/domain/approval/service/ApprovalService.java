@@ -352,10 +352,4 @@ public class ApprovalService {
 
         return ApprovalDetailResponse.from(doc);
     }
-
-    @Transactional
-    public ApprovalDetailResponse getDocList(StepType stepType){
-        ApprovalDocItem approvalDocItem = approvalFormRepository.findByFormType(stepType).filter()
-                .ifPresent(e -> e.getFormSchema());
-    }
 }
