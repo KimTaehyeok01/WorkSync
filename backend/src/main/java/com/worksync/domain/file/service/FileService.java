@@ -132,48 +132,37 @@ public class FileService {
                 .collect(Collectors.toList());
     }
 
-    // 파일 DB 삭제
+    // 파일 삭제
     @Transactional
-    public void deleteFile(Long id, String filePath) {
-        // 저장된 URL에서 objectPath 추출
-        String prefix = supabaseUrl + "/storage/v1/object/public/" + BUCKET + "/";
-        String objectPath = filePath.replace(prefix, "");
+    public void deleteFile(String refType, Long refId) {
 
-        // Supabase Storage 삭제
-        try {
-            restClient.method(HttpMethod.DELETE)
-                    .uri(supabaseUrl + "/storage/v1/object/" + BUCKET)
-                    .header("Authorization", "Bearer " + serviceRoleKey)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of("prefixes", List.of(objectPath)))
-                    .retrieve()
-                    .toBodilessEntity();
-        } catch (Exception e) {
-            log.error("[FileService] Storage 삭제 실패 (DB 삭제 진행): {}", e.getMessage());
-        }
+        // String refType -> RefType refType 타입 변환
+        RefType refTypeName = RefType.fromTypeName(refType);
 
-        // DB에 있으면 삭제
-        fileAttachmentRepository.findById(id).ifPresent(fileAttachmentRepository::delete);
-    }
+        // 파일 불러오기
+        List<FileAttachment> files = fileAttachmentRepository.findByRefTypeAndRefId(refTypeName, refId);
 
-    // 파일 스토리지 삭제
-    @Transactional
-    public void deleteFormStorage(String filePath) {
-        // 저장된 URL에서 objectPath 추출
-        String prefix = supabaseUrl + "/storage/v1/object/public/" + BUCKET + "/";
-        String objectPath = filePath.replace(prefix, "");
+        // 파일 반복문으로 돌리면서 삭제
+        for (FileAttachment file : files) {
+            // 저장된 URL에서 objectPath 추출
+            String prefix = supabaseUrl + "/storage/v1/object/public/" + BUCKET + "/";
+            String objectPath = file.getFilePath().replace(prefix, "");
 
-        // Supabase Storage 삭제
-        try {
-            restClient.method(HttpMethod.DELETE)
-                    .uri(supabaseUrl + "/storage/v1/object/" + BUCKET)
-                    .header("Authorization", "Bearer " + serviceRoleKey)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of("prefixes", List.of(objectPath)))
-                    .retrieve()
-                    .toBodilessEntity();
-        } catch (Exception e) {
-            log.error("[FileService] Storage 삭제 실패 (DB 삭제 진행): {}", e.getMessage());
+            // Supabase Storage 삭제
+            try {
+                restClient.method(HttpMethod.DELETE)
+                        .uri(supabaseUrl + "/storage/v1/object/" + BUCKET)
+                        .header("Authorization", "Bearer " + serviceRoleKey)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(Map.of("prefixes", List.of(objectPath)))
+                        .retrieve()
+                        .toBodilessEntity();
+            } catch (Exception e) {
+                log.error("[FileService] Storage 삭제 실패 (DB 삭제 진행): {}", e.getMessage());
+            }
+
+            // DB에 있으면 삭제
+            fileAttachmentRepository.delete(file);
         }
     }
 }

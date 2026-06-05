@@ -51,16 +51,9 @@ public class FileController {
   }
 
   // 파일 DB 삭제
-  @DeleteMapping("/{fileId}")
-  public ResponseEntity<ApiResponse<Void>> deleteFile(@PathVariable Long id, @RequestParam String filePath) {
-    fileService.deleteFile(id,filePath);
-    return ResponseEntity.ok(ApiResponse.ok(null));
-  }
-
-  // 파일 스토리지 삭제
   @DeleteMapping("/delete")
-  public ResponseEntity<ApiResponse<Void>> deleteFormStorage(@RequestParam String filePath) {
-    fileService.deleteFormStorage(filePath);
+  public ResponseEntity<ApiResponse<Void>> deleteFile(@RequestParam("refType") String refType, @RequestParam("refId") Long refId) {
+    fileService.deleteFile(refType, refId);
     return ResponseEntity.ok(ApiResponse.ok(null));
   }
 }
