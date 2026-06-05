@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { updateFile } from "../domains/file/services/fileApi";
-import useAuthContext from "../../../store/AuthContext";
+import { uploadFile } from "../domains/file/services/FileApi";
 
 export default function useFileUpload(accessToken, refType) {
   const [files, setFiles] = useState([]); //파일 목록
@@ -19,9 +18,9 @@ export default function useFileUpload(accessToken, refType) {
 
     // 스토리지에 업로드가 있으면, URL sessionStorage 임시 저장
     if (result?.filePath) {
-      const saved = JSON.parse(sessionStorage.getItem("uploadUrls") || []);
+      const saved = JSON.parse(sessionStorage.getItem("uploadUrls") || "[]"); //불러오기
       const updated = [...saved, result.filePath];
-      sessionStorage.setItem("uploadUrls", JSON.stringify(updated));
+      sessionStorage.setItem("uploadUrls", JSON.stringify(updated)); //저장하기
       setUploadUrls(updated);
     }
   };

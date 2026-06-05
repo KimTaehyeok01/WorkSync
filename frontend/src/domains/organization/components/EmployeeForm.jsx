@@ -54,7 +54,6 @@ export default function EmployeeForm({
   removeFiles,
   clearFiles,
 }) {
-  const { accessToken } = useAuthContext();
   const navigate = useNavigate();
 
   // 입력폼 형식 오류 메시지

@@ -6,11 +6,11 @@ import {
   createEmployee,
 } from "../services/organizationListApi";
 import { WSSuccessScreen } from "../../../components/common/LayoutComponents";
+import useFileUpload from "../../../hooks/useFileUpload";
 import EmployeeForm from "../components/EmployeeForm";
 
 export default function EmployeeAdd() {
   const { accessToken } = useAuthContext();
-  const { addFiles } = useFileUpload(accessToken, "ORGANIZATION");
   const navigate = useNavigate();
   const [pwDisabled, setPwDisabled] = useState(false);
   const [departments, setDepartments] = useState([]);
@@ -69,11 +69,15 @@ export default function EmployeeAdd() {
   // 저장
   async function handleSubmit() {
     try {
-      await createEmployee(accessToken, { ...form, profileImage: uploadUrls });
+      await createEmployee(accessToken, {
+        ...form,
+        profileImage: uploadUrls[0],
+      });
       clearFiles();
     } catch (error) {
       console.log("저장 실패: " + error);
       alert("저장에 실패했습니다.");
+      clearFiles();
     }
     setSubmitted(true);
     navigate("/organization");
