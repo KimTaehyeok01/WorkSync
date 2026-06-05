@@ -23,9 +23,7 @@ public class FileController {
   // 파일 스토리지 저장
   @PostMapping("/upload")
   public ResponseEntity<ApiResponse<FileUploadResponse>> upload(
-          @AuthenticationPrincipal CustomUserDetails userDetails,
-          @RequestParam("file") MultipartFile file,
-          @RequestParam("refType") String refType) {
+          @RequestParam("file") MultipartFile file) {
     return ResponseEntity.status(201)
             .body(ApiResponse.created(fileService.upload(file)));
   }
@@ -55,8 +53,8 @@ public class FileController {
 
   // 파일 삭제
   @DeleteMapping("/{id}")
-  public ResponseEntity<ApiResponse<Void>> delete(@PathVariable("id") Long id) {
-    fileService.delete(id);
+  public ResponseEntity<ApiResponse<Void>> delete(@RequestBody String filePath) {
+    fileService.delete(filePath);
     return ResponseEntity.ok(ApiResponse.ok(null));
   }
 }
