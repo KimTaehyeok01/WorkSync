@@ -26,6 +26,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -49,11 +50,27 @@ public class LeaveService {
         Employee approver = employeeRepository.findById(req.getApproverId())
                 .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
 
-        //잔여 연차 부족 검증 — 휴가 시작일이 속한 연도의 연차 기준 (승인 시 차감 연도와 일치)
+        // 본인을 결재자로 지정 금지
+        if (approver.getId().equals(employeeId)) {
+            throw new CustomException(ErrorCode.SELF_APPROVAL_NOT_ALLOWED);
+        }
+
+        // 동일 기간 중복 신청 방지
+        if (leaveRequestRepository.existsOverlapping(employeeId, req.getStartDate(), req.getEndDate())) {
+            throw new CustomException(ErrorCode.DUPLICATE_LEAVE_REQUEST);
+        }
+
+        // 잔여 연차 부족 검증 — 휴가 시작일이 속한 연도의 연차 기준 (승인 시 차감 연도와 일치)
         short leaveYear = (short) req.getStartDate().getYear();
+        // 해당 연도 연차 정보가 없으면 기본 15일로 자동 부여 후 진행
         AnnualLeaveBalance balance = annualLeaveBalanceRepository
                 .findByEmployeeIdAndYear(employeeId, leaveYear)
-                .orElseThrow(() -> new CustomException(ErrorCode.LEAVE_BALANCE_NOT_FOUND));
+                .orElseGet(() -> annualLeaveBalanceRepository.save(
+                        AnnualLeaveBalance.builder()
+                                .employee(employee)
+                                .year(leaveYear)
+                                .totalDays(BigDecimal.valueOf(15))
+                                .build()));
 
         if (balance.getRemainingDays().compareTo(req.getDayCount()) < 0) {
             throw new CustomException(ErrorCode.INSUFFICIENT_LEAVE_BALANCE);
