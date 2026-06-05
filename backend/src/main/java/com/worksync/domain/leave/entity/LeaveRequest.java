@@ -59,4 +59,12 @@ public class LeaveRequest {
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    public void approve() {
+        this.status = LeaveStatus.APPROVED;
+    }
+
+    public void reject() {
+        this.status = LeaveStatus.REJECTED;
+    }
 }
