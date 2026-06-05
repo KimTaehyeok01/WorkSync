@@ -4,6 +4,7 @@ import com.worksync.domain.approval.entity.ApprovalDoc;
 import com.worksync.domain.approval.entity.ApprovalLine;
 import com.worksync.domain.approval.entity.ApprovalLineStatus;
 import com.worksync.domain.approval.entity.StepType;
+import com.worksync.domain.approval.event.ApprovalApprovedEvent;
 import com.worksync.domain.approval.repository.ApprovalDocRepository;
 import com.worksync.domain.approval.repository.ApprovalFormRepository;
 import com.worksync.domain.employee.entity.Employee;
@@ -13,6 +14,7 @@ import com.worksync.domain.leave.dto.LeaveCreateRequest;
 import com.worksync.domain.leave.dto.LeaveResponse;
 import com.worksync.domain.leave.entity.AnnualLeaveBalance;
 import com.worksync.domain.leave.entity.LeaveRequest;
+import com.worksync.domain.leave.entity.LeaveStatus;
 import com.worksync.domain.leave.repository.AnnualLeaveBalanceRepository;
 import com.worksync.domain.leave.repository.LeaveRequestRepository;
 import com.worksync.domain.notification.entity.NotificationType;
@@ -20,6 +22,7 @@ import com.worksync.domain.notification.service.NotificationService;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -117,5 +120,33 @@ public class LeaveService {
                 .orElseThrow(() -> new CustomException(ErrorCode.LEAVE_BALANCE_NOT_FOUND));
 
         return LeaveBalanceResponse.from(balance);
+    }
+
+    // 휴가 결재가 최종 승인되면 연차를 차감한다 (ApprovalApprovedEvent 구독)
+    // process()의 트랜잭션 안에서 동기 실행되므로, 차감 실패 시 결재 승인도 함께 롤백된다.
+    // @EventListener는 처음 써봐서 주석 많이 남깁니다.
+    @EventListener
+    @Transactional
+    public void onApprovalApproved(ApprovalApprovedEvent event) {
+        // 휴가 결재가 아니면 무시
+        if (!"LEAVE".equals(event.formType())) {
+            return;
+        }
+
+        // 결재 문서에 연결된 휴가 신청 조회 (없거나 이미 처리됐으면 중복 차감 방지)
+        LeaveRequest leaveRequest = leaveRequestRepository.findByApprovalDocId(event.docId())
+                .orElse(null);
+        if (leaveRequest == null || leaveRequest.getStatus() != LeaveStatus.PENDING) {
+            return;
+        }
+
+        // 신청 시작일 연도 기준 잔여 연차에서 차감
+        short year = (short) leaveRequest.getStartDate().getYear();
+        AnnualLeaveBalance balance = annualLeaveBalanceRepository
+                .findByEmployeeIdAndYear(leaveRequest.getEmployee().getId(), year)
+                .orElseThrow(() -> new CustomException(ErrorCode.LEAVE_BALANCE_NOT_FOUND));
+
+        balance.useLeave(leaveRequest.getDaysCount());
+        leaveRequest.approve();
     }
 }

@@ -25,7 +25,7 @@ public class LeaveBalanceResponse {
                 .year(balance.getYear())
                 .totalDays(balance.getTotalDays())
                 .usedDays(balance.getUsedDays())
-                .remainingDays(balance.getTotalDays().subtract(balance.getUsedDays()))
+                .remainingDays(balance.getRemainingDays())
                 .build();
     }
 }
