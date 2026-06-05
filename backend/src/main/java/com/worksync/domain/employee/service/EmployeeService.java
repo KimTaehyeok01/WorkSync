@@ -138,6 +138,11 @@ public class EmployeeService {
                 encodedPassword
         );
 
+        // 첨부파일 경로 List 타입 변환, 파일 refId 업데이트 (직원 ID)
+        if (request.getProfileImage() != null) {
+            fileService.updateRefId(List.of(request.getProfileImage()), employee.getId());
+        }
+
         return EmployeeResponse.from(employee);
     }
 

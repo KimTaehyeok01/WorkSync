@@ -43,7 +43,7 @@ public class FileService {
 
     private static final String BUCKET = "WorkSync";
 
-    // 파일 업로드
+    // refId를 제외한 초기 파일 업로드
     @Transactional
     public FileUploadResponse upload(MultipartFile file, Long uploaderId, String refType) {
 
@@ -102,6 +102,7 @@ public class FileService {
         return FileUploadResponse.from(fileAttachmentRepository.save(fileAttachment));
     }
 
+    // 최종 저장시 refId 추가
     @Transactional
     public void updateRefId(List<String> fileUrls, Long refId) {
         // 파일 경로가 null이거나 비어있으면 돌려보냄
