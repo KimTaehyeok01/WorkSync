@@ -27,7 +27,8 @@ public class AuthController {
             HttpServletRequest httpRequest) {
 
         String clientIp = httpRequest.getRemoteAddr();
-        return ResponseEntity.ok(ApiResponse.ok(authService.login(request, clientIp)));
+        String userAgent = httpRequest.getHeader("User-Agent");
+        return ResponseEntity.ok(ApiResponse.ok(authService.login(request, clientIp, userAgent)));
     }
 
     // 토큰 재발급 — 리프레시 토큰으로 새 액세스/리프레시 토큰 발급
@@ -41,9 +42,12 @@ public class AuthController {
     // 로그아웃
     @DeleteMapping("/token")
     public ResponseEntity<ApiResponse<Void>> logout(
-            @RequestBody ReissueRequest request) {
+            @RequestBody ReissueRequest request,
+            HttpServletRequest httpRequest) {
 
-        authService.logout(request);
+        String clientIp = httpRequest.getRemoteAddr();
+        String userAgent = httpRequest.getHeader("User-Agent");
+        authService.logout(request, clientIp, userAgent);
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 }

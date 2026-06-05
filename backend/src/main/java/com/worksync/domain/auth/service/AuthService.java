@@ -1,6 +1,7 @@
 package com.worksync.domain.auth.service;
 
 import com.worksync.domain.attendance.service.AttendanceService;
+import com.worksync.domain.audit.service.AuditLogService;
 import com.worksync.domain.auth.dto.LoginRequest;
 import com.worksync.domain.auth.dto.LoginResponse;
 import com.worksync.domain.auth.dto.ReissueRequest;
@@ -28,12 +29,19 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AttendanceService attendanceService;
+    private final AuditLogService auditLogService;
+
+    // 감사 로그 카테고리
+    private static final String CATEGORY_AUTH = "AUTH";
+    private static final String ACTION_LOGIN = "로그인";
+    private static final String ACTION_LOGIN_FAIL = "로그인 실패";
+    private static final String ACTION_LOGOUT = "로그아웃";
 
     private static final int MAX_LOGIN_FAIL = 5;
     private static final int LOCK_MINUTES = 30;
 
     @Transactional(noRollbackFor = CustomException.class)
-    public LoginResponse login(LoginRequest request, String clientIp) {
+    public LoginResponse login(LoginRequest request, String clientIp, String userAgent) {
         Employee employee = employeeRepository.findByEmpNo(request.getEmpNo())
                 .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CREDENTIALS));
 
@@ -51,6 +59,9 @@ public class AuthService {
         // 비밀번호 확인
         if (!passwordEncoder.matches(request.getPassword(), employee.getPassword())) {
             employee.incrementLoginFailCount(MAX_LOGIN_FAIL, LOCK_MINUTES);
+            // 감사 로그 — 로그인 실패
+            auditLogService.log(employee.getId(), employee.getName(),
+                    ACTION_LOGIN_FAIL, CATEGORY_AUTH, null, clientIp, userAgent);
             throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
         }
 
@@ -61,6 +72,10 @@ public class AuthService {
 
         // 로그인 = 출근 처리
         attendanceService.checkInOnLogin(employee.getId(), clientIp);
+
+        // 감사 로그 — 로그인 성공
+        auditLogService.log(employee.getId(), employee.getName(),
+                ACTION_LOGIN, CATEGORY_AUTH, null, clientIp, userAgent);
 
         String accessToken = jwtTokenProvider.generateAccessToken(
                 employee.getId(), employee.getEmail(), employee.getRole().name());
@@ -104,7 +119,7 @@ public class AuthService {
 
     // 로그아웃
     @Transactional
-    public void logout(ReissueRequest request) {
+    public void logout(ReissueRequest request, String clientIp, String userAgent) {
         if (!jwtTokenProvider.validateToken(request.getRefreshToken())) {
             throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
@@ -116,5 +131,9 @@ public class AuthService {
 
         // 로그아웃 = 퇴근 처리
         attendanceService.checkOutOnLogout(employee.getId());
+
+        // 감사 로그 — 로그아웃
+        auditLogService.log(employee.getId(), employee.getName(),
+                ACTION_LOGOUT, CATEGORY_AUTH, null, clientIp, userAgent);
     }
 }
