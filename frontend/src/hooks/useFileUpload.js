@@ -25,12 +25,12 @@ export default function useFileUpload(accessToken, refType) {
   // 파일 삭제
   const removeFiles = async (index) => {
     const targetFile = files[index];
-    if (targetFile?.fileId) {
+    if (targetFile?.data.fileId !== undefined) {
       // DB 삭제
-      await deleteFile(accessToken, targetFile.fileId);
+      await deleteFile(accessToken, targetFile.data.fileId);
     } else {
       // 스토리지 삭제
-      await deleteFile(accessToken, targetFile.url);
+      await deleteFile(accessToken, targetFile.data.url);
     }
 
     // 화면에 파일 제거
