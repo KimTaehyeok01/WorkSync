@@ -52,7 +52,7 @@ public class FileController {
   }
 
   // 파일 삭제
-  @DeleteMapping("/{id}")
+  @DeleteMapping("/delete")
   public ResponseEntity<ApiResponse<Void>> delete(@RequestBody String filePath) {
     fileService.delete(filePath);
     return ResponseEntity.ok(ApiResponse.ok(null));
