@@ -8,6 +8,7 @@ import {
 import { WSSuccessScreen } from "../../../components/common/LayoutComponents";
 import useFileUpload from "../../../hooks/useFileUpload";
 import EmployeeForm from "../components/EmployeeForm";
+import { saveFile } from "../../file/services/FileApi";
 
 export default function EmployeeAdd() {
   const { accessToken } = useAuthContext();
@@ -70,11 +71,14 @@ export default function EmployeeAdd() {
   async function handleSubmit() {
     try {
       // 직원 저장
-      await createEmployee(accessToken, form);
+      const response = await createEmployee(accessToken, {
+        ...form,
+        profileImage: uploadedFile.filePath ?? null,
+      });
       const employeeId = response.data.id;
 
       // 파일 저장
-      await uploadFile(accessToken, {
+      await saveFile(accessToken, {
         ...uploadedFile,
         refType: "ORGANIZATION",
         refId: employeeId,
@@ -82,18 +86,21 @@ export default function EmployeeAdd() {
 
       // 파일 초기화
       clearFiles();
+      setSubmitted(true);
       navigate("/organization");
     } catch (error) {
-      // 파일 삭제
-      removeFiles();
       if (error.response?.status === 409) {
+        // 파일 초기화
+        clearFiles();
         alert("이미 존재하는 이메일 또는 사번입니다.");
         return;
       } else {
+        // 파일 초기화
+        clearFiles();
         console.log("저장실패: " + error);
+        return;
       }
     }
-    setSubmitted(true);
   }
 
   // 취소
@@ -115,13 +122,13 @@ export default function EmployeeAdd() {
   return (
     <>
       <EmployeeForm
+        isValid={isValid}
         form={form}
         setForm={setForm}
         pwDisabled={pwDisabled}
         DEPT_OPTIONS={DEPT_OPTIONS}
         onSubmit={handleSubmit}
         onCancel={handleRollBack}
-        isValid={isValid}
         submitLabel="직원 등록"
         textBtnLabel="취소하고 돌아가기"
         pageTitle="직원 등록"

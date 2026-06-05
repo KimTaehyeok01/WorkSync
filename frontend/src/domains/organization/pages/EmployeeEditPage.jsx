@@ -31,6 +31,20 @@ export default function EmployeeEdit() {
     hireDate: "",
   });
 
+  // 입력폼 유효성 체크
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
+  const isValidPhone = /^010-\d{4}-\d{4}$/.test(form.phone);
+  const isValid = [
+    form.empNo.trim().length > 0,
+    form.name.trim().length > 0,
+    form.email.trim().length > 0,
+    isValidEmail,
+    isValidPhone,
+    form.role.trim().length > 0,
+    form.jobGrade.trim().length > 0,
+    form.departmentId > 0,
+  ].every(Boolean);
+
   // 파일 선언
   const {
     files,
@@ -80,27 +94,26 @@ export default function EmployeeEdit() {
     label: dept.name,
   }));
 
-  // 입력폼 유효성 체크
-  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
-  const isValidPhone = /^010-\d{4}-\d{4}$/.test(form.phone);
-  const isValid = [
-    form.empNo.trim().length > 0,
-    form.name.trim().length > 0,
-    form.email.trim().length > 0,
-    isValidEmail,
-    isValidPhone,
-    form.role.trim().length > 0,
-    form.jobGrade.trim().length > 0,
-    form.departmentId > 0,
-  ].every(Boolean);
-
   // 저장
   async function handleSubmit() {
     try {
-      await editEmployee(accessToken, id, {
+      // 직원 저장
+      const response = await editEmployee(accessToken, {
         ...form,
-        profileImage: uploadUrls[0] ?? null,
+        profileImage: uploadedFile.filePath ?? null,
       });
+      const employeeId = response.data.id;
+
+      // 파일 저장
+      await saveFile(accessToken, {
+        ...uploadedFile,
+        refType: "ORGANIZATION",
+        refId: employeeId,
+      });
+
+      // 파일 초기화
+      clearFiles();
+      setSubmitted(true);
       navigate("/organization");
     } catch (error) {
       removeFiles();
@@ -111,7 +124,6 @@ export default function EmployeeEdit() {
         console.log("저장실패: " + error);
       }
     }
-    setSubmitted(true);
   }
 
   // 삭제
@@ -147,13 +159,13 @@ export default function EmployeeEdit() {
   return (
     <>
       <EmployeeForm
+        isValid={isValid}
         form={form}
         setForm={setForm}
         pwDisabled={pwDisabled}
         DEPT_OPTIONS={DEPT_OPTIONS}
         onSubmit={handleSubmit}
         onCancel={handleDelete}
-        isValid={isValid}
         submitLabel="직원 수정"
         textBtnLabel="삭제하기"
         pageTitle="직원 수정"

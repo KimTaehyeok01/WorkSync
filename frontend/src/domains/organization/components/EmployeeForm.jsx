@@ -35,13 +35,13 @@ const ROLE_OPTIONS = [
 ];
 
 export default function EmployeeForm({
+  isValid,
   form,
   setForm,
   pwDisabled,
   DEPT_OPTIONS = [],
   onSubmit,
   onCancel,
-  isValid,
   submitLabel,
   textBtnLabel,
   pageTitle,
