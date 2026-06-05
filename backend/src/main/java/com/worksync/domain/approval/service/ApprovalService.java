@@ -6,6 +6,7 @@ import com.worksync.domain.approval.dto.ApprovalFormResponse;
 import com.worksync.domain.approval.dto.ApprovalListResponse;
 import com.worksync.domain.approval.dto.ApprovalProcessRequest;
 import com.worksync.domain.approval.dto.ApprovalUpdateRequest;
+import com.worksync.domain.approval.event.ApprovalApprovedEvent;
 import com.worksync.domain.approval.entity.ApprovalDoc;
 import com.worksync.domain.approval.entity.ApprovalDocItem;
 import com.worksync.domain.approval.entity.ApprovalDocStatus;
@@ -23,6 +24,7 @@ import com.worksync.domain.notification.service.NotificationService;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +43,7 @@ public class ApprovalService {
     private final ApprovalFormRepository approvalFormRepository;
     private final EmployeeRepository employeeRepository;
     private final NotificationService notificationService;
+    private final ApplicationEventPublisher eventPublisher;
 
     /* 결재 양식 */
 
@@ -314,6 +317,10 @@ public class ApprovalService {
                         "APPROVAL",
                         doc.getId()
                 );
+
+                // 최종 승인 이벤트 발행 → 구독 측(leave 등)이 후속 처리(연차 차감 등) 수행
+                eventPublisher.publishEvent(
+                        new ApprovalApprovedEvent(doc.getId(), doc.getForm().getFormType()));
             } else {
                 // 중간 승인 → 다음 순서 결재자에게 알림
                 int nextOrder = doc.getApprovalLines().stream()
