@@ -1,6 +1,13 @@
 import { useParams, useNavigate } from "react-router-dom";
 import useAuthContext from "../../../store/AuthContext";
-import { CheckCircle, XCircle, ChevronRight, Download, X } from "lucide-react";
+import {
+  CheckCircle,
+  XCircle,
+  ChevronRight,
+  Download,
+  X,
+  Clock,
+} from "lucide-react";
 import { APPROVAL_DOCS, TEAM_MEMBERS } from "../../../constants/mockData";
 import { WSAvatar } from "../../../components/common/CommonWidgets";
 import { getMyInfo, getApprovalById } from "../services/approvalApi";
@@ -31,6 +38,34 @@ function stepLabelColor(status) {
   return "#9CA3AF";
 }
 
+// 연차 신청서
+function LeaveDetail({ items }) {
+  return (
+    <div className={s.detailTableWrap}>
+      <table className={s.detailTable}>
+        <tbody>
+          <tr>
+            <th>소속</th>
+            <td>{items.departmentName ?? "-"}</td>
+            <th>작성자</th>
+            <td>{items.name ?? "-"}</td>
+          </tr>
+          <tr>
+            <th>휴가 종류</th>
+            <td>{items.leaveType ?? "-"}</td>
+            <th>휴가 기간</th>
+            <td>{items.days ?? "-"}</td>
+          </tr>
+          <tr>
+            <th>휴가 사유</th>
+            <td colSpan={3}>{items.reason ?? "-"}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function ApprovalDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -38,6 +73,7 @@ export default function ApprovalDetail() {
   const [status, setStatus] = useState(null);
   const [approvalLines, setApprovalLines] = useState([]);
   const [approval, setApproval] = useState(null);
+  const [me, setMe] = useState(null);
   const fallbackStatusConfig = {
     label: "알 수 없음",
     bg: "#E5E7EB",
@@ -51,9 +87,17 @@ export default function ApprovalDetail() {
       setApproval(data);
       setStatus(data.status);
       setApprovalLines(data.approvalLines ?? []);
-      console.log("items 찐 : " + JSON.stringify(data.items, null, 2));
+      console.log("items : ", data.items);
     });
   }, [accessToken, id]);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    getMyInfo(accessToken).then((data) => {
+      if (!data) return;
+      setMe(data);
+    });
+  });
 
   if (!approval) {
     return (
@@ -84,11 +128,18 @@ export default function ApprovalDetail() {
               <WSAvatar src={null} name={approval.drafterName} size={32} />
               <div>
                 <p className={s.requesterName}>{approval.drafterName}</p>
-                <p className={s.requesterDate}>{approval.createdAt}</p>
+                <div style={{ display: "flex" }}>
+                  <p className={s.requesterDate} style={{ marginRight: "5px" }}>
+                    {me.jobGrade} ·
+                  </p>
+                  <p className={s.requesterDate}>
+                    {new Date(approval.createdAt).toLocaleDateString("ko-KR")}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-          <button onClick={() => navigate("/approvals")} className={s.closeBtn}>
+          <button onClick={() => navigate("/approval")} className={s.closeBtn}>
             <X size={20} />
           </button>
         </div>
@@ -96,9 +147,28 @@ export default function ApprovalDetail() {
 
       <div className={s.section}>
         <h2 className={s.sectionTitle}>결재선</h2>
-        <p className={s.sectionSub}>ws-apv-approval-line</p>
+        <p className={s.sectionSub}>결재 진행 상황</p>
 
         <div className={s.stepsRow}>
+          <div className={s.stepGroup}>
+            <div className={`${s.step} ${s.stepApproved}`}>
+              <div className={s.stepStatusRow}>
+                <CheckCircle size={14} color="#16A34A"></CheckCircle>
+                <span
+                  className={s.stepStatusLabel}
+                  style={{ "--step-color": "#16A34A" }}
+                >
+                  승인됨
+                </span>
+              </div>
+              <WSAvatar src={null} name={approval.drafterName} size={40} />
+              <p className={s.stepName}>{approval.drafterName}</p>
+              <p className={s.stepRole}>기안자</p>
+            </div>
+            {approvalLines.length > 0 && (
+              <ChevronRight size={16} className={s.stepArrow} />
+            )}
+          </div>
           {approvalLines.map((step, idx) => (
             <div key={idx} className={s.stepGroup}>
               <div className={`${s.step} ${stepClass(step.status)}`}>
@@ -108,6 +178,9 @@ export default function ApprovalDetail() {
                   )}
                   {step.status === "REJECTED" && (
                     <XCircle size={14} color="#DC2626" />
+                  )}
+                  {step.status === "WAITING" && (
+                    <Clock size={14} color="#9CA3AF" />
                   )}
                   <span
                     className={s.stepStatusLabel}
@@ -120,9 +193,17 @@ export default function ApprovalDetail() {
                         : "대기"}
                   </span>
                 </div>
-                <WSAvatar src={null} name={step.drafterName} size={40} />
-                <p className={s.stepName}>{step.drafterName}</p>
-                {/* <p className={s.stepRole}>{step.role}</p> */}
+                <WSAvatar src={null} name={step.approverName} size={40} />
+                <p className={s.stepName}>{step.approverName}</p>
+                <p className={s.stepRole}>
+                  {step.stepType === "REVIEW"
+                    ? "검토자"
+                    : step.stepType === "APPROVE"
+                      ? "최종 승인자"
+                      : step.stepType === "REFERENCE"
+                        ? "참조자"
+                        : "-"}
+                </p>
               </div>
               {idx < approvalLines.length - 1 && (
                 <ChevronRight size={16} className={s.stepArrow} />
@@ -135,29 +216,18 @@ export default function ApprovalDetail() {
       <div className={s.section}>
         <h2 className={s.sectionTitle}>{approval.formName}</h2>
         <p className={s.sectionSub}>제출된 문서 미리보기</p>
-
-        <div className={s.previewStack}>
-          <div className={s.infoGrid}>
-            <div>
-              <p className={s.infoLabel}>제목</p>
-              <p className={s.infoValue}>{approval.title}</p>
-            </div>
-            <div>
-              <p className={s.infoLabel}>작성자</p>
-              <p className={s.infoValue}>{approval.drafterName}</p>
-            </div>
-            <div>
-              <p className={s.infoLabel}>작성일</p>
-              <p className={s.infoValue}>{approval.createdAt?.slice(0, 10)}</p>
-            </div>
-            <div>
-              <p className={s.infoLabel}>제출일</p>
-              <p className={s.infoValue}>
-                {approval.submittedAt?.slice(0, 10) ?? "미제출"}
-              </p>
-            </div>
-          </div>
-        </div>
+        {approval.formId === 1 && (
+          <LeaveDetail items={approval.items}></LeaveDetail>
+        )}
+        {approval.formId === 2 && (
+          <ExpenseDetail items={approval.items}></ExpenseDetail>
+        )}
+        {approval.formId === 3 && (
+          <PurchaseDetail items={approval.items}></PurchaseDetail>
+        )}
+        {approval.formId === 4 && (
+          <BusinessTripDetail items={approval.items}></BusinessTripDetail>
+        )}
       </div>
 
       <div className={s.section}>

@@ -55,6 +55,16 @@ function ExpenseForm({ formValues, setFormValues, myInfo, title, setTitle }) {
     setFormValues((prev) => ({ ...prev, amount: total }));
   }, [total]);
 
+  useEffect(() => {
+    if (myInfo) {
+      setFormValues((prev) => ({
+        ...prev,
+        departmentName: myInfo.departmentName,
+        name: myInfo.name,
+      }));
+    }
+  }, [myInfo]);
+
   const CATEGORIES = ["물품구입비", "교통비", "식비", "숙박비", "기타"];
 
   return (
@@ -214,6 +224,16 @@ function LeaveForm({ formValues, setFormValues, myInfo, title, setTitle }) {
   const update = (key, value) =>
     setFormValues((prev) => ({ ...prev, [key]: value }));
 
+  useEffect(() => {
+    if (myInfo) {
+      setFormValues((prev) => ({
+        ...prev,
+        departmentName: myInfo.departmentName,
+        name: myInfo.name,
+      }));
+    }
+  }, [myInfo]);
+
   return (
     <>
       {/* 기본 정보 */}
@@ -358,6 +378,16 @@ function PurchaseForm({ formValues, setFormValues, myInfo, title, setTitle }) {
   useEffect(() => {
     setFormValues((prev) => ({ ...prev, amount: total }));
   }, [total]);
+
+  useEffect(() => {
+    if (myInfo) {
+      setFormValues((prev) => ({
+        ...prev,
+        departmentName: myInfo.departmentName,
+        name: myInfo.name,
+      }));
+    }
+  }, [myInfo]);
 
   return (
     <>
@@ -561,6 +591,16 @@ function BusinessTripForm({
     setExpenses((prev) =>
       prev.map((r) => (r.id === id ? { ...r, [key]: value } : r)),
     );
+
+  useEffect(() => {
+    if (myInfo) {
+      setFormValues((prev) => ({
+        ...prev,
+        departmentName: myInfo.departmentName,
+        name: myInfo.name,
+      }));
+    }
+  }, [myInfo]);
 
   const EXPENSE_CATEGORIES = ["교통비", "숙박비", "식비", "기타"];
 

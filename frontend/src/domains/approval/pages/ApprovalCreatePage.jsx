@@ -177,6 +177,8 @@ export default function ApprovalNew() {
       }
     }
 
+    console.log("변환 후 formValues:", JSON.stringify(formValues, null, 2));
+
     const body = {
       formId: selectedForm?.id,
       title,

@@ -75,11 +75,11 @@
 .stepsRow {
   display: flex;
   align-items: center;
-  gap: 12px;
 }
 .stepGroup {
   display: flex;
   align-items: center;
+  flex: 1;
 }
 .step {
   display: flex;
@@ -89,6 +89,7 @@
   border-radius: 8px;
   border: 1px solid;
   min-width: 140px;
+  flex: 1;
 }
 .stepApproved {
   background: #f0fdf4;
@@ -115,7 +116,6 @@
 }
 .stepName {
   color: var(--ws-text-800);
-  margin-top: 8px;
   text-align: center;
   font-size: 12.5px;
   font-weight: 600;
@@ -128,6 +128,7 @@
 .stepArrow {
   color: var(--ws-text-300);
   margin: 0 8px;
+  flex-shrink: 0;
 }
 
 .infoGrid {
@@ -274,3 +275,40 @@
   font-size: 20px;
   font-weight: 700;
 }
+
+.detailTableWrap {
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.detailTable {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.detailTable th {
+  background: #f9fafb;
+  padding: 15px 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ws-text-500);
+  text-align: left;
+  border: 1px solid #f0f0f0;
+  width: 120px;
+}
+
+.detailTable td {
+  padding: 10px 16px;
+  font-size: 13px;
+  color: var(--ws-text-800);
+  border: 1px solid #f0f0f0;
+}
+
+/* .detailTable tr:last-child th,
+.detailTable tr:last-child td {
+  border-bottom: none;
+} */
