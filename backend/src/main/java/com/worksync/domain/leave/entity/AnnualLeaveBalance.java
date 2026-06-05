@@ -44,4 +44,8 @@ public class AnnualLeaveBalance {
     public void useLeave(BigDecimal days){
         this.usedDays=this.usedDays.add(days);
     }
+
+    public BigDecimal getRemainingDays(){
+        return this.totalDays.subtract(this.usedDays);
+    }
 }
