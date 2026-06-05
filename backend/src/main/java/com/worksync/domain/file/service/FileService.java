@@ -132,9 +132,15 @@ public class FileService {
                 .collect(Collectors.toList());
     }
 
-    // 파일 삭제
+    // 파일 DB 삭제
     @Transactional
-    public void delete(String filePath) {
+    public void deleteFile(Long id) {// DB에 있으면 삭제
+        fileAttachmentRepository.findById(id).ifPresent(fileAttachmentRepository::delete);
+    }
+
+    // 파일 스토리지 삭제
+    @Transactional
+    public void deleteFormStorage(String filePath) {
         // 저장된 URL에서 objectPath 추출
         String prefix = supabaseUrl + "/storage/v1/object/public/" + BUCKET + "/";
         String objectPath = filePath.replace(prefix, "");
@@ -151,8 +157,5 @@ public class FileService {
         } catch (Exception e) {
             log.error("[FileService] Storage 삭제 실패 (DB 삭제 진행): {}", e.getMessage());
         }
-
-        // DB에 있으면 삭제
-        fileAttachmentRepository.findByFilePath(filePath).ifPresent(fileAttachmentRepository::delete);
     }
 }
