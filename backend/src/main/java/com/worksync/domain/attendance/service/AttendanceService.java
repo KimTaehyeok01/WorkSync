@@ -25,7 +25,7 @@ public class AttendanceService {
   private final EmployeeRepository employeeRepository;
 
   @Transactional
-  //출근체크 - 오늘 출근햇으면 예외처리 던져
+  // 출근체크
   public AttendanceResponse checkIn(Long employeeId, String clientIp){
 
     // 사원조회 없으면 404
@@ -105,11 +105,13 @@ public class AttendanceService {
     attendanceRepository.save(attendance);
   }
 
-  // 로그아웃 연동 퇴근 — 오늘 출근 기록 있으면 퇴근시각 갱신, 없으면 통과
+  // 로그아웃 연동 퇴근 — 오늘 출근 기록이 있고 아직 퇴근 전일 때만 퇴근 처리
+  // 이미 퇴근한 기록은 갱신하지 않음
   @Transactional
   public void checkOutOnLogout(Long employeeId) {
     LocalDate today = LocalDate.now();
     attendanceRepository.findByEmployeeIdAndWorkDate(employeeId, today)
+            .filter(attendance -> attendance.getCheckOutTime() == null)
             .ifPresent(attendance -> attendance.checkOut(LocalDateTime.now()));
   }
 
