@@ -44,7 +44,7 @@ public class FileController {
 
   // 첨부 위치별 파일 목록 조회
   @GetMapping
-  public ResponseEntity<ApiResponse<List<FileUploadResponse>>> findByRef(
+  public ResponseEntity<ApiResponse<List<FileSaveRequest>>> findByRef(
           @RequestParam("refType") String refType,
           @RequestParam("refId") Long refId) {
     return ResponseEntity.ok(ApiResponse.ok(fileService.findByRef(refType, refId)));

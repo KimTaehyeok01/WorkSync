@@ -122,13 +122,13 @@ public class FileService {
     }
 
     // 첨부 위치별 파일 목록 조회
-    public List<FileUploadResponse> findByRef(String refType, Long refId) {
+    public List<FileSaveRequest> findByRef(String refType, Long refId) {
         // String refType -> RefType refType 타입 변환
         RefType refTypeName = RefType.fromTypeName(refType);
 
         return fileAttachmentRepository.findByRefTypeAndRefId(refTypeName, refId)
                 .stream()
-                .map(FileUploadResponse::from)
+                .map(FileSaveRequest::from)
                 .collect(Collectors.toList());
     }
 
