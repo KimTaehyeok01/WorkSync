@@ -14,6 +14,7 @@ import com.worksync.domain.approval.entity.ApprovalForm;
 import com.worksync.domain.approval.entity.ApprovalLine;
 import com.worksync.domain.approval.entity.ApprovalLineStatus;
 import com.worksync.domain.approval.entity.StepType;
+import com.worksync.domain.approval.event.ApprovalRejectedEvent;
 import com.worksync.domain.approval.repository.ApprovalDocRepository;
 import com.worksync.domain.approval.repository.ApprovalFormRepository;
 import com.worksync.domain.approval.repository.ApprovalLineRepository;
@@ -300,6 +301,10 @@ public class ApprovalService {
                     "APPROVAL",
                     doc.getId()
             );
+
+            // 반려 이벤트 발행 → 구독 측(leave 등)이 후속 처리(휴가 신청 반려 등) 수행
+            eventPublisher.publishEvent(
+                    new ApprovalRejectedEvent(doc.getId(), doc.getForm().getFormType()));
         } else {
             // 승인 → 모든 REVIEW/APPROVE 라인이 승인 완료면 문서 최종 승인
             boolean allApproved = doc.getApprovalLines().stream()
