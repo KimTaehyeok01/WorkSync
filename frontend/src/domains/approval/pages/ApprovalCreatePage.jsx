@@ -1,6 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getMyInfo, getForms, getEmployees } from "../services/approvalApi";
+import {
+  getMyInfo,
+  getForms,
+  getEmployees,
+  createApproval,
+} from "../services/approvalApi";
 import useAuthContext from "../../../store/AuthContext";
 import ApprovalFormPanel from "../components/ApprovalFormPanel";
 import {
@@ -77,14 +82,18 @@ export default function ApprovalNew() {
   const [formValues, setFormValues] = useState({});
   const [employees, setEmployees] = useState([]);
   const [myInfo, setMyInfo] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const { accessToken } = useAuthContext();
 
   useEffect(() => {
     if (!accessToken) return;
 
+    console.log("페이지 employees:", JSON.stringify(employees));
+
     getMyInfo(accessToken).then((data) => setMyInfo(data));
     getForms(accessToken).then((data) => setTemplates(data ?? []));
     getEmployees(accessToken).then((data) => setEmployees(data ?? []));
+    console.log("employees 전체 : " + employees);
   }, [accessToken]);
 
   const [approvers, setApprovers] = useState([]);
@@ -154,6 +163,21 @@ export default function ApprovalNew() {
   const handleSubmit = async () => {
     if (!isValid) return;
 
+    // items 중 amount는 숫자 items는 배열로 보낼 시 오류터짐 방지
+    const rawItems = { ...formValues };
+    // Map<String, String> 맞게 모든 값을 문자열로 변환
+    const stringifiedItems = {};
+
+    for (const [key, value] of Object.entries(rawItems)) {
+      if (Array.isArray(value) || typeof value === "object") {
+        // 배열이나 객체는 JSON 문자열로 변환
+        stringifiedItems[key] = JSON.stringify(value);
+      } else {
+        // 숫자, 문자열 등은 String()으로 변환
+        stringifiedItems[key] = String(value ?? "");
+      }
+    }
+
     const body = {
       formId: selectedForm?.id,
       title,
@@ -162,14 +186,19 @@ export default function ApprovalNew() {
         stepOrder: idx + 1,
         stepType: a.role,
       })),
-      items: formValues,
+      items: stringifiedItems,
     };
 
+    console.log("전송 body : ", JSON.stringify(body, null, 2));
+
+    setIsLoading(true);
     const result = await createApproval(accessToken, body);
-    if (result?.status === 200) {
+    console.log("result:", result);
+    if (result?.status === 201) {
       setSubmitted(true);
       setTimeout(() => navigate("/approval"), 1600);
     }
+    setIsLoading(false);
   };
 
   const selectedPriority = PRIORITIES.find((p) => p.value === priority);
@@ -229,7 +258,9 @@ export default function ApprovalNew() {
                   onClick={() => {
                     setDocType(tpl.type);
                     setTitle(
-                      tpl.name + " - " + new Date().toLocaleDateString("ko-KR"),
+                      tpl.formName +
+                        " - " +
+                        new Date().toLocaleDateString("ko-KR"),
                     );
                     setSelectedForm(tpl);
                     setFormValues({});
@@ -459,66 +490,14 @@ export default function ApprovalNew() {
             )}
           </WSCard>
 
-          <WSCard title="등록 요약">
-            <div className={s.summaryGrid}>
-              <SummaryRow
-                label="문서 제목"
-                value={title || "—"}
-                empty={!title}
-              />
-              <SummaryRow
-                label="문서 유형"
-                value={docType || "—"}
-                empty={!docType}
-              />
-              <SummaryRow
-                label="우선순위"
-                value={
-                  <span
-                    className={s.priorityBadge}
-                    style={{
-                      "--badge-bg": selectedPriority.bg,
-                      "--badge-color": selectedPriority.color,
-                    }}
-                  >
-                    {selectedPriority.label}
-                  </span>
-                }
-              />
-              <SummaryRow
-                label="요청 부서"
-                value={department || "—"}
-                empty={!department}
-              />
-              <SummaryRow
-                label="결재자 수"
-                value={`${approvers.length}명`}
-                empty={approvers.length === 0}
-              />
-              <SummaryRow label="첨부 파일" value={`${attachments.length}개`} />
-              <div className={s.summaryDivider}>
-                <div className={s.summaryNote}>
-                  <Info size={13} className={s.summaryNoteIcon} />
-                  <p className={s.summaryNoteText}>
-                    제출 후에는 기안 취소 또는 관리자 권한이 필요합니다.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </WSCard>
-
           <div className={s.actionsCol}>
             <button
               onClick={handleSubmit}
-              disabled={!isValid}
+              disabled={!isValid || isLoading}
               className={s.submitBtn}
             >
               <Send size={16} />
-              결재 요청 제출
-            </button>
-            <button onClick={handleSaveDraft} className={s.draftBtn}>
-              <Save size={15} />
-              임시 저장
+              {isLoading ? "등록 중..." : "결재 요청 제출"}
             </button>
             <button
               onClick={() => navigate("/approval")}

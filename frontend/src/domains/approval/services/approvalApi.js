@@ -26,7 +26,7 @@ export async function getEmployees(accessToken) {
   return await fetch(`${BASE_URL}/employees`, {
     method: "GET",
     headers: {
-      "Content-Type": "appliction/json",
+      "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
   })
@@ -35,8 +35,7 @@ export async function getEmployees(accessToken) {
       return response.json();
     })
     .then((text) => {
-      console.log("employees 응답 : " + text);
-      return text.data ?? [];
+      return Array.isArray(text.data) ? text.data : (text.data?.content ?? []);
     })
     .catch((error) => console.log("에러발생 : " + error));
 }
