@@ -146,6 +146,11 @@ public class LeaveService {
                 .findByEmployeeIdAndYear(leaveRequest.getEmployee().getId(), year)
                 .orElseThrow(() -> new CustomException(ErrorCode.LEAVE_BALANCE_NOT_FOUND));
 
+        // 승인 시점 잔여 재검증 — 신청 이후 다른 휴가가 차감돼 부족해졌을 수 있음 (음수 연차 방지)
+        if (balance.getRemainingDays().compareTo(leaveRequest.getDaysCount()) < 0) {
+            throw new CustomException(ErrorCode.INSUFFICIENT_LEAVE_BALANCE);
+        }
+
         balance.useLeave(leaveRequest.getDaysCount());
         leaveRequest.approve();
     }
