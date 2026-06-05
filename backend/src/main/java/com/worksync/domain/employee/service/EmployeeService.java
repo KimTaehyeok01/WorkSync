@@ -101,10 +101,14 @@ public class EmployeeService {
                 .hireDate(request.getHireDate())
                 .build();
 
-        // 첨부파일 경로 List 타입 변환, 파일 refId 업데이트 (직원 ID)
-        fileService.updateRefId(List.of(request.getProfileImage()), employee.getId());
+        Employee saveEmployee = employeeRepository.save(employee);
 
-        return EmployeeResponse.from(employeeRepository.save(employee));
+        // 첨부파일 경로 List 타입 변환, 파일 refId 업데이트 (직원 ID)
+        if (request.getProfileImage() != null) {
+            fileService.updateRefId(List.of(request.getProfileImage()), employee.getId());
+        }
+
+        return EmployeeResponse.from(saveEmployee);
     }
 
     @Transactional
