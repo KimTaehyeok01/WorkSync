@@ -1,5 +1,6 @@
 package com.worksync.domain.file.controller;
 
+import com.worksync.domain.file.dto.FileSaveRequest;
 import com.worksync.domain.file.dto.FileUploadResponse;
 import com.worksync.domain.file.service.FileService;
 import com.worksync.global.response.ApiResponse;
@@ -19,14 +20,23 @@ public class FileController {
 
   private final FileService fileService;
 
-  // 파일 업로드
+  // 파일 스토리지 저장
   @PostMapping("/upload")
   public ResponseEntity<ApiResponse<FileUploadResponse>> upload(
           @AuthenticationPrincipal CustomUserDetails userDetails,
           @RequestParam("file") MultipartFile file,
           @RequestParam("refType") String refType) {
     return ResponseEntity.status(201)
-            .body(ApiResponse.created(fileService.upload(file, userDetails.getId(), refType)));
+            .body(ApiResponse.created(fileService.upload(file)));
+  }
+
+  // 파일 DB 저장
+  @PostMapping("/save")
+  public ResponseEntity<ApiResponse<Void>> saveFile(
+          @AuthenticationPrincipal CustomUserDetails userDetails,
+          @RequestBody FileSaveRequest request) {
+    fileService.updateRefId(userDetails.getId(), request);
+    return ResponseEntity.ok(ApiResponse.ok(null));
   }
 
   // 파일 단건 조회

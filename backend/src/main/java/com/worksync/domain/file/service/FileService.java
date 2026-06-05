@@ -2,6 +2,7 @@ package com.worksync.domain.file.service;
 
 import com.worksync.domain.employee.entity.Employee;
 import com.worksync.domain.employee.repository.EmployeeRepository;
+import com.worksync.domain.file.dto.FileSaveRequest;
 import com.worksync.domain.file.dto.FileUploadResponse;
 import com.worksync.domain.file.entity.FileAttachment;
 import com.worksync.domain.file.entity.RefType;
@@ -45,12 +46,7 @@ public class FileService {
 
     // refId를 제외한 초기 파일 업로드
     @Transactional
-    public FileUploadResponse upload(MultipartFile file, Long uploaderId, String refType) {
-
-        // 업로드 사원 조회
-        Employee uploader = employeeRepository.findById(uploaderId)
-                .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
-
+    public FileUploadResponse upload(MultipartFile file) {
         // Storage 경로는 UUID만 사용 (한글/특수문자 방지)
         String ext = "";
         String originalFilename = file.getOriginalFilename();
@@ -85,34 +81,37 @@ public class FileService {
         // 공개 URL 생성
         String publicUrl = supabaseUrl + "/storage/v1/object/public/" + BUCKET + "/" + objectPath;
 
-        // String refType -> RefType refType 타입 변환
-        RefType refTypeName = RefType.fromTypeName(refType);
-
-        // DB에 파일 정보 저장
-        FileAttachment fileAttachment = FileAttachment.builder()
-                .uploader(uploader)
-                .originalName(file.getOriginalFilename())
+        return FileUploadResponse.builder()
                 .filePath(publicUrl)
+                .originalName(file.getOriginalFilename())
                 .fileSize(file.getSize())
                 .mimeType(file.getContentType())
-                .refType(refTypeName)
-                .refId(null)
                 .build();
-
-        return FileUploadResponse.from(fileAttachmentRepository.save(fileAttachment));
     }
 
     // 최종 저장시 refId 추가
     @Transactional
-    public void updateRefId(List<String> fileUrls, Long refId) {
-        // 파일 경로가 null이거나 비어있으면 돌려보냄
-        if (fileUrls == null || fileUrls.isEmpty()) return;
+    public void updateRefId(Long uploaderId, FileSaveRequest request) {
+        // 업로드 사원 조회
+        Employee uploader = employeeRepository.findById(uploaderId)
+                .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
+
+        // String refType -> RefType refType 타입 변환
+        RefType refTypeName = RefType.fromTypeName(request.getRefType());
+
+        // DB에 파일 정보 저장
+        FileAttachment fileAttachment = FileAttachment.builder()
+                .uploader(uploader)
+                .filePath(request.getFilePath())
+                .originalName(request.getOriginalName())
+                .fileSize(request.getFileSize())
+                .mimeType(request.getMimeType())
+                .refType(refTypeName)
+                .refId(request.getRefId())
+                .build();
 
         // refId 최종 저장
-        fileUrls.forEach(url -> {
-            FileAttachment file = fileAttachmentRepository.findByFilePath(url).orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
-            file.updateRefId(refId);
-        });
+        FileUploadResponse.from(fileAttachmentRepository.save(fileAttachment));
     }
 
     // 파일 단건 조회
