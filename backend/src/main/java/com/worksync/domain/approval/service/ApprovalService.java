@@ -18,6 +18,7 @@ import com.worksync.domain.approval.event.ApprovalRejectedEvent;
 import com.worksync.domain.approval.repository.ApprovalDocRepository;
 import com.worksync.domain.approval.repository.ApprovalFormRepository;
 import com.worksync.domain.approval.repository.ApprovalLineRepository;
+import com.worksync.domain.audit.service.AuditLogService;
 import com.worksync.domain.employee.entity.Employee;
 import com.worksync.domain.employee.repository.EmployeeRepository;
 import com.worksync.domain.notification.entity.NotificationType;
@@ -45,6 +46,12 @@ public class ApprovalService {
     private final EmployeeRepository employeeRepository;
     private final NotificationService notificationService;
     private final ApplicationEventPublisher eventPublisher;
+    private final AuditLogService auditLogService;
+
+    // 감사 로그 카테고리 / 액션명
+    private static final String CATEGORY_APPROVAL = "APPROVAL";
+    private static final String ACTION_APPROVE = "결재 승인";
+    private static final String ACTION_REJECT = "결재 반려";
 
     /* 결재 양식 */
 
@@ -251,7 +258,8 @@ public class ApprovalService {
 
     // 결재 처리 (승인 or 반려)
     @Transactional
-    public ApprovalDetailResponse process(Long docId, Long approverId, ApprovalProcessRequest request) {
+    public ApprovalDetailResponse process(Long docId, Long approverId, ApprovalProcessRequest request,
+                                          String clientIp, String userAgent) {
         ApprovalDoc doc = approvalDocRepository.findWithDetailsById(docId)
                 .orElseThrow(() -> new CustomException(ErrorCode.APPROVAL_DOC_NOT_FOUND));
 
@@ -305,6 +313,10 @@ public class ApprovalService {
             // 반려 이벤트 발행 → 구독 측(leave 등)이 후속 처리(휴가 신청 반려 등) 수행
             eventPublisher.publishEvent(
                     new ApprovalRejectedEvent(doc.getId(), doc.getForm().getFormType()));
+
+            // 감사 로그 — 결재 반려
+            auditLogService.log(myLine.getApprover().getId(), myLine.getApprover().getName(),
+                    ACTION_REJECT, CATEGORY_APPROVAL, doc.getId(), clientIp, userAgent);
         } else {
             // 승인 → 모든 REVIEW/APPROVE 라인이 승인 완료면 문서 최종 승인
             boolean allApproved = doc.getApprovalLines().stream()
@@ -326,6 +338,10 @@ public class ApprovalService {
                 // 최종 승인 이벤트 발행 → 구독 측(leave 등)이 후속 처리(연차 차감 등) 수행
                 eventPublisher.publishEvent(
                         new ApprovalApprovedEvent(doc.getId(), doc.getForm().getFormType()));
+
+                // 감사 로그 — 결재 최종 승인
+                auditLogService.log(myLine.getApprover().getId(), myLine.getApprover().getName(),
+                        ACTION_APPROVE, CATEGORY_APPROVAL, doc.getId(), clientIp, userAgent);
             } else {
                 // 중간 승인 → 다음 순서 결재자에게 알림
                 int nextOrder = doc.getApprovalLines().stream()

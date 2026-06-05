@@ -10,6 +10,7 @@ import com.worksync.domain.approval.entity.ApprovalDocStatus;
 import com.worksync.domain.approval.service.ApprovalService;
 import com.worksync.global.response.ApiResponse;
 import com.worksync.global.security.CustomUserDetails;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -105,8 +106,11 @@ public class ApprovalController {
     public ResponseEntity<ApiResponse<ApprovalDetailResponse>> process(
             @PathVariable Long id,
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody @Valid ApprovalProcessRequest request) {
+            @RequestBody @Valid ApprovalProcessRequest request,
+            HttpServletRequest httpRequest) {
+        String clientIp = httpRequest.getRemoteAddr();
+        String userAgent = httpRequest.getHeader("User-Agent");
         return ResponseEntity.ok(ApiResponse.ok(
-                approvalService.process(id, userDetails.getId(), request)));
+                approvalService.process(id, userDetails.getId(), request, clientIp, userAgent)));
     }
 }
