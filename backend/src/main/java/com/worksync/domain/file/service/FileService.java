@@ -134,7 +134,25 @@ public class FileService {
 
     // 파일 DB 삭제
     @Transactional
-    public void deleteFile(Long id) {// DB에 있으면 삭제
+    public void deleteFile(Long id, String filePath) {
+        // 저장된 URL에서 objectPath 추출
+        String prefix = supabaseUrl + "/storage/v1/object/public/" + BUCKET + "/";
+        String objectPath = filePath.replace(prefix, "");
+
+        // Supabase Storage 삭제
+        try {
+            restClient.method(HttpMethod.DELETE)
+                    .uri(supabaseUrl + "/storage/v1/object/" + BUCKET)
+                    .header("Authorization", "Bearer " + serviceRoleKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("prefixes", List.of(objectPath)))
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (Exception e) {
+            log.error("[FileService] Storage 삭제 실패 (DB 삭제 진행): {}", e.getMessage());
+        }
+
+        // DB에 있으면 삭제
         fileAttachmentRepository.findById(id).ifPresent(fileAttachmentRepository::delete);
     }
 

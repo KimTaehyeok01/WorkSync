@@ -52,8 +52,8 @@ public class FileController {
 
   // 파일 DB 삭제
   @DeleteMapping("/{fileId}")
-  public ResponseEntity<ApiResponse<Void>> deleteFile(@PathVariable Long id) {
-    fileService.deleteFile(id);
+  public ResponseEntity<ApiResponse<Void>> deleteFile(@PathVariable Long id, @RequestParam String filePath) {
+    fileService.deleteFile(id,filePath);
     return ResponseEntity.ok(ApiResponse.ok(null));
   }
 
