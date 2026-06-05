@@ -56,8 +56,8 @@ public class LeaveService {
             throw new CustomException(ErrorCode.SELF_APPROVAL_NOT_ALLOWED);
         }
 
-        // 동일 기간 중복 신청 방지
-        if (leaveRequestRepository.existsOverlapping(employeeId, req.getStartDate(), req.getEndDate())) {
+        // 동일 기간 중복 신청 방지 (반려된 건은 제외)
+        if (leaveRequestRepository.existsOverlapping(employeeId, LeaveStatus.REJECTED, req.getStartDate(), req.getEndDate())) {
             throw new CustomException(ErrorCode.DUPLICATE_LEAVE_REQUEST);
         }
 
