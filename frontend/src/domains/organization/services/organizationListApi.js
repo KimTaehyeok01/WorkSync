@@ -171,3 +171,20 @@ export async function deleteEmployee(accessToken, id) {
       console.log("에러발생: " + error);
     });
 }
+
+// 직원 퇴사 처리 (상태를 INACTIVE로 변경 — 데이터는 보존되며 감사 로그에 기록됨)
+export async function resignEmployee(accessToken, id) {
+  return await fetch(`${BASE_URL}/employees/${id}/status?status=INACTIVE`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+    .then((response) => {
+      return response.ok;
+    })
+    .catch((error) => {
+      console.log("에러발생: " + error);
+    });
+}

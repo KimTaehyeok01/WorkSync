@@ -5,7 +5,7 @@ import {
   getDepartments,
   getEmployeeById,
   editEmployee,
-  deleteEmployee,
+  resignEmployee,
 } from "../services/organizationListApi";
 import EmployeeForm from "../components/EmployeeForm";
 import { WSSuccessScreen } from "../../../components/common/LayoutComponents";
@@ -77,10 +77,10 @@ export default function EmployeeEdit() {
     navigate("/organization");
   }
 
-  // 삭제
+  // 퇴사 처리 (소프트 삭제 — 상태를 INACTIVE로 변경, 감사 로그에 기록됨)
   async function handleDelete() {
     const confirmText = confirm(
-      "삭제 시 복구가 불가능합니다. 삭제하시겠습니까?",
+      "해당 직원을 퇴사 처리하시겠습니까?",
     );
 
     if (!confirmText) {
@@ -88,11 +88,11 @@ export default function EmployeeEdit() {
     }
 
     try {
-      await deleteEmployee(accessToken, id);
+      await resignEmployee(accessToken, id);
       navigate("/organization");
     } catch (error) {
-      console.log("저장 실패: " + error);
-      alert("저장에 실패했습니다.");
+      console.log("퇴사 처리 실패: " + error);
+      alert("퇴사 처리에 실패했습니다.");
     }
   }
 
