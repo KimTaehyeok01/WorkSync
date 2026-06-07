@@ -148,7 +148,7 @@ export default function Approval() {
                     <button
                       className={s.ddItem}
                       onClick={(e) => {
-                        navigate(`/approval/${doc.id}`);
+                        navigate(`/approval/${doc.id}/edit`);
                         e.stopPropagation();
                         setOpenDropdown(null);
                       }}

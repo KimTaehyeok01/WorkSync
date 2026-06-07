@@ -12,6 +12,7 @@ import s from "./ApprovalFormPanel.module.css";
 // formValues: 현재 입력값 객체
 // setFormValues: 입력값 업데이트 함수
 function ExpenseForm({ formValues, setFormValues, myInfo, title, setTitle }) {
+  const [initialized, setInitialized] = useState(false);
   // 사용 내역 행 목록 (처음엔 빈 행 1개)
   const [rows, setRows] = useState([
     {
@@ -64,6 +65,19 @@ function ExpenseForm({ formValues, setFormValues, myInfo, title, setTitle }) {
       }));
     }
   }, [myInfo]);
+
+  // rows 값 초기세팅
+  useEffect(() => {
+    if (initialized) return;
+    if (!formValues.items) return;
+    try {
+      const parsed = JSON.parse(formValues.items);
+      if (parsed.length > 0) {
+        setRows(parsed);
+        setInitialized(true);
+      }
+    } catch {}
+  }, [formValues.items]);
 
   const CATEGORIES = ["물품구입비", "교통비", "식비", "숙박비", "기타"];
 
@@ -331,6 +345,7 @@ function LeaveForm({ formValues, setFormValues, myInfo, title, setTitle }) {
 
 // 구매 요청서 양식 컴포넌트
 function PurchaseForm({ formValues, setFormValues, myInfo, title, setTitle }) {
+  const [initialized, setInitialized] = useState(false);
   // 구매 요청 행 목록
   const [rows, setRows] = useState([
     {
@@ -342,6 +357,19 @@ function PurchaseForm({ formValues, setFormValues, myInfo, title, setTitle }) {
       note: "",
     },
   ]);
+
+  //rows 값 초기세팅
+  useEffect(() => {
+    if (initialized) return;
+    if (!formValues.items) return;
+    try {
+      const parsed = JSON.parse(formValues.items);
+      if (parsed.length > 0) {
+        setRows(parsed);
+        setInitialized(true);
+      }
+    } catch {}
+  }, [formValues.items]);
 
   const addRow = () =>
     setRows((prev) => [
@@ -552,6 +580,7 @@ function BusinessTripForm({
   setTitle,
   employees = [],
 }) {
+  const [initialized, setInitialized] = useState(false);
   // 출장자 행 목록
   const [rows, setRows] = useState([
     { id: Date.now(), name: "", dept: "", grade: "", empNo: "" },
@@ -601,6 +630,28 @@ function BusinessTripForm({
       }));
     }
   }, [myInfo]);
+
+  // 출장자(rows), 출장비(expenses) 변경시  formValues에 반영
+  useEffect(() => {
+    setFormValues((prev) => ({
+      ...prev,
+      travelers: rows,
+      expenses: expenses,
+    }));
+  }, [rows, expenses]);
+
+  //rows 값 초기세팅
+  useEffect(() => {
+    if (initialized) return;
+    if (!formValues.travelers && !formValues.expenses) return;
+    try {
+      const parsedTravelers = JSON.parse(formValues.travelers ?? "[]");
+      const parsedExpenses = JSON.parse(formValues.expenses ?? "[]");
+      if (parsedTravelers.length > 0) setRows(parsedTravelers);
+      if (parsedExpenses.length > 0) setExpenses(parsedExpenses);
+      setInitialized(true);
+    } catch {}
+  }, [formValues.travelers, formValues.expenses]);
 
   const EXPENSE_CATEGORIES = ["교통비", "숙박비", "식비", "기타"];
 

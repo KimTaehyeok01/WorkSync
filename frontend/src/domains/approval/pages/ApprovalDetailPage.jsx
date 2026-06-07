@@ -10,9 +10,13 @@ import {
 } from "lucide-react";
 import { APPROVAL_DOCS, TEAM_MEMBERS } from "../../../constants/mockData";
 import { WSAvatar } from "../../../components/common/CommonWidgets";
-import { getMyInfo, getApprovalById } from "../services/approvalApi";
+import {
+  getMyInfo,
+  getApprovalById,
+  processApproval,
+} from "../services/approvalApi";
 import s from "./ApprovalDetailPage.module.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 
 const STATUS_CONFIG = {
   PENDING: { label: "대기", bg: "#FEF3C7", text: "#92400E" },
@@ -38,30 +42,281 @@ function stepLabelColor(status) {
   return "#9CA3AF";
 }
 
+// 양식 items  JSON문자열 배열 변환 함수
+function parseJSON(str) {
+  try {
+    return JSON.parse(str ?? "[]");
+  } catch {
+    return [];
+  }
+}
+
 // 연차 신청서
-function LeaveDetail({ items }) {
+function LeaveDetail({ items, approval }) {
   return (
-    <div className={s.detailTableWrap}>
-      <table className={s.detailTable}>
-        <tbody>
-          <tr>
-            <th>소속</th>
-            <td>{items.departmentName ?? "-"}</td>
-            <th>작성자</th>
-            <td>{items.name ?? "-"}</td>
-          </tr>
-          <tr>
-            <th>휴가 종류</th>
-            <td>{items.leaveType ?? "-"}</td>
-            <th>휴가 기간</th>
-            <td>{items.days ?? "-"}</td>
-          </tr>
-          <tr>
-            <th>휴가 사유</th>
-            <td colSpan={3}>{items.reason ?? "-"}</td>
-          </tr>
-        </tbody>
-      </table>
+    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+      <div className={s.detailTableWrap}>
+        <table className={s.detailTable}>
+          <tbody>
+            <tr>
+              <th>제목</th>
+              <td>{approval.title ?? "-"}</td>
+            </tr>
+            <tr>
+              <th>소속</th>
+              <td>{items.departmentName ?? "-"}</td>
+            </tr>
+            <tr>
+              {" "}
+              <th>작성자</th>
+              <td>{items.name ?? "-"}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className={s.detailTableWrap}>
+        <table className={s.detailTable}>
+          <tbody>
+            <tr>
+              <th>휴가 종류</th>
+              <td>{items.leaveType ?? "-"}</td>
+              <th>잔여일</th>
+              <td>{items.remainingDays ?? "-"}일</td>
+            </tr>
+            <tr>
+              <th>휴가 기간</th>
+              <td colSpan={3}>{items.days ?? "-"}</td>
+            </tr>
+            <tr>
+              <th>휴가 사유</th>
+              <td colSpan={3}>{items.reason ?? "-"}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// 구매요청서
+function PurchaseDetail({ items, approval }) {
+  const rows = parseJSON(items.items);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+      <div className={s.detailTableWrap}>
+        <table className={s.detailTable}>
+          <tbody>
+            <tr>
+              <th>제목</th>
+              <td>{approval.title ?? "-"}</td>
+              <th>소속</th>
+              <td>{items.departmentName ?? "-"}</td>
+              <th>작성자</th>
+              <td>{items.name ?? "-"}</td>
+            </tr>
+            <tr>
+              <th>구매 용도</th>
+              <td colSpan={3}>{items.purpose ?? "-"}</td>
+            </tr>
+            <tr>
+              <th>합계</th>
+              <td colSpan={3}>{items.amount ?? "-"}원</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className={s.detailTableWrap}>
+        <table className={s.detailTable}>
+          <thead>
+            <tr>
+              <th>요청 품목</th>
+              <th>수량</th>
+              <th>단가</th>
+              <th>금액</th>
+              <th>비고</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, idx) => (
+              <tr key={idx}>
+                <td>{row.item ?? "-"}</td>
+                <td>{row.quantity ?? "-"}</td>
+                <td>{row.unitPrice ?? "-"}</td>
+                <td>{row.amount ?? "-"}</td>
+                <td>{row.note ?? "-"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// 지출결의서
+function ExpenseDetail({ items, approval }) {
+  const rows = parseJSON(items.items);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+      <div className={s.detailTableWrap}>
+        <table className={s.detailTable}>
+          <tbody>
+            <tr>
+              <th>제목</th>
+              <td>{approval.title ?? "-"}</td>
+            </tr>
+            <tr>
+              <th>소속</th>
+              <td>{items.departmentName ?? "-"}</td>
+              <th>작성자</th>
+              <td>{items.name ?? "-"}</td>
+            </tr>
+            <tr>
+              <th>지출 사유</th>
+              <td colSpan={3}>{items.reason ?? "-"}</td>
+            </tr>
+            <tr>
+              <th>금액</th>
+              <td colSpan={3}>{items.amount ?? "-"}원</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className={s.detailTableWrap}>
+        <table className={s.detailTable}>
+          <thead>
+            <tr>
+              <th>일자</th>
+              <th>분류</th>
+              <th>사용 내역</th>
+              <th>금액</th>
+              <th>비고</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, idx) => (
+              <tr key={idx}>
+                <td>{row.date ?? "-"}</td>
+                <td>{row.category ?? "-"}</td>
+                <td>{row.description ?? "-"}</td>
+                <td>{row.amount ?? "-"}</td>
+                <td>{row.note ?? "-"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// 출장신청서
+function BusinessTripDetail({ items }) {
+  const travelers = parseJSON(items.travelers);
+  const expenses = parseJSON(items.expenses);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+      {/* 시행 정보 */}
+      <div>
+        <p className={s.sectionDivider} style={{ marginBottom: "8px" }}>
+          시행 정보
+        </p>
+        <div className={s.detailTableWrap}>
+          <table className={s.detailTable}>
+            <tbody>
+              <tr>
+                <th>시행자</th>
+                <td>{items.name ?? "-"}</td>
+                <th>소속</th>
+                <td>{items.departmentName ?? "-"}</td>
+              </tr>
+              <tr>
+                <th>시행 일자</th>
+                <td colSpan={3}>{items.executionDate ?? "-"}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* 출장자 */}
+      <div>
+        <p className={s.sectionSubTitle} style={{ marginBottom: "8px" }}>
+          출장자
+        </p>
+        <div className={s.detailTableWrap}>
+          <table className={s.detailTable}>
+            <thead>
+              <tr>
+                <th>성명</th>
+                <th>소속</th>
+                <th>직급</th>
+                <th>사번</th>
+              </tr>
+            </thead>
+            <tbody>
+              {travelers.map((row, idx) => (
+                <tr key={idx}>
+                  <td>{row.name ?? "-"}</td>
+                  <td>{row.dept ?? "-"}</td>
+                  <td>{row.grade ?? "-"}</td>
+                  <td>{row.empNo ?? "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* 출장지 및 일정별 */}
+      <div>
+        <p className={s.sectionSubTitle} style={{ marginBottom: "8px" }}>
+          출장지 및 일정별
+        </p>
+        <div className={s.detailTableWrap}>
+          <table className={s.detailTable}>
+            <tbody>
+              <tr>
+                <th>출장지</th>
+                <td>{items.destination ?? "-"}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* 출장비 */}
+      <div>
+        <p className={s.sectionSubTitle} style={{ marginBottom: "8px" }}>
+          출장비
+        </p>
+        <div className={s.detailTableWrap}>
+          <table className={s.detailTable}>
+            <thead>
+              <tr>
+                <th>항목</th>
+                <th>금액</th>
+                <th>산출 내역</th>
+              </tr>
+            </thead>
+            <tbody>
+              {expenses.map((row, idx) => (
+                <tr key={idx}>
+                  <td>{row.category ?? "-"}</td>
+                  <td>{row.amount ?? "-"}</td>
+                  <td>{row.note ?? "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
@@ -97,7 +352,7 @@ export default function ApprovalDetail() {
       if (!data) return;
       setMe(data);
     });
-  });
+  }, [accessToken]);
 
   if (!approval) {
     return (
@@ -106,6 +361,33 @@ export default function ApprovalDetail() {
       </div>
     );
   }
+
+  // 결재자 확인
+  const myLine = approvalLines.find((line) => line.approverId === me?.id);
+  // 참조자 확인
+  const isReference = myLine?.stepType === "REFERENCE";
+  // 결재 버튼 활성화 조건
+  const canProcess = myLine && myLine.status === "WAITING" && !isReference;
+
+  const handleApprove = async () => {
+    await processApproval(accessToken, id, "APPROVED");
+    getApprovalById(accessToken, id).then((data) => {
+      if (!data) return;
+      setApproval(data);
+      setStatus(data.status);
+      setApprovalLines(data.approvalLines ?? []);
+    });
+  };
+
+  const handleReject = async () => {
+    await processApproval(accessToken, id, "REJECTED");
+    getApprovalById(accessToken, id).then((data) => {
+      if (!data) return;
+      setApproval(data);
+      setStatus(data.status);
+      setApprovalLines(data.approvalLines ?? []);
+    });
+  };
 
   const statusConfig = STATUS_CONFIG[approval.status] ?? fallbackStatusConfig;
 
@@ -130,7 +412,7 @@ export default function ApprovalDetail() {
                 <p className={s.requesterName}>{approval.drafterName}</p>
                 <div style={{ display: "flex" }}>
                   <p className={s.requesterDate} style={{ marginRight: "5px" }}>
-                    {me.jobGrade} ·
+                    {me?.jobGrade} ·
                   </p>
                   <p className={s.requesterDate}>
                     {new Date(approval.createdAt).toLocaleDateString("ko-KR")}
@@ -150,27 +432,24 @@ export default function ApprovalDetail() {
         <p className={s.sectionSub}>결재 진행 상황</p>
 
         <div className={s.stepsRow}>
-          <div className={s.stepGroup}>
-            <div className={`${s.step} ${s.stepApproved}`}>
-              <div className={s.stepStatusRow}>
-                <CheckCircle size={14} color="#16A34A"></CheckCircle>
-                <span
-                  className={s.stepStatusLabel}
-                  style={{ "--step-color": "#16A34A" }}
-                >
-                  승인됨
-                </span>
-              </div>
-              <WSAvatar src={null} name={approval.drafterName} size={40} />
-              <p className={s.stepName}>{approval.drafterName}</p>
-              <p className={s.stepRole}>기안자</p>
+          <div className={`${s.step} ${s.stepApproved}`}>
+            <div className={s.stepStatusRow}>
+              <CheckCircle size={14} color="#16A34A"></CheckCircle>
+              <span
+                className={s.stepStatusLabel}
+                style={{ "--step-color": "#16A34A" }}
+              >
+                승인됨
+              </span>
             </div>
-            {approvalLines.length > 0 && (
-              <ChevronRight size={16} className={s.stepArrow} />
-            )}
+            <WSAvatar src={null} name={approval.drafterName} size={40} />
+            <p className={s.stepName}>{approval.drafterName}</p>
+            <p className={s.stepRole}>기안자</p>
           </div>
+
           {approvalLines.map((step, idx) => (
-            <div key={idx} className={s.stepGroup}>
+            <Fragment key={idx}>
+              <ChevronRight size={16} className={s.stepArrow} />
               <div className={`${s.step} ${stepClass(step.status)}`}>
                 <div className={s.stepStatusRow}>
                   {step.status === "APPROVED" && (
@@ -205,25 +484,28 @@ export default function ApprovalDetail() {
                         : "-"}
                 </p>
               </div>
-              {idx < approvalLines.length - 1 && (
-                <ChevronRight size={16} className={s.stepArrow} />
-              )}
-            </div>
+            </Fragment>
           ))}
         </div>
       </div>
 
       <div className={s.section}>
         <h2 className={s.sectionTitle}>{approval.formName}</h2>
-        <p className={s.sectionSub}>제출된 문서 미리보기</p>
+        <p className={s.sectionSub}>제출된 문서</p>
         {approval.formId === 1 && (
-          <LeaveDetail items={approval.items}></LeaveDetail>
+          <LeaveDetail items={approval.items} approval={approval}></LeaveDetail>
         )}
         {approval.formId === 2 && (
-          <ExpenseDetail items={approval.items}></ExpenseDetail>
+          <ExpenseDetail
+            items={approval.items}
+            approval={approval}
+          ></ExpenseDetail>
         )}
         {approval.formId === 3 && (
-          <PurchaseDetail items={approval.items}></PurchaseDetail>
+          <PurchaseDetail
+            items={approval.items}
+            approval={approval}
+          ></PurchaseDetail>
         )}
         {approval.formId === 4 && (
           <BusinessTripDetail items={approval.items}></BusinessTripDetail>
@@ -245,10 +527,16 @@ export default function ApprovalDetail() {
         </div>
       </div>
 
-      <div className={s.actions}>
-        <button className={s.btnReject}>결재 반려</button>
-        <button className={s.btnApprove}>결재 승인</button>
-      </div>
+      {canProcess && (
+        <div className={s.actions}>
+          <button className={s.btnReject} onClick={handleReject}>
+            결재 반려
+          </button>
+          <button className={s.btnApprove} onClick={handleApprove}>
+            결재 승인
+          </button>
+        </div>
+      )}
     </div>
   );
 }

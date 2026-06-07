@@ -66,10 +66,25 @@
   font-weight: 700;
   margin: 0 0 4px;
 }
+.sectionSubTitle {
+  color: var(--ws-text-800);
+  font-size: 13px;
+  font-weight: 700;
+  margin: 5px 0 5px 0px;
+}
 .sectionSub {
   color: var(--ws-text-400);
   font-size: 11.5px;
   margin: 0 0 16px;
+}
+.sectionDivider {
+  border-top: 1px solid var(--ws-border);
+  padding-top: 20px;
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ws-text-800);
+  margin-bottom: 8px;
 }
 
 .stepsRow {
@@ -119,11 +134,13 @@
   text-align: center;
   font-size: 12.5px;
   font-weight: 600;
+  margin: 8px 0 2px;
 }
 .stepRole {
   color: var(--ws-text-500);
   text-align: center;
   font-size: 11px;
+  margin: 0;
 }
 .stepArrow {
   color: var(--ws-text-300);

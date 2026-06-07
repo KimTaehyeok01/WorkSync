@@ -104,7 +104,6 @@ export async function getApprovalById(accessToken, id) {
     });
 }
 
-
 export async function getForms(accessToken) {
   return await fetch(`${BASE_URL}/approvals/forms`, {
     method: "GET",
@@ -117,6 +116,42 @@ export async function getForms(accessToken) {
     .then((json) => {
       console.log("forms : " + json);
       return json.data ?? [];
+    })
+    .catch((error) => console.log("에러발생 : " + error));
+}
+
+// 결재선
+export async function processApproval(accessToken, id, status, comment = "") {
+  const res = await fetch(`/api/approvals/${id}/process`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ status, comment }),
+  })
+    .then((res) => res.json())
+    .then((json) => {
+      console.log("process result : ", json);
+      return json.data ?? null;
+    })
+    .catch((error) => console.log("에러발생 : " + error));
+}
+
+// 전자결재 수정
+export function updateApproval(accessToken, id, body) {
+  return fetch(`/api/approvals/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(body),
+  })
+    .then((res) => res.json())
+    .then((json) => {
+      console.log("update result : ", json);
+      return json;
     })
     .catch((error) => console.log("에러발생 : " + error));
 }
