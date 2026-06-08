@@ -196,3 +196,13 @@ export function getPendingApproval(accessToken) {
       console.log("에러 발생 : ", error);
     });
 }
+
+// 잔여일 조회
+export async function getLeaveBalance(accessToken) {
+  return fetch(`${BASE_URL}/leave/Balance`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+    .then((res) => res.json())
+    .then((json) => json.data ?? null)
+    .catch((error) => console.log("에러발생 : ", error));
+}

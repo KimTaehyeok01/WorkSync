@@ -233,13 +233,14 @@ function ExpenseForm({ formValues, setFormValues, myInfo, title, setTitle }) {
 
 // 연차 신청서 양식 컴포넌트
 function LeaveForm({ formValues, setFormValues, myInfo, title, setTitle }) {
+  console.log("myInfo:", myInfo);
   // 특정 key의 값만 업데이트하는 함수
   // ex: update("reason", "개인 사유") -> formValues.reason = "개인 사유"
   const update = (key, value) =>
     setFormValues((prev) => ({ ...prev, [key]: value }));
 
   // 휴가 종류
-  const [leaveType, setLeaveType] = useState("");
+  const [leaveType, setLeaveType] = useState("연차");
   // 휴가 기간
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -253,8 +254,9 @@ function LeaveForm({ formValues, setFormValues, myInfo, title, setTitle }) {
         ...prev,
         departmentName: myInfo.departmentName,
         name: myInfo.name,
-        leaveType: "연차",
+        leaveType: "ANNUAL",
       }));
+      setLeaveType("ANNUAL");
     }
   }, [myInfo]);
 
@@ -331,12 +333,12 @@ function LeaveForm({ formValues, setFormValues, myInfo, title, setTitle }) {
                   <label className={s.label}>
                     휴가 기간 <span className={s.required}>*</span>
                   </label>
-                  <div style={{ display: "flex", width: "100%" }}>
+                  <div style={{ display: "flex", width: "100%", minWidth: 0 }}>
                     <input
                       type="date"
                       value={halfDate}
                       className={s.input}
-                      style={{ flex: 1, marginRight: "15px" }}
+                      style={{ flex: 1, marginRight: "15px", minWidth: 0 }}
                       onChange={(e) => {
                         setHalfDate(e.target.value);
                         setFormValues((prev) => ({
@@ -348,7 +350,7 @@ function LeaveForm({ formValues, setFormValues, myInfo, title, setTitle }) {
                     <select
                       value={halfTime}
                       className={s.input}
-                      style={{ flex: 1 }}
+                      style={{ flex: 1, minWidth: 0 }}
                       onChange={(e) => {
                         setHalfTime(e.target.value);
                         setFormValues((prev) => ({
@@ -370,12 +372,14 @@ function LeaveForm({ formValues, setFormValues, myInfo, title, setTitle }) {
                     <label className={s.label}>
                       휴가 기간 <span className={s.required}>*</span>
                     </label>
-                    <div style={{ display: "flex", width: "100%" }}>
+                    <div
+                      style={{ display: "flex", width: "100%", minWidth: 0 }}
+                    >
                       <input
                         type="date"
                         value={startDate}
                         className={s.input}
-                        style={{ flex: 1 }}
+                        style={{ flex: 1, minWidth: 0 }}
                         onChange={(e) => {
                           setStartDate(e.target.value);
                           setFormValues((prev) => ({
@@ -384,12 +388,12 @@ function LeaveForm({ formValues, setFormValues, myInfo, title, setTitle }) {
                           }));
                         }}
                       />
-                      <span style={{ padding: "10px" }}>-</span>
+                      <span style={{ padding: "5px", flexShrink: 0 }}>-</span>
                       <input
                         type="date"
                         value={endDate}
                         className={s.input}
-                        style={{ flex: 1 }}
+                        style={{ flex: 1, minWidth: 0 }}
                         onChange={(e) => {
                           setEndDate(e.target.value);
                           setFormValues((prev) => ({
@@ -967,7 +971,7 @@ export default function ApprovalFormPanel({
         <h2 className={s.panelTitle}>{selectedForm.formName}</h2>
         <p className={s.panelSub}>양식 내용을 입력하세요.</p>
       </div> */}
-      {formType === "EXPENSE" && (
+      {formType === "EXPENSE" && myInfo && (
         <ExpenseForm
           formValues={formValues}
           setFormValues={setFormValues}
@@ -976,7 +980,7 @@ export default function ApprovalFormPanel({
           setTitle={setTitle}
         />
       )}
-      {formType === "LEAVE" && (
+      {formType === "LEAVE" && myInfo && (
         <LeaveForm
           formValues={formValues}
           setFormValues={setFormValues}
@@ -985,7 +989,7 @@ export default function ApprovalFormPanel({
           setTitle={setTitle}
         />
       )}
-      {formType === "PURCHASE" && (
+      {formType === "PURCHASE" && myInfo && (
         <PurchaseForm
           formValues={formValues}
           setFormValues={setFormValues}
@@ -994,7 +998,7 @@ export default function ApprovalFormPanel({
           setTitle={setTitle}
         />
       )}
-      {formType === "BUSINESS_TRIP" && (
+      {formType === "BUSINESS_TRIP" && myInfo && (
         <BusinessTripForm
           formValues={formValues}
           setFormValues={setFormValues}

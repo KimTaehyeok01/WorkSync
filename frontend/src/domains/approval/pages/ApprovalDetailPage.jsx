@@ -14,6 +14,7 @@ import {
   getMyInfo,
   getApprovalById,
   processApproval,
+  getLeaveBalance,
 } from "../services/approvalApi";
 import s from "./ApprovalDetailPage.module.css";
 import { useState, useEffect, Fragment } from "react";
@@ -52,6 +53,39 @@ function parseJSON(str) {
 
 // 연차 신청서
 function LeaveDetail({ items, approval }) {
+  const { accessToken } = useAuthContext();
+  const [balance, setBalance] = useState(null);
+
+  useEffect(() => {
+    getLeaveBalance(accessToken).then((data) => {
+      setBalance(data);
+    }, []);
+  });
+
+  //휴가 종류 매핑
+  const LEAVE_TYPE = {
+    ANNUAL: "연차",
+    HALF: "반차",
+    SICK: "병가",
+    OTHER: "휴가",
+  };
+  // 날짜 표시 함수
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "";
+    const [year, month, day] = dateStr.split("-");
+    return `${year}.${month}.${day}`;
+  };
+  // 휴가 기간 표시 함수
+  const leavePeriod = () => {
+    if (items.halfDate) {
+      return `${formatDate(items.halfDate)} ${items.halfTime === "AM" ? "오전" : "오후"}`;
+    }
+    if (items.startDate && items.endDate) {
+      return `${formatDate(items.startDate)} - ${formatDate(items.endDate)}`;
+    }
+    return items.days ?? "-";
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
       <div className={s.detailTableWrap}>
@@ -66,7 +100,6 @@ function LeaveDetail({ items, approval }) {
               <td>{items.departmentName ?? "-"}</td>
             </tr>
             <tr>
-              {" "}
               <th>작성자</th>
               <td>{items.name ?? "-"}</td>
             </tr>
@@ -79,13 +112,13 @@ function LeaveDetail({ items, approval }) {
           <tbody>
             <tr>
               <th>휴가 종류</th>
-              <td>{items.leaveType ?? "-"}</td>
+              <td>{LEAVE_TYPE[items.leaveType] ?? "-"}</td>
               <th>잔여일</th>
-              <td>{items.remainingDays ?? "-"}일</td>
+              <td>{balance?.remainingDays ?? "-"}일</td>
             </tr>
             <tr>
               <th>휴가 기간</th>
-              <td colSpan={3}>{items.days ?? "-"}</td>
+              <td colSpan={3}>{leavePeriod()}</td>
             </tr>
             <tr>
               <th>휴가 사유</th>
@@ -357,8 +390,6 @@ export default function ApprovalDetail() {
       setApproval(data);
       setStatus(data.status);
       setApprovalLines(data.approvalLines ?? []);
-      console.log("items : ", data.items);
-      console.log("approvalLines : ", approvalLines);
     });
   }, [accessToken, id]);
 

@@ -171,6 +171,7 @@ export default function ApprovalNew() {
 
   const handleSubmit = async () => {
     if (!isValid) return;
+    // 제출 버튼 클릭 핸들러 안에서
 
     // items 중 amount는 숫자 items는 배열로 보낼 시 오류터짐 방지
     const rawItems = { ...formValues };
@@ -187,8 +188,6 @@ export default function ApprovalNew() {
       }
     }
 
-    console.log("변환 후 formValues:", JSON.stringify(formValues, null, 2));
-
     const body = {
       formId: selectedForm?.id,
       title,
@@ -200,11 +199,8 @@ export default function ApprovalNew() {
       items: stringifiedItems,
     };
 
-    console.log("전송 body : ", JSON.stringify(body, null, 2));
-
     setIsLoading(true);
     const result = await createApproval(accessToken, body);
-    console.log("result:", result);
     if (result?.status === 201) {
       setSubmitted(true);
       setTimeout(() => navigate("/approval"), 1600);
