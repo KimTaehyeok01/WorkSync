@@ -90,7 +90,7 @@ export default function EmployeeEdit() {
         password: data.data.password ?? "",
         phone: data.data.phone ?? "",
         jobGrade: data.data.jobGrade ?? "",
-        profileImage: data.data.profileImage ?? "",
+        profileImage: data.data.profileImage ?? null,
         role: data.data.role ?? "",
         departmentId: data.data.departmentId ?? 0,
         hireDate: data.data.hireDate ?? "",
@@ -111,14 +111,17 @@ export default function EmployeeEdit() {
     label: dept.name,
   }));
 
+  // 파일 삭제
+  const handleRemoveFile = async (index) => {
+    await removeFiles(index);
+    setForm((prev) => ({ ...prev, profileImage: null }));
+  };
+
   // 저장
   async function handleSubmit() {
     try {
       // 직원 저장
-      const response = await editEmployee(accessToken, id, {
-        ...form,
-        profileImage: uploadedFile?.filePath ?? null,
-      });
+      const response = await editEmployee(accessToken, id, form);
       const employeeId = response.data.id;
 
       // 파일 경로가 있으면 파일 저장
@@ -193,7 +196,7 @@ export default function EmployeeEdit() {
         isDragging={isDragging}
         setIsDragging={setIsDragging}
         addFiles={addFiles}
-        removeFiles={removeFiles}
+        removeFiles={handleRemoveFile}
       />
     </>
   );

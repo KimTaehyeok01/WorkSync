@@ -263,10 +263,7 @@ export default function EmployeeForm({
             />
             <WSFileList
               files={files.map(({ file }) => file)} //화면에 파일 리스트 보여줌
-              onRemove={(idx) => {
-                (removeFiles(idx),
-                  setForm((prev) => ({ ...prev, profileImage: null })));
-              }}
+              onRemove={removeFiles}
             />
           </WSCard>
 
