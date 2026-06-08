@@ -81,12 +81,12 @@ public class Employee {
                        Department department, String email, LocalDate hireDate, String profileImage, String encodedPassword) {
         if (name != null) this.name = name;
         if (phone != null) this.phone = phone;
-        if(email != null) this.email = email;
+        if (email != null) this.email = email;
         if (jobGrade != null) this.jobGrade = jobGrade;
         if (role != null) this.role = role;
         if (department != null) this.department = department;
-        if(hireDate != null) this.hireDate = hireDate;
-        if (profileImage != null) this.profileImage = profileImage;
+        if (hireDate != null) this.hireDate = hireDate;
+        this.profileImage = profileImage; //profileImage는 이미지 삭제할 수 있으므로 null 허용해야함
         if (encodedPassword != null) this.password = encodedPassword;
     }
 
