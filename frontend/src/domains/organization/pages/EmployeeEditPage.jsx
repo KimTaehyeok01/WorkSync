@@ -121,7 +121,10 @@ export default function EmployeeEdit() {
   async function handleSubmit() {
     try {
       // 직원 저장
-      const response = await editEmployee(accessToken, id, form);
+      const response = await editEmployee(accessToken, id, {
+        ...form,
+        profileImage: uploadedFile?.filePath ?? null,
+      });
       const employeeId = response.data.id;
 
       // 파일 경로가 있으면 파일 저장
@@ -137,14 +140,19 @@ export default function EmployeeEdit() {
       setSubmitted(true);
       navigate("/organization");
     } catch (error) {
-      removeFiles();
       if (error.response?.status === 409) {
         alert("이미 존재하는 이메일 또는 사번입니다.");
         return;
       } else {
         console.log("저장실패: " + error);
       }
+
+      // 파일 삭제
+      removeFiles();
     }
+
+    // 파일 초기화
+    clearFiles();
   }
 
   // 삭제
