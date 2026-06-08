@@ -5,8 +5,10 @@ import {
   getDepartments,
   createEmployee,
 } from "../services/organizationListApi";
-import EmployeeForm from "../components/EmployeeForm";
 import { WSSuccessScreen } from "../../../components/common/LayoutComponents";
+import useFileUpload from "../../../hooks/useFileUpload";
+import EmployeeForm from "../components/EmployeeForm";
+import { saveFile, deleteFile } from "../../file/services/FileApi";
 
 export default function EmployeeAdd() {
   const { accessToken } = useAuthContext();
@@ -54,16 +56,50 @@ export default function EmployeeAdd() {
     form.departmentId > 0,
   ].every(Boolean);
 
-  // 저장
+  // 파일 선언
+  const {
+    files,
+    isDragging,
+    setIsDragging,
+    uploadedFile,
+    addFiles,
+    removeFiles,
+    clearFiles,
+  } = useFileUpload(accessToken, "EMPLOYEE");
+
+  // 폼 저장
   async function handleSubmit() {
     try {
-      await createEmployee(accessToken, form);
+      // 직원 저장
+      const response = await createEmployee(accessToken, {
+        ...form,
+        profileImage: uploadedFile?.filePath ?? null,
+      });
+      const employeeId = response.data.id;
+
+      if (uploadedFile?.filePath) {
+        // 파일 저장
+        await saveFile(accessToken, {
+          ...uploadedFile,
+          refType: "EMPLOYEE",
+          refId: employeeId,
+        });
+      }
+
+      setSubmitted(true);
+      navigate("/organization");
     } catch (error) {
-      console.log("저장 실패: " + error);
-      alert("저장에 실패했습니다.");
+      if (error.response?.status === 409) {
+        alert("이미 존재하는 이메일 또는 사번입니다.");
+        return;
+      } else {
+        console.log("저장실패: " + error);
+        return;
+      }
     }
-    setSubmitted(true);
-    navigate("/organization");
+
+    // 파일 초기화
+    clearFiles();
   }
 
   // 취소
@@ -85,16 +121,21 @@ export default function EmployeeAdd() {
   return (
     <>
       <EmployeeForm
+        isValid={isValid}
         form={form}
         setForm={setForm}
         pwDisabled={pwDisabled}
         DEPT_OPTIONS={DEPT_OPTIONS}
         onSubmit={handleSubmit}
         onCancel={handleRollBack}
-        isValid={isValid}
         submitLabel="직원 등록"
         textBtnLabel="취소하고 돌아가기"
         pageTitle="직원 등록"
+        files={files}
+        isDragging={isDragging}
+        setIsDragging={setIsDragging}
+        addFiles={addFiles}
+        removeFiles={removeFiles}
       />
     </>
   );

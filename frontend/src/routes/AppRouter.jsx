@@ -59,7 +59,7 @@ export const router = createBrowserRouter([
       { path: "board/:boardId/:postId", Component: BoardDetailPage },
       { path: "board/edit/:boardId/:postId", Component: BoardUpdatePage },
       { path: "organization", Component: OrganizationListPage },
-      { path: "organization/employee-add", Component: EmployeeCreatePage },
+      { path: "organization/employees-add", Component: EmployeeCreatePage },
       { path: "organization", Component: OrganizationListPage },
       { path: "organization/new", Component: EmployeeCreatePage },
       { path: "organization/edit/:id", Component: EmployeeEditPage },

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Upload, User, Send, Paperclip } from "lucide-react";
 import {
@@ -10,8 +11,8 @@ import {
   WSFormField,
   WSSelect,
   WSTextarea,
-  WSFileUploadZone,
   WSDatepicker,
+  WSFileUploadZone,
   WSFileList,
 } from "../../../components/common/FormComponents";
 import s from "../pages/EmployeeCreatePage.module.css";
@@ -34,16 +35,23 @@ const ROLE_OPTIONS = [
 ];
 
 export default function EmployeeForm({
+  isValid,
   form,
   setForm,
   pwDisabled,
   DEPT_OPTIONS = [],
   onSubmit,
   onCancel,
-  isValid,
   submitLabel,
   textBtnLabel,
   pageTitle,
+  files,
+  isDragging,
+  setIsDragging,
+  uploadUrls,
+  addFiles,
+  removeFiles,
+  clearFiles,
 }) {
   const navigate = useNavigate();
 
@@ -244,20 +252,19 @@ export default function EmployeeForm({
 
         <div>
           <WSCard title="프로필 이미지" className={`${s.card} ${s.colSide}`}>
-            {/* <WSFileUploadZone
-              onFilesAdded={addFiles}
+            <WSFileUploadZone
+              onFilesAdded={addFiles} //파일추가
               isDragging={isDragging}
               onDragStateChange={setIsDragging}
               icon={<Paperclip size={28} />}
-              accept=".jpg, ,png"
+              accept=".jpg, .png"
               label="파일을 드래그하거나 클릭하여 업로드"
               helperText="JPG, PNG - 최대 50MB"
             />
-
             <WSFileList
-              files={files.map(({ file }) => file)}
+              files={files.map(({ file }) => file)} //화면에 파일 리스트 보여줌
               onRemove={removeFiles}
-            /> */}
+            />
           </WSCard>
 
           <div className={s.actionsCol}>

@@ -9,6 +9,12 @@ import {
   Calendar,
   Download,
 } from "lucide-react";
+import {
+  EXT_MAP,
+  getExt,
+  getSize,
+  getFileMeta,
+} from "../../domains/file/components/fileUtil";
 import s from "./Widgets.module.css";
 
 /** 아이콘 버튼 */
@@ -390,6 +396,7 @@ export function WSFileUploadZone({
   icon,
   label,
   helperText,
+  multiple = true,
 }) {
   const inputRef = React.useRef(null);
 
@@ -405,6 +412,8 @@ export function WSFileUploadZone({
   const handleChange = (e) => {
     const files = Array.from(e.target.files);
     onFilesAdded(files);
+
+    e.target.value = "";
   };
 
   return (
@@ -440,7 +449,7 @@ export function WSFileUploadZone({
         ref={inputRef}
         type="file"
         accept={accept}
-        multiple
+        multiple={multiple}
         className={s.uploadInput}
         onChange={handleChange}
       />
@@ -451,16 +460,6 @@ export function WSFileUploadZone({
 /** 파일 리스트 **/
 export function WSFileList({ files, onRemove, onDownload }) {
   if (!files || files.length === 0) return null;
-
-  const getExt = (name) => name.split(".").pop();
-
-  const getSize = (size) => {
-    if (size < 1024 * 1024) {
-      return `${(size / 1024).toFixed(1)}KB`;
-    } else {
-      return `${(size / (1024 * 1024)).toFixed(1)}MB`;
-    }
-  };
 
   return (
     <>
