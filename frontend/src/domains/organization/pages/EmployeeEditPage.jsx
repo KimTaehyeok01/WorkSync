@@ -56,12 +56,12 @@ export default function EmployeeEdit() {
     addFiles,
     removeFiles,
     clearFiles,
-  } = useFileUpload(accessToken, "ORGANIZATION", id);
+  } = useFileUpload(accessToken, "EMPLOYEE", id);
 
   // 파일 데이터 불러오기
   useEffect(() => {
     if (!accessToken || !id) return;
-    getFile(accessToken, "ORGANIZATION", id).then((data) => {
+    getFile(accessToken, "EMPLOYEE", id).then((data) => {
       const fileList = Array.isArray(data.data) ? data.data : [];
       console.log(fileList);
 
@@ -122,16 +122,13 @@ export default function EmployeeEdit() {
       const employeeId = response.data.id;
 
       // 파일 경로가 있으면 파일 저장
-      if (uploadedFile?.filePath) {
+      if (uploadedFile?.filePath && uploadedFile?.isNew) {
         // 파일 저장
         await saveFile(accessToken, {
           ...uploadedFile,
-          refType: "ORGANIZATION",
+          refType: "EMPLOYEE",
           refId: employeeId,
         });
-
-        // 파일 초기화
-        clearFiles();
       }
 
       setSubmitted(true);
@@ -159,8 +156,8 @@ export default function EmployeeEdit() {
 
     try {
       await deleteEmployee(accessToken, id);
-      clearFiles;
-      removeFiles;
+      removeFiles();
+      clearFiles();
       navigate("/organization");
     } catch (error) {
       console.log("저장 실패: " + error);

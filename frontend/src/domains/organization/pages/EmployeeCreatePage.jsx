@@ -65,7 +65,7 @@ export default function EmployeeAdd() {
     addFiles,
     removeFiles,
     clearFiles,
-  } = useFileUpload(accessToken, "ORGANIZATION");
+  } = useFileUpload(accessToken, "EMPLOYEE");
 
   // 폼 저장
   async function handleSubmit() {
@@ -81,7 +81,7 @@ export default function EmployeeAdd() {
         // 파일 저장
         await saveFile(accessToken, {
           ...uploadedFile,
-          refType: "ORGANIZATION",
+          refType: "EMPLOYEE",
           refId: employeeId,
         });
 

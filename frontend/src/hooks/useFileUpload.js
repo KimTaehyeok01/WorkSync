@@ -18,7 +18,7 @@ export default function useFileUpload(accessToken, refType) {
 
     // filePath, originalName, fileSize, mimeType 데이터 저장
     if (result?.data) {
-      setUploadedFile(result.data);
+      setUploadedFile({ ...result.data, isNew: true });
     }
   };
 
@@ -27,7 +27,7 @@ export default function useFileUpload(accessToken, refType) {
     const targetFile = files[index];
     console.log("targetFile: ", targetFile); // 구조 확인
 
-    if (targetFile?.fileId !== undefined) {
+    if (targetFile?.refId !== undefined) {
       // DB + 스토리지 삭제
       await deleteFile(accessToken, targetFile.refType, targetFile.refId);
     }
