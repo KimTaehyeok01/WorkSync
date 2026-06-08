@@ -6,7 +6,9 @@ public enum RefType {
     APPROVAL,
     TASK,
     CHAT,
-    ORGANIZATION,
+    POST,
+    DEPARTMENT,
+    EMPLOYEE,
     BOARD;
 
     public static RefType fromTypeName(String refName) {
