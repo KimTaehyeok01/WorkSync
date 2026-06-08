@@ -78,7 +78,10 @@ export default function ApprovalNew() {
   const [content, setContent] = useState("");
   const [showTemplate, setShowTemplate] = useState(false);
   const [templates, setTemplates] = useState(false);
-  const [selectedForm, setSelectedForm] = useState(null);
+  const [selectedForm, setSelectedForm] = useState({
+    formType: "EXPENSE",
+    formName: "지출결의서",
+  });
   const [formValues, setFormValues] = useState({});
   const [employees, setEmployees] = useState([]);
   const [myInfo, setMyInfo] = useState(null);
@@ -257,7 +260,7 @@ export default function ApprovalNew() {
                   key={tpl.id}
                   className={s.tplItem}
                   onClick={() => {
-                    setDocType(tpl.type);
+                    setDocType(tpl.formType);
                     setTitle(
                       tpl.formName +
                         " - " +

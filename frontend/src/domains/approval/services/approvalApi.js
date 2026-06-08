@@ -122,7 +122,7 @@ export async function getForms(accessToken) {
 
 // 결재선
 export async function processApproval(accessToken, id, status, comment = "") {
-  const res = await fetch(`/api/approvals/${id}/process`, {
+  const res = await fetch(`${BASE_URL}/approvals/${id}/process`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -140,7 +140,7 @@ export async function processApproval(accessToken, id, status, comment = "") {
 
 // 전자결재 수정
 export function updateApproval(accessToken, id, body) {
-  return fetch(`/api/approvals/${id}`, {
+  return fetch(`${BASE_URL}/approvals/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -154,4 +154,23 @@ export function updateApproval(accessToken, id, body) {
       return json;
     })
     .catch((error) => console.log("에러발생 : " + error));
+}
+
+// 전자결재 삭제
+export function deleteApproval(accessToken, id) {
+  return fetch(`${BASE_URL}/approvals/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+    .then((response) => {
+      console.log("삭제 상태코드 : " + response.status);
+      return response;
+    })
+    .catch((error) => {
+      console.log("에러 발생 : " + error);
+      throw error; // onClick의 try-catch 전달용
+    });
 }

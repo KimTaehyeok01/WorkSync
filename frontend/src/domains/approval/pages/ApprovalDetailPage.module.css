@@ -319,7 +319,7 @@
 }
 
 .detailTable td {
-  padding: 10px 16px;
+  padding: 15px 20px;
   font-size: 13px;
   color: var(--ws-text-800);
   border: 1px solid #f0f0f0;

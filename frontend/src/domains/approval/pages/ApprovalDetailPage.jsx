@@ -19,11 +19,10 @@ import s from "./ApprovalDetailPage.module.css";
 import { useState, useEffect, Fragment } from "react";
 
 const STATUS_CONFIG = {
-  PENDING: { label: "대기", bg: "#FEF3C7", text: "#92400E" },
+  IN_PROGRESS: { label: "대기", bg: "#FEF3C7", text: "#92400E" },
   APPROVED: { label: "승인", bg: "#D1FAE5", text: "#065F46" },
   REJECTED: { label: "반려", bg: "#FEE2E2", text: "#991B1B" },
 };
-
 const APPROVAL_STEPS = [
   { role: "기안자", member: TEAM_MEMBERS[1], status: "approved" },
   { role: "검토자", member: TEAM_MEMBERS[3], status: "rejected" },
@@ -109,8 +108,11 @@ function PurchaseDetail({ items, approval }) {
         <table className={s.detailTable}>
           <tbody>
             <tr>
+              {" "}
               <th>제목</th>
-              <td>{approval.title ?? "-"}</td>
+              <td colSpan={3}>{approval.title ?? "-"}</td>
+            </tr>
+            <tr>
               <th>소속</th>
               <td>{items.departmentName ?? "-"}</td>
               <th>작성자</th>
@@ -122,7 +124,9 @@ function PurchaseDetail({ items, approval }) {
             </tr>
             <tr>
               <th>합계</th>
-              <td colSpan={3}>{items.amount ?? "-"}원</td>
+              <td colSpan={3}>
+                {Number(items.amount).toLocaleString() ?? "-"}원
+              </td>
             </tr>
           </tbody>
         </table>
@@ -143,9 +147,9 @@ function PurchaseDetail({ items, approval }) {
             {rows.map((row, idx) => (
               <tr key={idx}>
                 <td>{row.item ?? "-"}</td>
-                <td>{row.quantity ?? "-"}</td>
-                <td>{row.unitPrice ?? "-"}</td>
-                <td>{row.amount ?? "-"}</td>
+                <td>{Number(row.quantity).toLocaleString() ?? "-"}</td>
+                <td>{Number(row.unitPrice).toLocaleString() ?? "-"}</td>
+                <td>{Number(row.amount).toLocaleString() ?? "-"}</td>
                 <td>{row.note ?? "-"}</td>
               </tr>
             ))}
@@ -181,7 +185,9 @@ function ExpenseDetail({ items, approval }) {
             </tr>
             <tr>
               <th>금액</th>
-              <td colSpan={3}>{items.amount ?? "-"}원</td>
+              <td colSpan={3}>
+                {Number(items.amount).toLocaleString() ?? "-"}원
+              </td>
             </tr>
           </tbody>
         </table>
@@ -204,7 +210,7 @@ function ExpenseDetail({ items, approval }) {
                 <td>{row.date ?? "-"}</td>
                 <td>{row.category ?? "-"}</td>
                 <td>{row.description ?? "-"}</td>
-                <td>{row.amount ?? "-"}</td>
+                <td>{Number(row.amount).toLocaleString() ?? "-"}</td>
                 <td>{row.note ?? "-"}</td>
               </tr>
             ))}
@@ -309,7 +315,7 @@ function BusinessTripDetail({ items }) {
               {expenses.map((row, idx) => (
                 <tr key={idx}>
                   <td>{row.category ?? "-"}</td>
-                  <td>{row.amount ?? "-"}</td>
+                  <td>{Number(row.amount).toLocaleString() ?? "-"}</td>
                   <td>{row.note ?? "-"}</td>
                 </tr>
               ))}
@@ -447,45 +453,47 @@ export default function ApprovalDetail() {
             <p className={s.stepRole}>기안자</p>
           </div>
 
-          {approvalLines.map((step, idx) => (
-            <Fragment key={idx}>
-              <ChevronRight size={16} className={s.stepArrow} />
-              <div className={`${s.step} ${stepClass(step.status)}`}>
-                <div className={s.stepStatusRow}>
-                  {step.status === "APPROVED" && (
-                    <CheckCircle size={14} color="#16A34A" />
-                  )}
-                  {step.status === "REJECTED" && (
-                    <XCircle size={14} color="#DC2626" />
-                  )}
-                  {step.status === "WAITING" && (
-                    <Clock size={14} color="#9CA3AF" />
-                  )}
-                  <span
-                    className={s.stepStatusLabel}
-                    style={{ "--step-color": stepLabelColor(step.status) }}
-                  >
-                    {step.status === "APPROVED"
-                      ? "승인"
-                      : step.status === "REJECTED"
-                        ? "반려"
-                        : "대기"}
-                  </span>
+          {approvalLines
+            .filter((step) => step.stepType !== "REFERENCE")
+            .map((step, idx) => (
+              <Fragment key={idx}>
+                <ChevronRight size={16} className={s.stepArrow} />
+                <div className={`${s.step} ${stepClass(step.status)}`}>
+                  <div className={s.stepStatusRow}>
+                    {step.status === "APPROVED" && (
+                      <CheckCircle size={14} color="#16A34A" />
+                    )}
+                    {step.status === "REJECTED" && (
+                      <XCircle size={14} color="#DC2626" />
+                    )}
+                    {step.status === "WAITING" && (
+                      <Clock size={14} color="#9CA3AF" />
+                    )}
+                    <span
+                      className={s.stepStatusLabel}
+                      style={{ "--step-color": stepLabelColor(step.status) }}
+                    >
+                      {step.status === "APPROVED"
+                        ? "승인"
+                        : step.status === "REJECTED"
+                          ? "반려"
+                          : "대기"}
+                    </span>
+                  </div>
+                  <WSAvatar src={null} name={step.approverName} size={40} />
+                  <p className={s.stepName}>{step.approverName}</p>
+                  <p className={s.stepRole}>
+                    {step.stepType === "REVIEW"
+                      ? "검토자"
+                      : step.stepType === "APPROVE"
+                        ? "최종 승인자"
+                        : step.stepType === "REFERENCE"
+                          ? "참조자"
+                          : "-"}
+                  </p>
                 </div>
-                <WSAvatar src={null} name={step.approverName} size={40} />
-                <p className={s.stepName}>{step.approverName}</p>
-                <p className={s.stepRole}>
-                  {step.stepType === "REVIEW"
-                    ? "검토자"
-                    : step.stepType === "APPROVE"
-                      ? "최종 승인자"
-                      : step.stepType === "REFERENCE"
-                        ? "참조자"
-                        : "-"}
-                </p>
-              </div>
-            </Fragment>
-          ))}
+              </Fragment>
+            ))}
         </div>
       </div>
 

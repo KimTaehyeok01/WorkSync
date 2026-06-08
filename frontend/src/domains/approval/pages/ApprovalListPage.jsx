@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Plus, MoreVertical, ChevronDown, Search } from "lucide-react";
 import { APPROVAL_DOCS } from "../../../constants/mockData";
 import {
   getMyInfo,
   getMyApprovals,
   getApprovalById,
+  deleteApproval,
 } from "../services/approvalApi";
 import {
   WSAvatar,
@@ -28,6 +29,7 @@ const STATUS_OPTIONS = [
 ];
 
 export default function Approval() {
+  const { id } = useParams();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -157,9 +159,21 @@ export default function Approval() {
                     </button>
                     <button
                       className={`${s.ddItem} ${s.ddItemDanger}`}
-                      onClick={(e) => {
+                      onClick={async (e) => {
                         e.stopPropagation();
                         setOpenDropdown(null);
+                        if (confirm("게시글을 삭제하시겠습니까?")) {
+                          try {
+                            await deleteApproval(accessToken, doc.id);
+                            getMyApprovals(accessToken, status).then((data) => {
+                              if (!data) return;
+                              setMyApprovals(data);
+                            });
+                          } catch (err) {
+                            console.error("삭제 에러 : " + err);
+                            alert("삭제 실패했습니다.");
+                          }
+                        }
                       }}
                     >
                       삭제
