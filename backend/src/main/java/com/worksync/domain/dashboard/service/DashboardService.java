@@ -55,11 +55,11 @@ public class DashboardService {
     long doneTaskCount = taskRepository.countByAssigneeIdAndStatus(employeeId, TaskStatus.DONE);
 
     // 잔여 연차 일수 (올해기준) 대기
-//    short thisYear = (short) LocalDate.now().getYear();
-//    BigDecimal remainingLeaveDays = annualLeaveBalanceRepository
-//            .findByEmployeeIdAndYear = annualLeaveBalanceRepository
-//            .map(b -> b.getTotalDays().subtract(b.getUsedDays()))
-//            .orElse(BigDecimal.ZERO);
+    short thisYear = (short) LocalDate.now().getYear();
+    BigDecimal remainingLeaveDays = annualLeaveBalanceRepository
+            .findByEmployeeIdAndYear(employeeId, thisYear)
+            .map(b -> b.getTotalDays().subtract(b.getUsedDays()))
+            .orElse(BigDecimal.ZERO);
 
     return DashboardResponse.builder()
             // 출근기록 있으면 상태(NORMAL/LATE), 없으면 NULL
