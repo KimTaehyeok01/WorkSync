@@ -1,19 +1,8 @@
 package com.worksync.domain.approval.service;
 
-import com.worksync.domain.approval.dto.ApprovalCreateRequest;
-import com.worksync.domain.approval.dto.ApprovalDetailResponse;
-import com.worksync.domain.approval.dto.ApprovalFormResponse;
-import com.worksync.domain.approval.dto.ApprovalListResponse;
-import com.worksync.domain.approval.dto.ApprovalProcessRequest;
-import com.worksync.domain.approval.dto.ApprovalUpdateRequest;
+import com.worksync.domain.approval.dto.*;
+import com.worksync.domain.approval.entity.*;
 import com.worksync.domain.approval.event.ApprovalApprovedEvent;
-import com.worksync.domain.approval.entity.ApprovalDoc;
-import com.worksync.domain.approval.entity.ApprovalDocItem;
-import com.worksync.domain.approval.entity.ApprovalDocStatus;
-import com.worksync.domain.approval.entity.ApprovalForm;
-import com.worksync.domain.approval.entity.ApprovalLine;
-import com.worksync.domain.approval.entity.ApprovalLineStatus;
-import com.worksync.domain.approval.entity.StepType;
 import com.worksync.domain.approval.event.ApprovalRejectedEvent;
 import com.worksync.domain.approval.repository.ApprovalDocRepository;
 import com.worksync.domain.approval.repository.ApprovalFormRepository;
@@ -152,6 +141,29 @@ public class ApprovalService {
                 ));
 
         return ApprovalDetailResponse.from(doc);
+    }
+
+    // 결재함 - 내가 결재선에 REVIEW/APPROVE로 포함된 문서 전체 (상태 필터링 가능)
+    public  List<ApprovalListResponse> getApprovalBoxDocs(Long approverId, ApprovalDocStatus status){
+        return approvalLineRepository
+                .findByApproverId(approverId)
+                .stream()
+                .filter(line -> line.getStepType() == StepType.REVIEW
+                || line.getStepType() == StepType.APPROVE)
+                .filter(line -> status == null || line.getDoc().getStatus() == status)
+                .map(line -> ApprovalListResponse.from(line.getDoc()))
+                .distinct() // 중복제거
+                .collect(Collectors.toList());
+    }
+    // 참조함 - 내가 REFERENCE로 지정된 문서
+    public List<ApprovalListResponse> getReferenceDocs(Long approverId) {
+        return approvalLineRepository
+                .findByApproverId(approverId)// 내가 결재자로 지정된 결재선들을 가져온 다음
+                .stream()
+                .filter(line -> line.getStepType() == StepType.REFERENCE)
+                .map(line -> ApprovalListResponse.from(line.getDoc())) // 그 결재선이 속한 문서를 꺼냄
+                .distinct()
+                .collect(Collectors.toList());
     }
 
     // 내가 상신한 문서 목록

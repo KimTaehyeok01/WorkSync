@@ -21,4 +21,6 @@ public interface ApprovalLineRepository extends JpaRepository<ApprovalLine, Long
             "WHERE al.approver.id = :approverId AND al.status = :status")
     List<ApprovalLine> findByApproverIdAndStatus(@Param("approverId") Long approverId,
                                                   @Param("status") ApprovalLineStatus status);
+
+    List<ApprovalLine> findByApproverId(Long approverId);
 }
