@@ -4,6 +4,7 @@ import DashboardPage from "../domains/dashboard/pages/DashboardPage";
 import ApprovalListPage from "../domains/approval/pages/ApprovalListPage";
 import ApprovalCreatePage from "../domains/approval/pages/ApprovalCreatePage";
 import ApprovalDetailPage from "../domains/approval/pages/ApprovalDetailPage";
+import ApprovalUpdatePage from "../domains/approval/pages/ApprovalUpdatePage";
 import BoardListPage from "../domains/board/pages/BoardListPage";
 import BoardCreatePage from "../domains/board/pages/BoardCreatePage";
 import BoardDetailPage from "../domains/board/pages/BoardDetailPage";
@@ -51,6 +52,7 @@ export const router = createBrowserRouter([
       { path: "approval", Component: ApprovalListPage },
       { path: "approval/new", Component: ApprovalCreatePage },
       { path: "approval/:id", Component: ApprovalDetailPage },
+      { path: "approval/:id/edit", Component: ApprovalUpdatePage },
       { path: "board", Component: BoardListPage },
       { path: "board/new", Component: BoardCreatePage },
       { path: "board/notice", Component: BoardListPage },

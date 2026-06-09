@@ -1,5 +1,13 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  getMyInfo,
+  getForms,
+  getEmployees,
+  createApproval,
+} from "../services/approvalApi";
+import useAuthContext from "../../../store/AuthContext";
+import ApprovalFormPanel from "../components/ApprovalFormPanel";
 import {
   ArrowLeft,
   X,
@@ -18,6 +26,7 @@ import {
 import { TEAM_MEMBERS } from "../../../constants/mockData";
 import { WSCard, WSAvatar } from "../../../components/common/CommonWidgets";
 import s from "./ApprovalCreatePage.module.css";
+import { getEmployee } from "../../organization/services/organizationListApi";
 
 const DOC_TYPES = [
   "예산",
@@ -68,10 +77,35 @@ export default function ApprovalNew() {
   const [department, setDepartment] = useState("");
   const [content, setContent] = useState("");
   const [showTemplate, setShowTemplate] = useState(false);
+  const [templates, setTemplates] = useState(false);
+  const [selectedForm, setSelectedForm] = useState({
+    formType: "EXPENSE",
+    formName: "지출결의서",
+  });
+  const [formValues, setFormValues] = useState({});
+  const [employees, setEmployees] = useState([]);
+  const [myInfo, setMyInfo] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { accessToken } = useAuthContext();
 
-  const [approvers, setApprovers] = useState([
-    { id: "a1", member: TEAM_MEMBERS[0], role: "최종 결재자" },
-  ]);
+  useEffect(() => {
+    if (!accessToken) return;
+
+    getMyInfo(accessToken).then((data) => setMyInfo(data));
+    getForms(accessToken).then((data) => setTemplates(data ?? []));
+    getEmployees(accessToken).then((data) => {
+      setEmployees(data ?? []);
+    });
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (templates.length > 0) {
+      setDocType(templates[0].formType);
+      setSelectedForm(templates[0]);
+    }
+  }, [templates]);
+
+  const [approvers, setApprovers] = useState([]);
   const [showMemberPicker, setShowMemberPicker] = useState(false);
 
   const [attachments, setAttachments] = useState([
@@ -84,14 +118,11 @@ export default function ApprovalNew() {
   const [saved, setSaved] = useState(false);
 
   const isValid =
-    title.trim().length > 0 &&
-    docType !== "" &&
-    department !== "" &&
-    approvers.length > 0;
+    title.trim().length > 0 && docType !== "" && approvers.length > 0;
 
   const handleAddApprover = (member) => {
     if (approvers.find((a) => a.member.id === member.id)) return;
-    const roles = ["검토자", "부서장", "협조자", "최종 결재자"];
+    const roles = ["REVIEW", "APPROVE", "REFERENCE"];
     setApprovers((prev) => [
       ...prev,
       {
@@ -138,10 +169,43 @@ export default function ApprovalNew() {
     setTimeout(() => setSaved(false), 2500);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!isValid) return;
-    setSubmitted(true);
-    setTimeout(() => navigate("/approval"), 1600);
+    // 제출 버튼 클릭 핸들러 안에서
+
+    // items 중 amount는 숫자 items는 배열로 보낼 시 오류터짐 방지
+    const rawItems = { ...formValues };
+    // Map<String, String> 맞게 모든 값을 문자열로 변환
+    const stringifiedItems = {};
+
+    for (const [key, value] of Object.entries(rawItems)) {
+      if (Array.isArray(value) || typeof value === "object") {
+        // 배열이나 객체는 JSON 문자열로 변환
+        stringifiedItems[key] = JSON.stringify(value);
+      } else {
+        // 숫자, 문자열 등은 String()으로 변환
+        stringifiedItems[key] = String(value ?? "");
+      }
+    }
+
+    const body = {
+      formId: selectedForm?.id,
+      title,
+      approvalLines: approvers.map((a, idx) => ({
+        approverId: a.member.id,
+        stepOrder: idx + 1,
+        stepType: a.role,
+      })),
+      items: stringifiedItems,
+    };
+
+    setIsLoading(true);
+    const result = await createApproval(accessToken, body);
+    if (result?.status === 201) {
+      setSubmitted(true);
+      setTimeout(() => navigate("/approval"), 1600);
+    }
+    setIsLoading(false);
   };
 
   const selectedPriority = PRIORITIES.find((p) => p.value === priority);
@@ -173,11 +237,7 @@ export default function ApprovalNew() {
             <ArrowLeft size={16} />
           </button>
           <div>
-            <h1 className={s.pageTitle}>새 결재 문서 등록</h1>
-            <p className={s.pageBreadcrumb}>
-              홈 &nbsp;/&nbsp; 전자결재 &nbsp;/&nbsp;
-              <span className={s.bcCurrent}>새 문서</span>
-            </p>
+            <h1 className={s.pageTitle}>{selectedForm?.formName}</h1>
           </div>
         </div>
 
@@ -198,15 +258,19 @@ export default function ApprovalNew() {
               <div className={s.tplMenuHeader}>
                 <p className={s.tplMenuLabel}>결재 양식 선택</p>
               </div>
-              {MOCK_TEMPLATES.map((tpl) => (
+              {templates.map((tpl) => (
                 <button
                   key={tpl.id}
                   className={s.tplItem}
                   onClick={() => {
-                    setDocType(tpl.type);
+                    setDocType(tpl.formType);
                     setTitle(
-                      tpl.name + " - " + new Date().toLocaleDateString("ko-KR"),
+                      tpl.formName +
+                        " - " +
+                        new Date().toLocaleDateString("ko-KR"),
                     );
+                    setSelectedForm(tpl);
+                    setFormValues({});
                     setShowTemplate(false);
                   }}
                   type="button"
@@ -214,8 +278,8 @@ export default function ApprovalNew() {
                 >
                   <FileText size={14} color="#9CA3AF" />
                   <div>
-                    <p className={s.tplItemName}>{tpl.name}</p>
-                    <p className={s.tplItemType}>{tpl.type}</p>
+                    <p className={s.tplItemName}>{tpl.formName}</p>
+                    <p className={s.tplItemType}>{tpl.formType}</p>
                   </div>
                 </button>
               ))}
@@ -224,146 +288,17 @@ export default function ApprovalNew() {
         </div>
       </div>
 
-      {saved && (
-        <div className={s.savedAlert}>
-          <CheckCircle size={15} color="#10B981" />
-          <span>임시 저장되었습니다. 목록의 임시보관함에서 확인하세요.</span>
-        </div>
-      )}
-
       <div className={s.layout}>
         <div className={`${s.col} ${s.colMain}`}>
-          <WSCard
-            title="문서 기본 정보"
-            subtitle="결재 문서의 기본 정보를 입력하세요"
-          >
-            <div className={s.formGrid}>
-              <div>
-                <label className={s.label}>
-                  문서 제목 <span className={s.required}>*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="결재 문서 제목을 입력하세요"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className={s.input}
-                />
-              </div>
-
-              <div className={s.row2}>
-                <div>
-                  <label className={s.label}>
-                    문서 유형 <span className={s.required}>*</span>
-                  </label>
-                  <div className={s.selectWrap}>
-                    <select
-                      value={docType}
-                      onChange={(e) => setDocType(e.target.value)}
-                      className={s.select}
-                    >
-                      <option value="">유형 선택...</option>
-                      {DOC_TYPES.map((t) => (
-                        <option key={t} value={t}>
-                          {t}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown size={14} className={s.selectChevron} />
-                  </div>
-                </div>
-                <div>
-                  <label className={s.label}>우선순위</label>
-                  <div className={s.priorityList}>
-                    {PRIORITIES.map((p) => {
-                      const sel = priority === p.value;
-                      return (
-                        <button
-                          key={p.value}
-                          onClick={() => setPriority(p.value)}
-                          className={`${s.priorityBtn} ${sel ? s.priorityBtnActive : ""}`}
-                          style={{
-                            "--priority-bg": p.bg,
-                            "--priority-color": p.color,
-                          }}
-                        >
-                          {p.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              <div className={s.row2}>
-                <div>
-                  <label className={s.label}>
-                    요청 부서 <span className={s.required}>*</span>
-                  </label>
-                  <div className={s.selectWrap}>
-                    <select
-                      value={department}
-                      onChange={(e) => setDepartment(e.target.value)}
-                      className={s.select}
-                    >
-                      <option value="">부서 선택...</option>
-                      {DEPARTMENTS.map((d) => (
-                        <option key={d} value={d}>
-                          {d}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown size={14} className={s.selectChevron} />
-                  </div>
-                </div>
-                <div>
-                  <label className={s.label}>요청일</label>
-                  <input
-                    type="date"
-                    defaultValue={new Date().toISOString().split("T")[0]}
-                    className={s.dateInput}
-                  />
-                </div>
-              </div>
-            </div>
-          </WSCard>
-
-          <WSCard
-            title="문서 내용"
-            subtitle="결재 문서의 상세 내용을 작성하세요"
-            action={
-              <span className={s.headerCount}>{content.length} / 2000자</span>
-            }
-          >
-            <div className={s.toolbar}>
-              {[
-                "굵게",
-                "기울임",
-                "밑줄",
-                "|",
-                "목록",
-                "번호목록",
-                "|",
-                "표 삽입",
-                "링크",
-              ].map((btn, i) =>
-                btn === "|" ? (
-                  <div key={i} className={s.toolbarSep} />
-                ) : (
-                  <button key={i} className={s.toolbarBtn}>
-                    {btn}
-                  </button>
-                ),
-              )}
-            </div>
-            <textarea
-              placeholder="결재 문서의 상세 내용을 작성하세요.&#10;&#10;예) 요청 배경, 목적, 예산 내역, 기대 효과 등을 상세하게 기술해 주세요."
-              value={content}
-              onChange={(e) => setContent(e.target.value.slice(0, 2000))}
-              className={s.textarea}
-            />
-          </WSCard>
-
+          <ApprovalFormPanel
+            selectedForm={selectedForm}
+            formValues={formValues}
+            setFormValues={setFormValues}
+            myInfo={myInfo}
+            title={title}
+            setTitle={setTitle}
+            employees={employees}
+          />
           <WSCard
             title="첨부 파일"
             subtitle={`${attachments.length}개 파일 첨부됨`}
@@ -458,14 +393,10 @@ export default function ApprovalNew() {
             }
           >
             <div className={s.applicantRow}>
-              <WSAvatar
-                src={TEAM_MEMBERS[3].avatar}
-                name={TEAM_MEMBERS[3].name}
-                size={30}
-              />
+              <WSAvatar src={null} name={myInfo?.name} size={30} />
               <div className={s.applicantBody}>
-                <p className={s.applicantName}>{TEAM_MEMBERS[3].name}</p>
-                <p className={s.applicantRole}>{TEAM_MEMBERS[3].role}</p>
+                <p className={s.applicantName}>{myInfo?.name}</p>
+                <p className={s.applicantRole}>{myInfo?.department}</p>
               </div>
               <span className={s.applicantBadge}>기안자</span>
             </div>
@@ -493,13 +424,11 @@ export default function ApprovalNew() {
                         onChange={(e) => handleRoleChange(a.id, e.target.value)}
                         className={s.roleSelect}
                       >
-                        {["검토자", "부서장", "협조자", "최종 결재자"].map(
-                          (r) => (
-                            <option key={r} value={r}>
-                              {r}
-                            </option>
-                          ),
-                        )}
+                        {["REVIEW", "APPROVE", "REFERENCE"].map((r) => (
+                          <option key={r} value={r}>
+                            {r}
+                          </option>
+                        ))}
                       </select>
                     </div>
                     <button
@@ -529,33 +458,35 @@ export default function ApprovalNew() {
                 <div className={s.pickerHeader}>
                   <p className={s.pickerHeaderLabel}>팀원 선택</p>
                 </div>
-                {TEAM_MEMBERS.filter((m) => m.id !== 4).map((member) => {
-                  const already = approvers.some(
-                    (a) => a.member.id === member.id,
-                  );
-                  return (
-                    <button
-                      key={member.id}
-                      disabled={already}
-                      onClick={() => handleAddApprover(member)}
-                      className={s.pickerItem}
-                      type="button"
-                      role="option"
-                      aria-selected={already}
-                    >
-                      <WSAvatar
-                        src={member.avatar}
-                        name={member.name}
-                        size={28}
-                      />
-                      <div className={s.pickerBody}>
-                        <p className={s.pickerName}>{member.name}</p>
-                        <p className={s.pickerRole}>{member.role}</p>
-                      </div>
-                      {already && <CheckCircle size={14} color="#10B981" />}
-                    </button>
-                  );
-                })}
+                {employees
+                  .filter((m) => m.id !== 4)
+                  .map((member) => {
+                    const already = approvers.some(
+                      (a) => a.member.id === member.id,
+                    );
+                    return (
+                      <button
+                        key={member.id}
+                        disabled={already}
+                        onClick={() => handleAddApprover(member)}
+                        className={s.pickerItem}
+                        type="button"
+                        role="option"
+                        aria-selected={already}
+                      >
+                        <WSAvatar
+                          src={member.avatar}
+                          name={member.name}
+                          size={28}
+                        />
+                        <div className={s.pickerBody}>
+                          <p className={s.pickerName}>{member.name}</p>
+                          <p className={s.pickerRole}>{member.role}</p>
+                        </div>
+                        {already && <CheckCircle size={14} color="#10B981" />}
+                      </button>
+                    );
+                  })}
               </div>
             )}
 
@@ -567,66 +498,14 @@ export default function ApprovalNew() {
             )}
           </WSCard>
 
-          <WSCard title="등록 요약">
-            <div className={s.summaryGrid}>
-              <SummaryRow
-                label="문서 제목"
-                value={title || "—"}
-                empty={!title}
-              />
-              <SummaryRow
-                label="문서 유형"
-                value={docType || "—"}
-                empty={!docType}
-              />
-              <SummaryRow
-                label="우선순위"
-                value={
-                  <span
-                    className={s.priorityBadge}
-                    style={{
-                      "--badge-bg": selectedPriority.bg,
-                      "--badge-color": selectedPriority.color,
-                    }}
-                  >
-                    {selectedPriority.label}
-                  </span>
-                }
-              />
-              <SummaryRow
-                label="요청 부서"
-                value={department || "—"}
-                empty={!department}
-              />
-              <SummaryRow
-                label="결재자 수"
-                value={`${approvers.length}명`}
-                empty={approvers.length === 0}
-              />
-              <SummaryRow label="첨부 파일" value={`${attachments.length}개`} />
-              <div className={s.summaryDivider}>
-                <div className={s.summaryNote}>
-                  <Info size={13} className={s.summaryNoteIcon} />
-                  <p className={s.summaryNoteText}>
-                    제출 후에는 기안 취소 또는 관리자 권한이 필요합니다.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </WSCard>
-
           <div className={s.actionsCol}>
             <button
               onClick={handleSubmit}
-              disabled={!isValid}
+              disabled={!isValid || isLoading}
               className={s.submitBtn}
             >
               <Send size={16} />
-              결재 요청 제출
-            </button>
-            <button onClick={handleSaveDraft} className={s.draftBtn}>
-              <Save size={15} />
-              임시 저장
+              {isLoading ? "등록 중..." : "결재 요청 제출"}
             </button>
             <button
               onClick={() => navigate("/approval")}
