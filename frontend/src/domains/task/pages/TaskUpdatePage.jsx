@@ -138,7 +138,7 @@ export default function TaskUpdate() {
   const isValid = form.title.trim().length > 0;
   const isTitleTooLong = form.title.length > 30;
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!isValid) return;
 
     const data = {
@@ -152,11 +152,32 @@ export default function TaskUpdate() {
       dueDate: form.dueDate,
     };
 
-    updateTask(accessToken, taskId, data).then((res) => {
-      if (!res) return;
+    try {
+      await updateTask(accessToken, taskId, data).then((res) => {
+        if (!res) return;
+      });
+
+      // 파일 경로가 있으면 파일 저장
+      if (uploadedFile?.filePath && uploadedFile?.isNew) {
+        // 파일 저장
+        await saveFile(accessToken, {
+          ...uploadedFile,
+          refType: "TASK",
+          refId: taskId,
+        });
+      }
+
       setSubmitted(true);
       setTimeout(() => navigate(`/tasks/${taskId}`), 1600);
-    });
+    } catch (err) {
+      console.error("게시글 업데이트 실패", err);
+
+      // 파일 삭제
+      removeFiles();
+    }
+
+    // 파일 초기화
+    clearFiles();
   }
 
   if (submitted) {

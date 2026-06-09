@@ -110,7 +110,6 @@ export default function BoardNew() {
         },
         accessToken,
       );
-      setSubmitted(true);
 
       // 파일 경로가 있으면 파일 저장
       if (uploadedFile?.filePath && uploadedFile?.isNew) {
@@ -122,6 +121,7 @@ export default function BoardNew() {
         });
       }
 
+      setSubmitted(true);
       setTimeout(() => navigate("/board"), 1800);
     } catch (err) {
       console.error("게시글 업데이트 실패", err);
