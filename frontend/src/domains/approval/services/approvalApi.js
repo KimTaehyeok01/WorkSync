@@ -13,7 +13,6 @@ export async function getMyInfo(accessToken) {
       return response.json();
     })
     .then((json) => {
-      console.log(json);
       return json.data;
     })
     .catch((error) => {
@@ -31,7 +30,6 @@ export async function getEmployees(accessToken) {
     },
   })
     .then((response) => {
-      console.log("status : ", response.status);
       return response.json();
     })
     .then((text) => {
@@ -58,8 +56,6 @@ export async function getMyApprovals(accessToken, status = "all") {
       return response.json();
     })
     .then((json) => {
-      console.log("응답 전체:", json);
-      console.log("data:", json.data);
       return json.data ?? [];
     })
     .catch((error) => {
@@ -80,7 +76,6 @@ export async function getApprovalById(accessToken, id) {
       return response.json();
     })
     .then((json) => {
-      console.log(json);
       return json.data;
     })
     .catch((error) => {
@@ -99,7 +94,6 @@ export async function getForms(accessToken) {
   })
     .then((res) => res.json())
     .then((json) => {
-      console.log("forms : " + json);
       return json.data ?? [];
     })
     .catch((error) => console.log("에러발생 : " + error));
@@ -134,7 +128,6 @@ export async function createApproval(accessToken, body) {
   })
     .then((response) => response.json())
     .then((json) => {
-      console.log("등록 결과 : ", json);
       return json;
     })
     .catch((error) => console.log("에러 발생 : " + error));
@@ -152,7 +145,6 @@ export function updateApproval(accessToken, id, body) {
   })
     .then((res) => res.json())
     .then((json) => {
-      console.log("update result : ", json);
       return json;
     })
     .catch((error) => console.log("에러발생 : " + error));
@@ -168,7 +160,6 @@ export function deleteApproval(accessToken, id) {
     },
   })
     .then((response) => {
-      console.log("삭제 상태코드 : " + response.status);
       return response;
     })
     .catch((error) => {
@@ -188,7 +179,6 @@ export function getPendingApproval(accessToken) {
   })
     .then((response) => response.json())
     .then((json) => {
-      console.log("pending : ", json);
       return json.data;
     })
     .catch((error) => {

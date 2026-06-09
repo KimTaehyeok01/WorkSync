@@ -46,6 +46,7 @@ export default function Approval() {
     getMyApprovals(accessToken, status).then((data) => {
       if (!data) return;
       setMyApprovals(data);
+      console.log("myApprovals", data);
     });
     getPendingApproval(accessToken).then((data) => {
       console.log("pending 데이터 : ", data);
@@ -149,52 +150,56 @@ export default function Approval() {
               className={s.card}
               onClick={() => navigate(`/approval/${doc.id}`)}
             >
-              <div className={s.cardMore}>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setOpenDropdown(openDropdown === doc.id ? null : doc.id);
-                  }}
-                  className={s.cardMoreBtn}
-                >
-                  <MoreVertical size={16} />
-                </button>
-                {openDropdown === doc.id && (
-                  <div className={s.cardMoreMenu}>
-                    <button
-                      className={s.ddItem}
-                      onClick={(e) => {
-                        navigate(`/approval/${doc.id}/edit`);
-                        e.stopPropagation();
-                        setOpenDropdown(null);
-                      }}
-                    >
-                      수정
-                    </button>
-                    <button
-                      className={`${s.ddItem} ${s.ddItemDanger}`}
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        setOpenDropdown(null);
-                        if (confirm("게시글을 삭제하시겠습니까?")) {
-                          try {
-                            await deleteApproval(accessToken, doc.id);
-                            getMyApprovals(accessToken, status).then((data) => {
-                              if (!data) return;
-                              setMyApprovals(data);
-                            });
-                          } catch (err) {
-                            console.error("삭제 에러 : " + err);
-                            alert("삭제 실패했습니다.");
+              <>
+                <div className={s.cardMore}>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenDropdown(openDropdown === doc.id ? null : doc.id);
+                    }}
+                    className={s.cardMoreBtn}
+                  >
+                    <MoreVertical size={16} />
+                  </button>
+                  {openDropdown === doc.id && (
+                    <div className={s.cardMoreMenu}>
+                      <button
+                        className={s.ddItem}
+                        onClick={(e) => {
+                          navigate(`/approval/${doc.id}/edit`);
+                          e.stopPropagation();
+                          setOpenDropdown(null);
+                        }}
+                      >
+                        수정
+                      </button>
+                      <button
+                        className={`${s.ddItem} ${s.ddItemDanger}`}
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          setOpenDropdown(null);
+                          if (confirm("게시글을 삭제하시겠습니까?")) {
+                            try {
+                              await deleteApproval(accessToken, doc.id);
+                              getMyApprovals(accessToken, status).then(
+                                (data) => {
+                                  if (!data) return;
+                                  setMyApprovals(data);
+                                },
+                              );
+                            } catch (err) {
+                              console.error("삭제 에러 : " + err);
+                              alert("삭제 실패했습니다.");
+                            }
                           }
-                        }
-                      }}
-                    >
-                      삭제
-                    </button>
-                  </div>
-                )}
-              </div>
+                        }}
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
 
               <div
                 className={s.statusBadge}
