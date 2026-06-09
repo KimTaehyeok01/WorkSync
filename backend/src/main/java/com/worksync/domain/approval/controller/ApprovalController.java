@@ -63,6 +63,25 @@ public class ApprovalController {
                 approvalService.getPendingDocs(userDetails.getId())));
     }
 
+    // 결재함 - 내가 결재선에 포함된 문서 (REVIEW/APPROVE)
+    @GetMapping("/inbox")
+    public ResponseEntity<ApiResponse<List<ApprovalListResponse>>> getApprovalBox (
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(required = false) ApprovalDocStatus status) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                approvalService.getApprovalBoxDocs(userDetails.getId(), status)
+        ));
+    }
+
+    // 참조함 - 내가 REFERENCE로 지정된 문서
+    @GetMapping("/reference")
+    public ResponseEntity<ApiResponse<List<ApprovalListResponse>>> getReference (
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                approvalService.getReferenceDocs(userDetails.getId())
+        ));
+    }
+
     // 결재 문서 상세 조회
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ApprovalDetailResponse>> getDoc(@PathVariable Long id) {
