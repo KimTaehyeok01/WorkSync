@@ -70,6 +70,7 @@ export const router = createBrowserRouter([
       { path: "tasks/:id", Component: TaskDetailPage },
       { path: "tasks/edit/:id", Component: TaskUpdatePage },
       { path: "messenger", Component: ChatPage },
+      { path: "messenger/:id", Component: ChatPage },
       { path: "audit-log", Component: AuditLogPage },
       { path: "*", Component: NotFound },
     ],

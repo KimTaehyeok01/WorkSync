@@ -70,7 +70,7 @@ export async function getTasksByDepartment(
 // 업무 상세 조회
 export async function getTaskById(accessToken, taskId) {
   return await fetch(`${BASE_URL}/tasks/${taskId}`, {
-    methos: "GET",
+    method: "GET",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,

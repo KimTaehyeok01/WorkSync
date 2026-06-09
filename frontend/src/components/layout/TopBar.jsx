@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Search,
   Bell,
@@ -16,10 +17,15 @@ import {
   UserRound,
 } from "lucide-react";
 import { WSAvatar } from "../../components/common/CommonWidgets";
-import { NOTIFICATIONS } from "../../constants/mockData";
 import styles from "./TopBar.module.css";
 import useAuthContext from "../../store/AuthContext";
 import { getMyInfo, patchStatus } from "../service/TopBarApi";
+import {
+  getNotifications,
+  getUnreadCount,
+  putNotifications,
+} from "../../domains/notification/services/notificationApi";
+import { getEmployee } from "../../domains/chat/services/chatApi";
 
 const PAGE_TITLES = {
   "/": { title: "대시보드", breadcrumb: ["홈", "대시보드"] },
@@ -45,7 +51,7 @@ const PAGE_TITLES = {
   },
   "/board": { title: "게시판", breadcrumb: ["홈", "게시판"] },
   "/board/new": { title: "글쓰기", breadcrumb: ["홈", "게시판", "글쓰기"] },
-  "/audit-log": { title: "감사 로그", breadcrumb: ["홈", "감사 로그"] },
+  "/audit-log": { titlse: "감사 로그", breadcrumb: ["홈", "감사 로그"] },
 };
 
 const notifIcons = {
@@ -76,18 +82,25 @@ const JOB_GRADE = {
 };
 
 export function TopBar({ pathname }) {
+  const navigate = useNavigate();
   // 상태(status)를 전역 Context와 연결 — 메신저 등 다른 화면에 즉시 반영
-  const { accessToken, logout, myStatus: status, setMyStatus: setStatus } =
-    useAuthContext();
+  const {
+    accessToken,
+    logout,
+    myStatus: status,
+    setMyStatus: setStatus,
+  } = useAuthContext();
   const [my, setMy] = useState({});
   const [showNotifs, setShowNotifs] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [search, setSearch] = useState("");
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const page = PAGE_TITLES[pathname] || {
     title: "WorkSync",
     breadcrumb: ["홈"],
   };
-  const unreadCount = NOTIFICATIONS.filter((n) => !n.read).length;
+  // const unreadCount = NOTIFICATIONS.filter((n) => !n.read).length;
 
   // 내 데이터 불러오기
   useEffect(() => {
@@ -96,7 +109,34 @@ export function TopBar({ pathname }) {
       setMy(data.data || {});
       setStatus(data.data.status || "");
     });
+
+    getNotifications(accessToken).then((data) => {
+      // console.log(data);
+      setNotifications(data || []);
+      console.log(data);
+    });
+
+    getUnreadCount(accessToken).then((data) => {
+      // console.log(data);
+      setUnreadCount(data.unreadCount || 0);
+    });
   }, [accessToken]);
+
+  const handleClick = (notif) => {
+    if (!notif) return;
+
+    putNotifications(accessToken, notif.id);
+    setUnreadCount - 1;
+
+    console.log(notif);
+    if (notif.type === "APPROVAL") {
+      return navigate(`/approval/${notif.targetId}`);
+    } else if (notif.type === "MESSAGE") {
+      return navigate(`/messenger`);
+    } else if (notif.type === "TASK") {
+      return navigate(`/tasks/${notif.targetId}`);
+    }
+  };
 
   // AWAYS 상태 변경
   function handleAwayStatus() {
@@ -194,30 +234,37 @@ export function TopBar({ pathname }) {
               <span className={styles.notifCount}>새 알림 {unreadCount}건</span>
             </div>
             <div className={styles.notifList}>
-              {NOTIFICATIONS.map((notif) => (
-                <div
-                  key={notif.id}
-                  className={`${styles.notifItem} ${!notif.read ? styles.notifItemUnread : ""}`}
-                >
+              {notifications
+                .filter((notif) => notif.isRead === false)
+                .map((notif) => (
                   <div
-                    className={styles.notifIcon}
-                    style={{
-                      "--notif-color": notifColors[notif.type] || "#6B7280",
+                    key={notif.id}
+                    className={`${styles.notifItem} ${!notif.read ? styles.notifItemUnread : ""}`}
+                    onClick={(e) => {
+                      e.stopPropagation(); //부모 onClick 버블링 막음
+                      handleClick(notif);
+                      setShowNotifs(false);
                     }}
                   >
-                    {notif.actor ? (
-                      <img src={notif.actor.avatar} alt="" />
-                    ) : (
-                      notifIcons[notif.type]
-                    )}
+                    <div
+                      className={styles.notifIcon}
+                      style={{
+                        "--notif-color": notifColors[notif.type] || "#6B7280",
+                      }}
+                    >
+                      <WSAvatar
+                        src={notif.receiverProfileImage}
+                        name={notif.receiverName}
+                        size={36}
+                      />
+                    </div>
+                    <div className={styles.notifBody}>
+                      <p className={styles.notifText}>{notif.content}</p>
+                      <p className={styles.notifTime}>{notif.createdAt}</p>
+                    </div>
+                    {!notif.readAt && <span className={styles.notifDot} />}
                   </div>
-                  <div className={styles.notifBody}>
-                    <p className={styles.notifText}>{notif.text}</p>
-                    <p className={styles.notifTime}>{notif.time}</p>
-                  </div>
-                  {!notif.read && <span className={styles.notifDot} />}
-                </div>
-              ))}
+                ))}
             </div>
             <div className={styles.notifFooter}></div>
           </div>

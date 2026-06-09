@@ -92,6 +92,7 @@ export default function Messenger() {
   // 메시지 데이터 불러오기
   useEffect(() => {
     if (!accessToken || !activeConvId) return;
+
     getMessages(accessToken, activeConvId).then((data) => {
       const list = Array.isArray(data.data) ? data.data : [];
 
@@ -477,7 +478,7 @@ export default function Messenger() {
                           "--status-color": statusColor(
                             member.employeeId === my.id && myStatus
                               ? myStatus
-                              : member.status
+                              : member.status,
                           ),
                         }}
                       />
