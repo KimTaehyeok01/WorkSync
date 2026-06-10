@@ -9,6 +9,7 @@ import com.worksync.domain.notification.repository.NotificationRepository;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +23,7 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final EmployeeRepository employeeRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     // 내 알림 목록 조회
     public List<NotificationResponse> getMyNotifications(Long myId, boolean unreadOnly) {
@@ -76,5 +78,14 @@ public class NotificationService {
                 .build();
 
         notificationRepository.save(notification);
+
+        // webSocket 실시간 안읽음 처리
+        Long unreadCount = notificationRepository.countByReceiverIdAndIsReadFalse(receiverId);
+
+        messagingTemplate.convertAndSendToUser(
+                String.valueOf(receiverId),
+                "/queue/notifications/unread-count",
+                unreadCount
+        );
     }
 }
