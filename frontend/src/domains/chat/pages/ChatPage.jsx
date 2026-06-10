@@ -66,6 +66,7 @@ export default function Messenger() {
       onConnect: () => {
         client.subscribe("/topic/status", (frame) => {
           const data = JSON.parse(frame.body);
+
           setTeamMember((prev) =>
             prev.map((m) =>
               m.employeeId === data.employeeId
@@ -79,6 +80,7 @@ export default function Messenger() {
     client.activate();
     return () => client.deactivate();
   }, []);
+
   const TEAM_MEMBERS = Array.isArray(teamMember)
     ? teamMember.map((member) => ({
         employeeId: member.employeeId,
@@ -131,6 +133,7 @@ export default function Messenger() {
       onConnect: () => {
         client.subscribe(`/topic/room/${activeConvId}`, (frame) => {
           const msg = JSON.parse(frame.body);
+
           setChatMessages((prev) => {
             const exists = prev.some((m) => m.id === msg.id);
             // 이미 있는 메시지면 무시 (중복 방지)

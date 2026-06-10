@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
@@ -99,6 +99,7 @@ export function TopBar({ pathname }) {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifId, setNotifId] = useState(0);
+  const clientRef = useRef(null);
   const page = PAGE_TITLES[pathname] || {
     title: "WorkSync",
     breadcrumb: ["홈"],
@@ -114,8 +115,8 @@ export function TopBar({ pathname }) {
     });
 
     getNotifications(accessToken).then((data) => {
-      // console.log(data);
-      setNotifications(data || []);
+      const notif = Array.isArray(data) ? data : [];
+      setNotifications(notif || []);
     });
 
     getUnreadCount(accessToken).then((data) => {
@@ -124,6 +125,7 @@ export function TopBar({ pathname }) {
     });
   }, [accessToken]);
 
+  // 알림 리스트 클릭
   const handleClick = (notif) => {
     if (!notif) return;
 
@@ -142,6 +144,14 @@ export function TopBar({ pathname }) {
 
   // WebSocket 실시간 알림 연동
   useEffect(() => {
+    if (!accessToken) return;
+
+    if (clientRef.current?.active) return; // 이미 연결되어 있으면 skip
+
+    if (clientRef.current) {
+      clientRef.current.deactivate(); // 이전 연결 해제
+    }
+
     const client = new Client({
       webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
       reconnectDelay: 5000,
@@ -151,25 +161,24 @@ export function TopBar({ pathname }) {
         console.log("연결 성공");
 
         // 알림 목록 실시간 불러오기
-        client.subscribe(`/user/queue/notifications`, (frame) => {
+        client.subscribe("/user/queue/notifications", (frame) => {
+          console.log("콜백 불림!", frame.body); // ← 추가
           const data = JSON.parse(frame.body);
-          console.log(data);
           setNotifications(data || []);
         });
 
         // 알림 unread count 실시간 불러오기
-        client.subscribe(`/user/queue/notifications/unread-count`, (frame) => {
-          console.log("frame 전체:", frame);
-          console.log("body:", frame.body);
+        client.subscribe("/user/queue/notifications/unread-count", (frame) => {
+          console.log("콜백 불림!", frame.body); // ← 추가
           const data = JSON.parse(frame.body);
           setUnreadCount(data || 0);
         });
       },
-      onStompError: (error) => {
-        console.log("에러", error);
-      },
     });
+
+    clientRef.current = client;
     client.activate();
+
     return () => client.deactivate();
   }, [accessToken]);
 
