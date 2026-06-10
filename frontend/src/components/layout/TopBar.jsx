@@ -157,22 +157,35 @@ export function TopBar({ pathname }) {
       reconnectDelay: 5000,
       connectHeaders: { Authorization: `Bearer ${accessToken}` },
 
+      debug: (str) => {
+        console.log("STOMP:", str);
+      },
+
       onConnect: () => {
         console.log("연결 성공");
 
         // 알림 목록 실시간 불러오기
         client.subscribe("/user/queue/notifications", (frame) => {
-          console.log("콜백 불림!", frame.body); // ← 추가
-          const data = JSON.parse(frame.body);
-          setNotifications(data || []);
+          console.log("notifications 수신", frame.body);
         });
 
         // 알림 unread count 실시간 불러오기
         client.subscribe("/user/queue/notifications/unread-count", (frame) => {
-          console.log("콜백 불림!", frame.body); // ← 추가
-          const data = JSON.parse(frame.body);
-          setUnreadCount(data || 0);
+          console.log("count 수신", frame.body);
         });
+
+        // test
+        client.subscribe("/topic/test", (frame) => {
+          console.log("topic", frame.body);
+        });
+      },
+
+      onStompError: (frame) => {
+        console.error("STOMP ERROR", frame);
+      },
+
+      onWebSocketError: (event) => {
+        console.error("WS ERROR", event);
       },
     });
 
