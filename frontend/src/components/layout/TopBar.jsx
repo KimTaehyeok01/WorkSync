@@ -146,12 +146,22 @@ export function TopBar({ pathname }) {
       webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
       reconnectDelay: 5000,
       connectHeaders: { Authorization: `Bearer ${accessToken}` },
+
       onConnect: () => {
         console.log("연결 성공");
 
-        client.subscribe(`/user/queue/notifications/unread-count`, (frame) => {
+        // 알림 목록 실시간 불러오기
+        client.subscribe(`/user/queue/notifications`, (frame) => {
           const data = JSON.parse(frame.body);
           console.log(data);
+          setNotifications(data || []);
+        });
+
+        // 알림 unread count 실시간 불러오기
+        client.subscribe(`/user/queue/notifications/unread-count`, (frame) => {
+          console.log("frame 전체:", frame);
+          console.log("body:", frame.body);
+          const data = JSON.parse(frame.body);
           setUnreadCount(data || 0);
         });
       },
