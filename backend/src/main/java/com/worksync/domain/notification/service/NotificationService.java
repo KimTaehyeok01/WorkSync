@@ -42,7 +42,7 @@ public class NotificationService {
     }
 
     // 단건 읽음 처리
-    @Transactional
+    @Transactional(readOnly = false)
     public void readNotification(Long notificationId, Long myId) {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOTIFICATION_NOT_FOUND));
@@ -52,10 +52,11 @@ public class NotificationService {
         }
 
         notification.markAsRead();
+        notificationRepository.flush();
 
         // (webSocket) PUSH 실시간 단건 읽음 처리 - isRead = false 인 것만 카운트
         Long unreadCount = notificationRepository.countByReceiverIdAndIsReadFalse(myId);
-
+        System.out.println("단건읽음");
         messagingTemplate.convertAndSendToUser(
                 String.valueOf(myId),
                 "/queue/notifications/unread-count",
@@ -70,6 +71,7 @@ public class NotificationService {
                 .forEach(Notification::markAsRead);
 
         // (webSocket) 실시간 전체 읽음 처리 - isRead = false 인 것만 카운트
+        System.out.println("전체읽음");
         messagingTemplate.convertAndSendToUser(
                 String.valueOf(myId),
                 "/queue/notifications/unread-count",
@@ -97,11 +99,25 @@ public class NotificationService {
 
         // (webSocket) 실시간 알림 전송 - isRead = false 인 것만 카운트
         Long unreadCount = notificationRepository.countByReceiverIdAndIsReadFalse(receiverId);
-
         messagingTemplate.convertAndSendToUser(
                 String.valueOf(receiverId),
                 "/queue/notifications/unread-count",
                 unreadCount
+        );
+
+        // (webSocket) 실시간 목록 전송
+        List<NotificationResponse> notifications = notificationRepository.findByReceiverIdOrderByCreatedAtDesc(receiverId)
+                .stream()
+                .map(NotificationResponse::from)
+                .collect(Collectors.toList());
+        messagingTemplate.convertAndSendToUser(
+                String.valueOf(receiverId),
+                "/queue/notifications",
+                notifications
+        );
+        messagingTemplate.convertAndSend(
+                "/topic/test",
+                "hello"
         );
     }
 }
