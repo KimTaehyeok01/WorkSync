@@ -43,41 +43,52 @@ public class NotificationService {
 
     // 단건 읽음 처리
     @Transactional(readOnly = false)
-    public void readNotification(Long notificationId, Long myId) {
-        Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOTIFICATION_NOT_FOUND));
+    public void readNotification(Long myId, String targetType, Long targetId) {
+        // targetType&&targetId 같은 알림만 읽음 처리
+        notificationRepository.findByReceiverIdOrderByCreatedAtDesc(myId)
+                .stream()
+                .filter(notification -> targetType.equals(notification.getTargetType()) && targetId.equals(notification.getTargetId()))
+                .forEach(Notification::markAsRead);
 
-        if (!notification.getReceiver().getId().equals(myId)) {
-            throw new CustomException(ErrorCode.FORBIDDEN);
-        }
-
-        notification.markAsRead();
         notificationRepository.flush();
 
-        // (webSocket) PUSH 실시간 단건 읽음 처리 - isRead = false 인 것만 카운트
+        // (webSocket) 읽음 처리 후 실시간 전송
         Long unreadCount = notificationRepository.countByReceiverIdAndIsReadFalse(myId);
         messagingTemplate.convertAndSendToUser(
                 String.valueOf(myId),
                 "/queue/notifications/unread-count",
                 unreadCount
         );
-        System.out.println("단건 읽음 : " + myId);
+        System.out.println("읽음 처리 완료 : " + myId);
+
+        // (webSocket) 읽음 처리 후 알림 목록 갱신
+        List<NotificationResponse> notifications = notificationRepository.findByReceiverIdOrderByCreatedAtDesc(myId)
+                .stream()
+                .map(NotificationResponse::from)
+                .collect(Collectors.toList());
+        messagingTemplate.convertAndSendToUser(
+                String.valueOf(myId),
+                "/queue/notifications",
+                notifications
+        );
+        System.out.println("목록 갱신 완료 : " + myId);
     }
 
     // 전체 읽음 처리
-    @Transactional
-    public void readAllNotifications(Long myId) {
-        notificationRepository.findByReceiverIdAndIsReadFalseOrderByCreatedAtDesc(myId)
-                .forEach(Notification::markAsRead);
-
-        // (webSocket) 실시간 전체 읽음 처리 - isRead = false 인 것만 카운트
-        messagingTemplate.convertAndSendToUser(
-                String.valueOf(myId),
-                "/queue/notifications/unread-count",
-                0L // 안읽음
-        );
-        System.out.println("전체 읽음 : " + myId);
-    }
+//    @Transactional
+//    public void readAllNotifications(Long myId, String targetType, Long targetId) {
+//        notificationRepository.findByReceiverIdOrderByCreatedAtDesc(myId)
+//                .stream()
+//                        .filter(notification -> targetType.equals(notification.getTargetId()) && targetId.equals(notification.getTargetId()) )
+//
+//        // (webSocket) 실시간 전체 읽음 처리 - isRead = false 인 것만 카운트
+//        messagingTemplate.convertAndSendToUser(
+//                String.valueOf(myId),
+//                "/queue/notifications/unread-count",
+//                0L // 안읽음
+//        );
+//        System.out.println("전체 읽음 : " + myId);
+//    }
 
     // 알림 전송 (내부용 — 다른 서비스에서 호출)
     @Transactional

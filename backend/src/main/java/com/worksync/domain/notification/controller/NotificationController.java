@@ -1,12 +1,12 @@
 package com.worksync.domain.notification.controller;
 
+import com.worksync.domain.notification.dto.NotificationRequest;
 import com.worksync.domain.notification.dto.NotificationResponse;
 import com.worksync.domain.notification.service.NotificationService;
 import com.worksync.global.response.ApiResponse;
 import com.worksync.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,22 +40,24 @@ public class NotificationController {
         return ResponseEntity.ok(ApiResponse.ok(Map.of("unreadCount", count)));
     }
 
-    // 단건 읽음 처리
-    @PutMapping("/{id}/read")
+    // 읽음 처리
+    @PutMapping("/read")
     public ResponseEntity<ApiResponse<Void>> readNotification(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long id) {
+            @RequestBody NotificationRequest request) {
 
-        notificationService.readNotification(id, userDetails.getId());
+        notificationService.readNotification(userDetails.getId(), request.getTargetType(), request.getTargetId());
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
     // 전체 읽음 처리
-    @PutMapping("/read-all")
-    public ResponseEntity<ApiResponse<Void>> readAllNotifications(
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-
-        notificationService.readAllNotifications(userDetails.getId());
-        return ResponseEntity.ok(ApiResponse.ok(null));
-    }
+//    @PutMapping("/read-all")
+//    public ResponseEntity<ApiResponse<Void>> readAllNotifications(
+//            @AuthenticationPrincipal CustomUserDetails userDetails,
+//            @RequestParam String targetType,
+//            @RequestParam Long targetId) {
+//
+//        notificationService.readAllNotifications(userDetails.getId(), targetType, targetId);
+//        return ResponseEntity.ok(ApiResponse.ok(null));
+//    }
 }
