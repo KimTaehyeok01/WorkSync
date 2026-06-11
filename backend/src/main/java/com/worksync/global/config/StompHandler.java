@@ -51,6 +51,7 @@ public class StompHandler implements ChannelInterceptor {
 
                 // webSocket 연결에 사용자 등록
                 accessor.setUser(auth);
+                System.out.println("토큰 유효성 검사 : " + auth);
             }
         }
 
