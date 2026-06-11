@@ -109,6 +109,8 @@ public class ApprovalService {
 // ─────────────────────────────────────────────
         if ("LEAVE".equals(form.getFormType())) {
             Map<String, String> items = request.getItems();
+            System.out.println("items:" + items);
+
 
             // 날짜 파싱
             LocalDate startDate = LocalDate.parse(items.get("startDate"));
