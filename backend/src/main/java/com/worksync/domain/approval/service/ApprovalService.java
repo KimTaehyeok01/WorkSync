@@ -129,6 +129,8 @@ public class ApprovalService {
                     ChronoUnit.DAYS.between(startDate, endDate) + 1
             );
 
+            System.out.println("daysCount: " + daysCount);
+
             // 잔여 연차 검증
             short leaveYear = (short) startDate.getYear();
             AnnualLeaveBalance balance = annualLeaveBalanceRepository
