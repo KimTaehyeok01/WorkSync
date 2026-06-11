@@ -57,10 +57,11 @@ function LeaveDetail({ items, approval }) {
   const [balance, setBalance] = useState(null);
 
   useEffect(() => {
-    getLeaveBalance(accessToken).then((data) => {
+    if (!approval?.drafterId) return;
+    getLeaveBalance(accessToken, approval.drafterId).then((data) => { // 작성자 id를 넘겨서 작성자 잔여일 반환
       setBalance(data);
-    }, []);
-  });
+    });
+  }, [accessToken, approval?.drafterId]);
 
   //휴가 종류 매핑
   const LEAVE_TYPE = {
