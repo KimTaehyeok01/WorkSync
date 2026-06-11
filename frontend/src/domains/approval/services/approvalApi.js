@@ -193,6 +193,7 @@ export function deleteApproval(accessToken, id) {
     },
   })
     .then((response) => {
+      if (!response.ok) throw new Error(response.status);
       return response;
     })
     .catch((error) => {

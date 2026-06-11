@@ -77,6 +77,7 @@
   resize: none;
   outline: none;
   transition: border-color 0.15s;
+  display: block;
 }
 
 .textarea::placeholder {
@@ -144,7 +145,17 @@
   gap: 8px;
   padding: 10px 0;
   /* border-bottom: 1px solid var(--ws-border-light); */
+  flex-wrap: wrap;
+}
+
+.tableRowFixed {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  /* border-bottom: 1px solid var(--ws-border-light); */
   flex-wrap: nowrap;
+  overflow-x: auto;
 }
 
 .tableRow:last-child {
@@ -152,7 +163,6 @@
 }
 
 .tableInput {
-  flex: 1;
   min-width: 0;
   height: 36px;
   border: 1px solid var(--ws-border);

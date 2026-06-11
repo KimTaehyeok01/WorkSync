@@ -140,8 +140,12 @@ function ExpenseForm({ formValues, setFormValues, myInfo, title, setTitle }) {
               금액 합계<span className={s.required}>*</span>
             </label>
             <input
-              type="number"
-              value={formValues.amount ?? ""}
+              type="text"
+              value={
+                formValues.amount
+                  ? Number(formValues.amount).toLocaleString()
+                  : "0"
+              }
               readOnly
               className={s.input}
             />
@@ -168,14 +172,14 @@ function ExpenseForm({ formValues, setFormValues, myInfo, title, setTitle }) {
               value={row.date}
               onChange={(e) => updateRow(row.id, "date", e.target.value)}
               className={s.tableInput}
-              style={{ width: 130, flex: "none" }}
+              style={{ flex: 1, minWidth: 100 }}
             />
             {/* 분류 선택 */}
             <select
               value={row.category}
               onChange={(e) => updateRow(row.id, "category", e.target.value)}
               className={s.tableSelect}
-              style={{ width: 110, flex: "none" }}
+              style={{ flex: 1, minWidth: 100 }}
             >
               <option value="">분류 선택</option>
               {CATEGORIES.map((c) => (
@@ -191,16 +195,21 @@ function ExpenseForm({ formValues, setFormValues, myInfo, title, setTitle }) {
               value={row.description}
               onChange={(e) => updateRow(row.id, "description", e.target.value)}
               className={s.tableInput}
-              style={{ flex: 1 }}
+              style={{ flex: 2, minWidth: 120 }}
             />
             {/* 금액 */}
             <input
-              type="number"
+              type="text"
               placeholder="0"
-              value={row.amount}
-              onChange={(e) => updateRow(row.id, "amount", e.target.value)}
+              value={
+                row.amount === "" ? "" : Number(row.amount).toLocaleString()
+              }
+              onChange={(e) => {
+                const raw = e.target.value.replace(/,/g, "");
+                updateRow(row.id, "amount", raw);
+              }}
               className={s.tableInput}
-              style={{ width: 90, flex: "none" }}
+              style={{ flex: 1, minWidth: 90 }}
             />
             {/* 비고 */}
             <input
@@ -209,7 +218,7 @@ function ExpenseForm({ formValues, setFormValues, myInfo, title, setTitle }) {
               value={row.note}
               onChange={(e) => updateRow(row.id, "note", e.target.value)}
               className={s.tableInput}
-              style={{ width: 80, flex: "none" }}
+              style={{ flex: 1, minWidth: 90 }}
             />
             {/* 행 삭제 버튼 */}
             <button
@@ -579,8 +588,8 @@ function PurchaseForm({ formValues, setFormValues, myInfo, title, setTitle }) {
               금액 합계<span className={s.required}>*</span>
             </label>
             <input
-              type="number"
-              value={formValues.amount ?? ""}
+              type="text"
+              value={Number(formValues.amount).toLocaleString()}
               readOnly
               className={s.input}
             />
@@ -604,34 +613,48 @@ function PurchaseForm({ formValues, setFormValues, myInfo, title, setTitle }) {
               value={row.item}
               onChange={(e) => updateRow(row.id, "item", e.target.value)}
               className={s.tableInput}
-              style={{ maxWidth: 500 }}
+              style={{ maxWidth: 500, flex: 1 }}
             />
             {/* 수량 */}
             <input
-              type="number"
+              type="text"
               placeholder="수량"
-              value={row.quantity}
-              onChange={(e) => updateRow(row.id, "quantity", e.target.value)}
+              value={
+                row.quantity === "" ? "" : Number(row.quantity).toLocaleString()
+              }
+              onChange={(e) => {
+                const raw = e.target.value.replace(/,/g, "");
+                updateRow(row.id, "quantity", raw);
+              }}
               className={s.tableInput}
-              style={{ maxWidth: 130 }}
+              style={{ maxWidth: 160, flex: 1 }}
             />
             {/* 단가 */}
             <input
-              type="number"
+              type="text"
               placeholder="단가"
-              value={row.unitPrice}
-              onChange={(e) => updateRow(row.id, "unitPrice", e.target.value)}
+              value={
+                row.unitPrice === ""
+                  ? ""
+                  : Number(row.unitPrice).toLocaleString()
+              }
+              onChange={(e) => {
+                const raw = e.target.value.replace(/,/g, "");
+                updateRow(row.id, "unitPrice", raw);
+              }}
               className={s.tableInput}
-              style={{ maxWidth: 130 }}
+              style={{ maxWidth: 160, flex: 1 }}
             />
             {/* 금액 (수량 * 단가 자동 계산, 읽기 전용) */}
             <input
-              type="number"
+              type="text"
               placeholder="금액"
-              value={row.amount}
+              value={
+                row.amount === "" ? "" : Number(row.amount).toLocaleString()
+              }
               readOnly
               className={s.tableInput}
-              style={{ maxWidth: 130 }}
+              style={{ maxWidth: 160, flex: 1 }}
             />
 
             {/* 비고
@@ -642,7 +665,7 @@ function PurchaseForm({ formValues, setFormValues, myInfo, title, setTitle }) {
               value={row.note}
               onChange={(e) => updateRow(row.id, "note", e.target.value)}
               className={s.tableInput}
-              style={{ maxWidth: 200 }}
+              style={{ maxWidth: 200, flex: 1 }}
             />
             <button
               onClick={() => delRow(row.id)}
@@ -701,6 +724,20 @@ function BusinessTripForm({
     setRows((prev) =>
       prev.map((r) => (r.id === id ? { ...r, [key]: value } : r)),
     );
+
+  const updateExpense = (id, key, value) => {
+    const updated = expenses.map((r) => {
+      r.id === id ? { ...r, [key]: value } : r;
+    });
+    setExpenses(updated);
+    setFormValues((prev) => ({ ...prev, expenses: updated }));
+  };
+
+  // 합계 계산 (amount를 숫자로 변환 후 합산)
+  const total = expenses.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+  useEffect(() => {
+    setFormValues((prev) => ({ ...prev, amount: total }));
+  }, [total]);
 
   // 출장비 행 추가/삭제/수정
   const addExpense = () =>
@@ -828,7 +865,7 @@ function BusinessTripForm({
           출장 인원 추가
         </button>
         {rows.map((row) => (
-          <div key={row.id} className={s.tableRow}>
+          <div key={row.id} className={s.tableRowFixed}>
             <select
               value={row.empNo}
               onChange={(e) => {
@@ -907,44 +944,78 @@ function BusinessTripForm({
           항목 추가
         </button>
         {expenses.map((row) => (
-          <div key={row.id} className={s.tableRow}>
-            <select
-              value={row.category}
-              onChange={(e) =>
-                updateExpense(row.id, "category", e.target.value)
-              }
-              className={s.tableSelect}
-            >
-              <option value="">항목 선택</option>
-              {EXPENSE_CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-            <input
-              type="number"
-              placeholder="금액"
-              value={row.amount}
-              onChange={(e) => updateExpense(row.id, "amount", e.target.value)}
-              className={s.tableInput}
-              style={{ maxWidth: 120 }}
-            />
-            <input
-              type="text"
-              placeholder="산출 내역"
-              value={row.note}
-              onChange={(e) => updateExpense(row.id, "note", e.target.value)}
-              className={s.tableInput}
-            />
-            <button
-              onClick={() => delExpense(row.id)}
-              className={s.delRowBtn}
-              type="button"
-            >
-              <Trash2 size={14} />
-            </button>
-          </div>
+          <>
+            <div key={row.id} className={s.tableRow}>
+              <select
+                value={row.category}
+                onChange={(e) =>
+                  updateExpense(row.id, "category", e.target.value)
+                }
+                className={s.tableSelect}
+                style={{ flex: 1, maxWidth: "200px" }}
+              >
+                <option value="">항목 선택</option>
+                {EXPENSE_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="text"
+                placeholder="금액"
+                value={
+                  row.expense === "" ? "" : Number(row.expense).toLocaleString()
+                }
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/,/g, "");
+                  updateExpense(row.id, "expense", raw);
+                }}
+                className={s.tableInput}
+                style={{ flex: 1 }}
+              />
+              <input
+                type="text"
+                placeholder="산출 내역"
+                value={row.note}
+                onChange={(e) => updateExpense(row.id, "note", e.target.value)}
+                className={s.tableInput}
+                style={{ flex: 1 }}
+              />
+              <button
+                onClick={() => delExpense(row.id)}
+                className={s.delRowBtn}
+                type="button"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+            <div>
+              <label
+                className={s.label}
+                style={{
+                  marginTop: "10px",
+                }}
+              >
+                금액 합계
+              </label>
+              <div style={{ display: "flex" }}>
+                <input
+                  type="text"
+                  placeholder="산출 내역"
+                  className={s.input}
+                  value={
+                    row.amount === "" ? "" : Number(row.amount).toLocaleString()
+                  }
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/,/g, "");
+                    updateRow(row.id, "amount", raw);
+                  }}
+                />
+                <span></span>
+              </div>
+            </div>
+          </>
         ))}
       </WSCard>
     </>

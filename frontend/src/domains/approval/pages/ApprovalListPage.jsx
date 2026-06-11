@@ -184,58 +184,62 @@ export default function Approval() {
               onClick={() => navigate(`/approval/${doc.id}`)}
             >
               <>
-                <div className={s.cardMore}>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setOpenDropdown(openDropdown === doc.id ? null : doc.id);
-                    }}
-                    className={s.cardMoreBtn}
-                  >
-                    <MoreVertical size={16} />
-                  </button>
-                  {openDropdown === doc.id && (
-                    <div className={s.cardMoreMenu}>
-                      <button
-                        className={s.ddItem}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setOpenDropdown(null);
-                          if (doc.status !== "IN_PROGRESS") {
-                            alert("대기 중인 문서만 수정할 수 있습니다.");
-                            return;
-                          }
-                          navigate(`/approval/${doc.id}/edit`);
-                        }}
-                      >
-                        수정
-                      </button>
-                      <button
-                        className={`${s.ddItem} ${s.ddItemDanger}`}
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          setOpenDropdown(null);
-                          if (confirm("게시글을 삭제하시겠습니까?")) {
+                {boxType === "my" && (
+                  <div className={s.cardMore}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdown(
+                          openDropdown === doc.id ? null : doc.id,
+                        );
+                      }}
+                      className={s.cardMoreBtn}
+                    >
+                      <MoreVertical size={16} />
+                    </button>
+                    {openDropdown === doc.id && (
+                      <div className={s.cardMoreMenu}>
+                        <button
+                          className={s.ddItem}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenDropdown(null);
                             if (doc.status !== "IN_PROGRESS") {
-                              alert("대기 중인 문서만 삭제할 수 있습니다.");
+                              alert("대기 중인 문서만 수정할 수 있습니다.");
                               return;
                             }
-                            try {
-                              await deleteApproval(accessToken, doc.id);
-                              setDocs((prev) =>
-                                prev.filter((d) => d.id !== doc.id),
-                              );
-                            } catch (err) {
-                              alert("삭제 실패했습니다.");
+                            navigate(`/approval/${doc.id}/edit`);
+                          }}
+                        >
+                          수정
+                        </button>
+                        <button
+                          className={`${s.ddItem} ${s.ddItemDanger}`}
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            setOpenDropdown(null);
+                            if (confirm("게시글을 삭제하시겠습니까?")) {
+                              if (doc.status !== "IN_PROGRESS") {
+                                alert("대기 중인 문서만 삭제할 수 있습니다.");
+                                return;
+                              }
+                              try {
+                                await deleteApproval(accessToken, doc.id);
+                                setDocs((prev) =>
+                                  prev.filter((d) => d.id !== doc.id),
+                                );
+                              } catch (err) {
+                                alert("삭제 실패했습니다.");
+                              }
                             }
-                          }
-                        }}
-                      >
-                        삭제
-                      </button>
-                    </div>
-                  )}
-                </div>
+                          }}
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </>
 
               <div
