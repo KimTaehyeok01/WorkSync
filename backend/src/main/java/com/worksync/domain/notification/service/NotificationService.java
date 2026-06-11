@@ -56,7 +56,6 @@ public class NotificationService {
 
         // (webSocket) PUSH 실시간 단건 읽음 처리 - isRead = false 인 것만 카운트
         Long unreadCount = notificationRepository.countByReceiverIdAndIsReadFalse(myId);
-        System.out.println("단건읽음");
         messagingTemplate.convertAndSendToUser(
                 String.valueOf(myId),
                 "/queue/notifications/unread-count",
@@ -114,10 +113,6 @@ public class NotificationService {
                 String.valueOf(receiverId),
                 "/queue/notifications",
                 notifications
-        );
-        messagingTemplate.convertAndSend(
-                "/topic/test",
-                "hello"
         );
     }
 }
