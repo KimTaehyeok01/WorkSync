@@ -29,15 +29,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.setApplicationDestinationPrefixes("/app");
         // 특정 사용자에게 메시지를 발송할 경로
         registry.setUserDestinationPrefix("/user");
+
+        System.out.println("MessageBroker 설정 완료 - userDestinationPrefix: /user");
     }
 
     // 클라이언트가 서버에 접속할 수 있는 웹소켓 연결 엔드포인트(URL)를 설정하는 핵심 메서드
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // 순수 WebSocket 연결 엔드포인트 - 알림 요청 헤더에서 순수 WebSocket으로 직접 연결 시도 문제 해결 방안
-        registry.addEndpoint("/ws")
-                .setAllowedOrigins(frontendUrl);
-
         // WebSocket 연결 엔드포인트 - frontendUrl 외 origin 차단
         registry.addEndpoint("/ws")
                 .setAllowedOrigins(frontendUrl)

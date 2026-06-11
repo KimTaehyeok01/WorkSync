@@ -25,7 +25,8 @@ public class StompHandler implements ChannelInterceptor {
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         // WebSocket 메시지에서 헤더 정보 꺼내기
-        StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+        // getAccessor() : 원본 메시지의 accessor 참조
+        StompHeaderAccessor accessor = StompHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
         // 최초 연결 시 한번만 토큰 확인
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
@@ -50,6 +51,7 @@ public class StompHandler implements ChannelInterceptor {
                 );
 
                 // webSocket 연결에 사용자 등록
+                System.out.println("StompHandler setUser: " + auth.getName());
                 accessor.setUser(auth);
                 System.out.println("토큰 유효성 검사 : " + auth);
             }
