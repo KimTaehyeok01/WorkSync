@@ -186,6 +186,11 @@ export default function ApprovalNew() {
       }
     }
 
+    // LEAVE 양식인데 leaveType이 없으면 기본값 보장
+    if (selectedForm?.formType === "LEAVE" && !stringifiedItems.leaveType) {
+      stringifiedItems.leaveType = "ANNUAL";
+    }
+
     const body = {
       formId: selectedForm?.id,
       title,
@@ -196,6 +201,8 @@ export default function ApprovalNew() {
       })),
       items: stringifiedItems,
     };
+
+    console.log("submit payload:", JSON.stringify(body));
 
     setIsLoading(true);
     const result = await createApproval(accessToken, body);

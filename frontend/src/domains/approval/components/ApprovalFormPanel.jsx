@@ -294,18 +294,21 @@ function LeaveForm({
   const [halfDate, setHalfDate] = useState("");
   const [halfTime, setHalfTime] = useState("");
 
+  // 마운트 시 leaveType만 즉시 세팅
+  useEffect(() => {
+    setFormValues((prev) => ({ ...prev, leaveType: "ANNUAL" }));
+  }, []);
+
+  // myInfo 로드되면 부서/이름 세팅 (기존 유지)
   useEffect(() => {
     if (myInfo) {
       setFormValues((prev) => ({
         ...prev,
         departmentName: myInfo.departmentName,
         name: myInfo.name,
-        leaveType: "ANNUAL",
       }));
-      setLeaveType("ANNUAL");
     }
   }, [myInfo]);
-
   // 유효성 검사
   const validate = () => {
     if (!title.trim()) {
