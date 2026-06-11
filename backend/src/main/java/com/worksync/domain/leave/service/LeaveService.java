@@ -130,12 +130,21 @@ public class LeaveService {
     }
 
     //연차 잔여 조회
+    @Transactional
     public LeaveBalanceResponse getBalance(Long employeeId){
-        short currentYear = (short)LocalDate.now().getYear();
+        short currentYear = (short) LocalDate.now().getYear();
+
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
 
         AnnualLeaveBalance balance = annualLeaveBalanceRepository
                 .findByEmployeeIdAndYear(employeeId, currentYear)
-                .orElseThrow(() -> new CustomException(ErrorCode.LEAVE_BALANCE_NOT_FOUND));
+                .orElseGet(() -> annualLeaveBalanceRepository.save(
+                        AnnualLeaveBalance.builder()
+                                .employee(employee)
+                                .year(currentYear)
+                                .totalDays(BigDecimal.valueOf(15))
+                                .build()));
 
         return LeaveBalanceResponse.from(balance);
     }
