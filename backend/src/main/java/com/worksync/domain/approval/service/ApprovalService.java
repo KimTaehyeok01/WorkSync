@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -148,6 +149,7 @@ public class ApprovalService {
         return approvalLineRepository
                 .findByApproverId(approverId)
                 .stream()
+                .sorted(Comparator.comparing(line -> line.getDoc().getCreatedAt(), Comparator.reverseOrder())) // 정렬 기준: 문서 생성일, 방향: 내림차순 (최신순)
                 .filter(line -> line.getStepType() == StepType.REVIEW
                 || line.getStepType() == StepType.APPROVE)
                 .filter(line -> status == null || line.getDoc().getStatus() == status)
