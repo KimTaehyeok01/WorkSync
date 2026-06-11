@@ -168,7 +168,7 @@ export function TopBar({ pathname }) {
     }
   };
 
-  // WebSocket 실시간 알림 연동
+  // WebSocket 실시간 알림 갱신
   useEffect(() => {
     if (!accessToken) return;
 
@@ -192,14 +192,12 @@ export function TopBar({ pathname }) {
 
         // 알림 목록 실시간 불러오기
         client.subscribe("/user/queue/notifications", (frame) => {
-          console.log("notifications 수신", frame.body);
           const notifList = frame.body;
           setNotifications(notifList || []);
         });
 
         // 알림 unread count 실시간 불러오기
         client.subscribe("/user/queue/notifications/unread-count", (frame) => {
-          console.log("count 수신", frame.body);
           const unreadCount = frame.body;
           setUnreadCount(unreadCount || 0);
         });

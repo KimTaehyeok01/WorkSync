@@ -63,6 +63,8 @@ export default function Messenger() {
     const client = new Client({
       webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
       reconnectDelay: 5000,
+      connectHeaders: { Authorization: `Bearer ${accessToken}` },
+
       onConnect: () => {
         client.subscribe("/topic/status", (frame) => {
           const data = JSON.parse(frame.body);
@@ -130,6 +132,8 @@ export default function Messenger() {
     const client = new Client({
       webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
       reconnectDelay: 5000,
+      connectHeaders: { Authorization: `Bearer ${accessToken}` },
+
       onConnect: () => {
         client.subscribe(`/topic/room/${activeConvId}`, (frame) => {
           const msg = JSON.parse(frame.body);
