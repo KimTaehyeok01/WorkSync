@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Client } from "@stomp/stompjs";
-import SockJS from "sockjs-client";
+import SockJS from "sockjs-client/dist/sockjs";
 import {
   Search,
   Bell,
@@ -172,11 +172,6 @@ export function TopBar({ pathname }) {
         // 알림 unread count 실시간 불러오기
         client.subscribe("/user/queue/notifications/unread-count", (frame) => {
           console.log("count 수신", frame.body);
-        });
-
-        // test
-        client.subscribe("/topic/test", (frame) => {
-          console.log("topic", frame.body);
         });
       },
 
