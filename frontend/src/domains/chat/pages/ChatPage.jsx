@@ -63,8 +63,6 @@ export default function Messenger() {
     const client = new Client({
       webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
       reconnectDelay: 5000,
-      connectHeaders: { Authorization: `Bearer ${accessToken}` },
-
       onConnect: () => {
         client.subscribe("/topic/status", (frame) => {
           const data = JSON.parse(frame.body);
@@ -76,6 +74,30 @@ export default function Messenger() {
                 : m,
             ),
           );
+        });
+
+        client.subscribe(`/topic/room/${activeConvId}`, (frame) => {
+          const msg = JSON.parse(frame.body);
+
+          setChatMessages((prev) => {
+            const exists = prev.some((m) => m.id === msg.id);
+            // 이미 있는 메시지면 무시 (중복 방지)
+            if (exists) return prev;
+            return [
+              ...prev,
+              {
+                id: msg.id,
+                isMine: msg.senderId === my.id,
+                sender: {
+                  name: msg.senderName,
+                  avatar: msg.senderProfileImage,
+                },
+                content: msg.content,
+                time: msg.sentAt,
+                type: msg.msgType,
+              },
+            ];
+          });
         });
       },
     });
@@ -124,46 +146,6 @@ export default function Messenger() {
       );
     });
   }, [accessToken, activeConvId, my]);
-
-  // WebSocket 실시간 구독 — 채팅방 입장 시 해당 방 토픽 구독, 나가면 해제
-  useEffect(() => {
-    if (!activeConvId) return;
-
-    const client = new Client({
-      webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
-      reconnectDelay: 5000,
-      connectHeaders: { Authorization: `Bearer ${accessToken}` },
-
-      onConnect: () => {
-        client.subscribe(`/topic/room/${activeConvId}`, (frame) => {
-          const msg = JSON.parse(frame.body);
-
-          setChatMessages((prev) => {
-            const exists = prev.some((m) => m.id === msg.id);
-            // 이미 있는 메시지면 무시 (중복 방지)
-            if (exists) return prev;
-            return [
-              ...prev,
-              {
-                id: msg.id,
-                isMine: msg.senderId === my.id,
-                sender: {
-                  name: msg.senderName,
-                  avatar: msg.senderProfileImage,
-                },
-                content: msg.content,
-                time: msg.sentAt,
-                type: msg.msgType,
-              },
-            ];
-          });
-        });
-      },
-    });
-
-    client.activate();
-    return () => client.deactivate();
-  }, [activeConvId, my]);
 
   // 내 데이터 불러오기
   useEffect(() => {
