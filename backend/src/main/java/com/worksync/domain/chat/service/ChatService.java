@@ -223,13 +223,16 @@ public class ChatService {
         String notificationContent = sender.getName() + ": " + request.getContent();
         room.getMembers().stream()
                 .filter(m -> !m.getEmployee().getId().equals(myId))
-                .forEach(m -> notificationService.send(
-                        m.getEmployee().getId(),
-                        NotificationType.MESSAGE,
-                        notificationContent,
-                        "CHAT_ROOM",
-                        roomId
-                ));
+                .forEach(m -> {
+                    System.out.println("알림 전송 대상: " + m.getEmployee().getId());
+                    notificationService.send(
+                            m.getEmployee().getId(),
+                            NotificationType.MESSAGE,
+                            notificationContent,
+                            "CHAT_ROOM",
+                            roomId
+                    );
+                });
 
         // 채팅방 구독자에게 실시간 메시지 전송 (WebSocket)
         MessageResponse response = MessageResponse.from(message);

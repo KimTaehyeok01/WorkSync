@@ -74,22 +74,6 @@ public class NotificationService {
         System.out.println("목록 갱신 완료 : " + myId);
     }
 
-    // 전체 읽음 처리
-//    @Transactional
-//    public void readAllNotifications(Long myId, String targetType, Long targetId) {
-//        notificationRepository.findByReceiverIdOrderByCreatedAtDesc(myId)
-//                .stream()
-//                        .filter(notification -> targetType.equals(notification.getTargetId()) && targetId.equals(notification.getTargetId()) )
-//
-//        // (webSocket) 실시간 전체 읽음 처리 - isRead = false 인 것만 카운트
-//        messagingTemplate.convertAndSendToUser(
-//                String.valueOf(myId),
-//                "/queue/notifications/unread-count",
-//                0L // 안읽음
-//        );
-//        System.out.println("전체 읽음 : " + myId);
-//    }
-
     // 알림 전송 (내부용 — 다른 서비스에서 호출)
     @Transactional
     public void send(Long receiverId, NotificationType type, String content,
