@@ -221,8 +221,13 @@ export function getPendingApproval(accessToken) {
 }
 
 // 잔여일 조회
-export async function getLeaveBalance(accessToken) {
-  return fetch(`${BASE_URL}/leave/balance`, {
+export async function getLeaveBalance(accessToken, employeeId) {
+  // employeeId가 있어야 본인외 잔여일 확인 가능
+  const url = employeeId
+    ? `${BASE_URL}/leave/balance?employeeId=${employeeId}`
+    : `${BASE_URL}/leave/balance`;
+
+  return fetch(url, {
     headers: { Authorization: `Bearer ${accessToken}` },
   })
     .then((res) => {
