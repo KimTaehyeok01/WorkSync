@@ -154,6 +154,7 @@ export function TopBar({ pathname }) {
 
     const client = new Client({
       webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
+      // brokerURL: "ws://localhost:8080/ws",
       reconnectDelay: 5000,
       connectHeaders: { Authorization: `Bearer ${accessToken}` },
 
@@ -172,6 +173,8 @@ export function TopBar({ pathname }) {
         // 알림 unread count 실시간 불러오기
         client.subscribe("/user/queue/notifications/unread-count", (frame) => {
           console.log("count 수신", frame.body);
+          const unreadCount = frame.body;
+          setUnreadCount(unreadCount || 0);
         });
       },
 
