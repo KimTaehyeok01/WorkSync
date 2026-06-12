@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -222,15 +223,33 @@ public class ChatService {
         // 나를 제외하고, 현재 채팅방에 입장하지 않은 멤버들에게만 알림 전송
         String notificationContent = sender.getName() + ": " + request.getContent();
         room.getMembers().stream()
-                .filter(m -> !m.getEmployee().getId().equals(myId))
                 .filter(m -> !m.isInRoom())
-                .forEach(m -> notificationService.send(
-                        m.getEmployee().getId(),
-                        NotificationType.MESSAGE,
-                        notificationContent,
-                        "CHAT_ROOM",
-                        roomId
-                ));
+                .filter(m -> !m.getEmployee().getId().equals(myId))
+                .forEach(m -> {
+                    // 채팅방 밖에 있는 멤버들에게 알림 전송
+                    notificationService.send(
+                            m.getEmployee().getId(),
+                            NotificationType.MESSAGE,
+                            notificationContent,
+                            "CHAT_ROOM",
+                            roomId
+                    );
+
+                    long unreadCount;
+                    if (m.getLastReadMessageId() == null) {
+                        unreadCount = messageRepository.countByRoomIdAndSenderIdNot(roomId, m.getEmployee().getId());
+                    } else {
+                        unreadCount = messageRepository.countByRoomIdAndIdGreaterThanAndSenderIdNot(roomId, m.getLastReadMessageId(), m.getEmployee().getId());
+                    }
+
+                    // 채팅방 ID와 안읽음 수 실시간 전송 (WebSocket)
+                    messagingTemplate.convertAndSendToUser(
+                            String.valueOf(m.getEmployee().getId()),
+                            "/queue/chat/unread",
+                            Map.of("roomId", roomId, "unreadCount", unreadCount)
+                    );
+                    System.out.println("unread 전송: " + m.getEmployee().getId() + " roomId: " + roomId + " unreadCount: " + unreadCount);
+                });
 
         // 채팅방 구독자에게 실시간 메시지 전송 (WebSocket)
         MessageResponse response = MessageResponse.from(message);
