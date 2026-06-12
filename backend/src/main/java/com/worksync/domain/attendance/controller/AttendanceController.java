@@ -54,6 +54,17 @@ public class AttendanceController {
             attendanceService.getMyAttendance(userDetails.getId(), year, month)));
   }
 
+  // 내 부서 근태 조회 — 대시보드: 로그인 사용자의 부서원 출퇴근 현황 (특정 날짜)
+  @GetMapping("/department")
+  public ResponseEntity<ApiResponse<List<AttendanceResponse>>> getMyDepartmentAttendance(
+          @AuthenticationPrincipal CustomUserDetails userDetails,
+          @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+          LocalDate date) {
+
+    return ResponseEntity.ok(ApiResponse.ok(
+            attendanceService.getMyDepartmentAttendance(userDetails.getId(), date)));
+  }
+
   // 단건 조회
   @GetMapping("/{id}")
   public ResponseEntity<ApiResponse<AttendanceResponse>> findById(

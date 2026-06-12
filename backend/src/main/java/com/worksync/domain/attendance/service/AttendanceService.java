@@ -4,10 +4,12 @@ import com.worksync.domain.attendance.dto.AttendanceResponse;
 import com.worksync.domain.attendance.entity.Attendance;
 import com.worksync.domain.attendance.entity.AttendanceStatus;
 import com.worksync.domain.attendance.repository.AttendanceRepository;
+import com.worksync.domain.department.entity.Department;
 import com.worksync.domain.employee.entity.Employee;
 import com.worksync.domain.employee.repository.EmployeeRepository;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
+import com.worksync.global.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -133,6 +135,23 @@ public class AttendanceService {
             .map(AttendanceResponse::from)
             .toList();
   }
+
+  // 내 부서 근태 조회 - 우리 부서원 출퇴근 현황
+  public List<AttendanceResponse> getMyDepartmentAttendance(Long employeeId, LocalDate date) {
+    Employee employee = employeeRepository.findById(employeeId)
+            .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
+
+    // 부서 미배정이면 빈 목록
+    if (employee.getDepartment() == null) {
+      return List.of();
+    }
+
+    return attendanceRepository.findByDepartmentAndWorkDate(employee.getDepartment().getId(), date)
+            .stream()
+            .map(AttendanceResponse::from)
+            .toList();
+  }
+
   // 단건 조회
   public AttendanceResponse findById(Long id) {
     Attendance attendance = attendanceRepository.findById(id)
