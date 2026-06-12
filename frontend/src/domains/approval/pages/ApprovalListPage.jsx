@@ -49,14 +49,6 @@ export default function Approval() {
   const status = searchParams.get("status") ?? "all";
   const [docs, setDocs] = useState([]);
 
-  useEffect(() => {
-    console.log("filtered.length:", filtered.length);
-    console.log(
-      "docs:",
-      docs.map((d) => ({ id: d.id, createdAt: d.createdAt })),
-    );
-  }, [docs]);
-
   // boxType of statusFilter 바뀔 때 마다 API 호출
   useEffect(() => {
     if (!accessToken) return;
@@ -84,15 +76,7 @@ export default function Approval() {
   });
 
   const perPage = 9;
-  const totalPages = Math.ceil(filtered.length / perPage);
-  const sortedDocs = [...filtered].sort(
-    (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-  );
-  const reversedPage = totalPages - page + 1;
-  const paginatedDocs = sortedDocs.slice(
-    (reversedPage - 1) * perPage,
-    reversedPage * perPage,
-  );
+  const paginatedDocs = filtered.slice((page - 1) * perPage, page * perPage);
   const boxLabel =
     BOX_OPTIONS.find((o) => o.key === boxType)?.label || "기안함";
   const statusLabel =

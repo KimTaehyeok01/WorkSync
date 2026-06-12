@@ -57,9 +57,12 @@ function LeaveDetail({ items, approval }) {
   const [balance, setBalance] = useState(null);
 
   useEffect(() => {
+    console.log("items:", JSON.stringify(items));
+  }, [items]);
+
+  useEffect(() => {
     if (!approval?.drafterId) return;
     getLeaveBalance(accessToken, approval.drafterId).then((data) => {
-      console.log("balance:", data);
       // 작성자 id를 넘겨서 작성자 잔여일 반환
       setBalance(data);
     });
