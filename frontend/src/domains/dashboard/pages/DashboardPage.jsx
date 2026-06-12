@@ -11,7 +11,7 @@ ArrowRight,
 Newspaper,
 CheckCircle2,
 } from "lucide-react";
-import { getDashboard, getPendingApprovals, getRecentPosts, getDepartmentAttendance } from "../services/dashboardApi";
+import { getDashboard, getPendingApprovals, getRecentPosts, getDepartmentAttendance, getMyPendingApprovals } from "../services/dashboardApi";
 import { getMyTaskList } from "../../task/services/taskApi";
 import { WSCard, WSStatCard, WSAvatar, WSButton } from "../../../components/common/CommonWidgets";
 import useAuthContext from "../../../store/AuthContext";
@@ -55,6 +55,7 @@ const { accessToken } = useAuthContext();
 const [loading,         setLoading]         = useState(true);
 const [dashboard,       setDashboard]       = useState(null);
 const [tasks,           setTasks]           = useState([]);
+const [myPendingDocs, setMyPendingDocs] = useState([]);
 const [pendingDocs,     setPendingDocs]     = useState([]);
 const [recentPosts,     setRecentPosts]     = useState([]);
 const [teamAttendance,  setTeamAttendance]  = useState([]);
@@ -70,18 +71,25 @@ const fetchDashboard = async () => {
     try {
     setLoading(true);
     const today = new Date().toISOString().split("T")[0];
-    const [dashboardRes, taskRes, approvalRes, postRes, attendanceRes] = await Promise.all([
+    const [dashboardRes, taskRes, approvalRes, postRes, attendanceRes, myDocsRes] = await Promise.all([
         getDashboard(accessToken),
         getMyTaskList(accessToken),
         getPendingApprovals(accessToken),
         getRecentPosts(accessToken),
         getDepartmentAttendance(accessToken, today),
-    ]);
-    setDashboard(dashboardRes ?? null);
-    setTasks(taskRes?.content ?? []);
-    setPendingDocs(approvalRes ?? []);
-    setRecentPosts(postRes ?? []);
-    setTeamAttendance(attendanceRes ?? []);
+        getMyPendingApprovals(accessToken),
+      ]);
+      setDashboard(dashboardRes ?? null);
+      setTasks(taskRes?.content ?? []);
+      setPendingDocs(approvalRes ?? []);
+      setRecentPosts(postRes ?? []);
+      setTeamAttendance(attendanceRes ?? []);
+      
+      const combined = [...(approvalRes ?? []), ...(myDocsRes ?? [])];
+      const unique = combined.filter((item, index, self) =>
+        self.findIndex((i) => i.id === item.id) === index
+      );
+      setMyPendingDocs(unique);
     } catch (error) {
     console.error("Dashboard API Error", error);
     } finally {
@@ -111,6 +119,7 @@ const sprintMonth = new Date().toLocaleDateString("ko-KR", {
 if (loading || !dashboard) {
     return <div className={s.root}>로딩 중...</div>;
 }
+const presentMembers = teamAttendance.filter(a => a.status !== "ABSENT");
 
 return (
     <div className={s.root}>
@@ -120,7 +129,7 @@ return (
         <div>
         <h2 className={s.bannerTitle}>안녕하세요 👋</h2>
         <p className={s.bannerSub}>
-            오늘 <strong>결재 대기 {dashboard.pendingApprovalCount}건</strong>과{" "}
+        오늘 <strong>결재 대기 {myPendingDocs.length}건</strong>과{" "}
             <strong>새 알림 {dashboard.unreadNotificationCount}건</strong>이 있습니다.
         </p>
         </div>
@@ -139,13 +148,13 @@ return (
     <div className={s.statsGrid}>
         <WSStatCard
         label="결재 대기"
-        value={String(dashboard.pendingApprovalCount)}
+        value={String(myPendingDocs.length)}
         icon={<ClipboardCheck size={22} />}
         color="#F59E0B"
         />
         <WSStatCard
         label="오늘 팀원 출근"
-        value={String(teamAttendance.length)}
+        value={`${presentMembers.length}/${teamAttendance.length}`}
         icon={<Users size={22} />}
         color="#8B5CF6"
         />
@@ -202,7 +211,7 @@ return (
                 return (
                     <div
                     key={post.id}
-                    onClick={() => navigate("/board")}
+                    onClick={() => navigate(`/board/${post.boardId}/${post.id}`)}
                     className={s.postItem}
                     >
                     <div className={s.postBody}>
@@ -295,77 +304,75 @@ return (
 
         {/* ─ 나의 팀 현황 ─ */}
         <WSCard title="나의 팀 현황" subtitle={`오늘, ${todayShort}`}>
-            {teamAttendance.length === 0 ? (
-            <div className={s.emptyBlock}>
-                <div className={`${s.emptyIconWrap} ${s.emptyIconWrapPosts}`}>
-                <Users size={24} className={s.emptyIconPosts} />
-                </div>
-                <p className={s.emptyTitle}>팀원 정보가 없습니다</p>
-                <p className={s.emptySub}>오늘 출근 기록이 있는 팀원이 없습니다.</p>
-            </div>
-            ) : (
-            <div className={s.attendList}>
-                {teamAttendance.map((a) => (
-                <div key={a.employeeId} className={s.attendRow}>
-                    <WSAvatar
-                    name={a.employeeName}
-                    src={a.profileImage}
-                    size={28}
-                    />
-                    <span className={s.attendName}>{a.employeeName}</span>
-                    <span
-                    className={`${s.attendBadge} ${
-                        a.status === "ABSENT" ? s.attendAbsent : s.attendPresent
-                    }`}
-                    >
-                    {formatTime(a.checkInTime) ?? "결근"}
-                    </span>
-                </div>
-                ))}
-            </div>
-            )}
-        </WSCard>
+  {teamAttendance.length === 0 ? (
+    <div className={s.emptyBlock}>
+      <div className={`${s.emptyIconWrap} ${s.emptyIconWrapPosts}`}>
+        <Users size={24} className={s.emptyIconPosts} />
+      </div>
+      <p className={s.emptyTitle}>팀원 정보가 없습니다</p>
+      <p className={s.emptySub}>오늘 출근 기록이 있는 팀원이 없습니다.</p>
+    </div>
+  ) : (
+    <div className={s.attendList}>
+      {teamAttendance.map((a) => (
+        <div key={a.employeeId} className={s.attendRow}>
+          <WSAvatar
+            src={a.profileImage}
+            name={a.employeeName}
+            size={28}
+          />
+          <span className={s.attendName}>{a.employeeName}</span>
+          <span className={`${s.attendBadge} ${a.status === "ABSENT" ? s.attendAbsent : s.attendPresent}`}>
+            {formatTime(a.checkInTime) ?? "결근"}
+          </span>
+        </div>
+      ))}
+    </div>
+  )}
+</WSCard>
 
         {/* ─ 최근 업무 ─ */}
-        <WSCard title="최근 업무" subtitle={`현재 스프린트 — ${sprintMonth}`}>
-            {tasks.length === 0 ? (
-            <div className={s.emptyBlock}>
-                <div className={`${s.emptyIconWrap} ${s.emptyIconWrapPosts}`}>
-                <CheckSquare size={24} className={s.emptyIconPosts} />
-                </div>
-                <p className={s.emptyTitle}>배정된 업무가 없습니다</p>
-                <p className={s.emptySub}>새 업무가 배정되면 여기에 표시됩니다.</p>
-            </div>
-            ) : (
-            <div className={s.approvalList}>
-                {tasks.slice(0, 5).map((task) => {
-                const statusColor =
-                    TASK_STATUS_COLOR[task.status] ?? TASK_STATUS_COLOR.TODO;
-                return (
-                    <div key={task.id} className={s.approvalItem}>
-                    <div className={s.approvalBody} style={{ marginTop: 0 }}>
-                        <p className={s.approvalTitle}>{task.title}</p>
-                        <p className={s.approvalMeta}>
-                        <span
-                            style={{
-                            background: statusColor.bg,
-                            color: statusColor.text,
-                            padding: "2px 8px",
-                            borderRadius: 999,
-                            fontSize: 10.5,
-                            fontWeight: 600,
-                            }}
-                        >
-                            {TASK_STATUS_LABEL[task.status] ?? task.status}
-                        </span>
-                        </p>
-                    </div>
-                    </div>
-                );
-                })}
-            </div>
-            )}
-        </WSCard>
+        <WSCard title="업무 진행률" subtitle={`현재 스프린트 — ${sprintMonth}`}>
+  <div className={s.approvalList}>
+
+    <div className={s.approvalItem}>
+      <div className={s.approvalBody} style={{ width: "100%" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+          <span style={{ fontSize: 13, color: "#6B7280" }}>준비중</span>
+          <span style={{ fontSize: 13, fontWeight: 600 }}>{dashboard.todoTaskCount}</span>
+        </div>
+        <div style={{ background: "#e5e7eb", borderRadius: 999, height: 6 }}>
+          <div style={{ width: `${(dashboard.todoTaskCount / (dashboard.todoTaskCount + dashboard.inProgressTaskCount + dashboard.doneTaskCount)) * 100}%`, background: "#6B7280", borderRadius: 999, height: 6 }} />
+        </div>
+      </div>
+    </div>
+
+    <div className={s.approvalItem}>
+      <div className={s.approvalBody} style={{ width: "100%" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+          <span style={{ fontSize: 13, color: "#1A73E8" }}>진행중</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: "#1A73E8" }}>{dashboard.inProgressTaskCount}</span>
+        </div>
+        <div style={{ background: "#e5e7eb", borderRadius: 999, height: 6 }}>
+          <div style={{ width: `${(dashboard.inProgressTaskCount / (dashboard.todoTaskCount + dashboard.inProgressTaskCount + dashboard.doneTaskCount)) * 100}%`, background: "#1A73E8", borderRadius: 999, height: 6 }} />
+        </div>
+      </div>
+    </div>
+
+    <div className={s.approvalItem}>
+      <div className={s.approvalBody} style={{ width: "100%" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+          <span style={{ fontSize: 13, color: "#059669" }}>완료</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: "#059669" }}>{dashboard.doneTaskCount}</span>
+        </div>
+        <div style={{ background: "#e5e7eb", borderRadius: 999, height: 6 }}>
+          <div style={{ width: `${(dashboard.doneTaskCount / (dashboard.todoTaskCount + dashboard.inProgressTaskCount + dashboard.doneTaskCount)) * 100}%`, background: "#059669", borderRadius: 999, height: 6 }} />
+        </div>
+      </div>
+    </div>
+
+  </div>
+</WSCard>
         </div>
     </div>
     </div>

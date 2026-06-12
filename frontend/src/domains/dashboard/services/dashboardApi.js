@@ -102,3 +102,15 @@ export async function getDepartmentAttendance(accessToken, date) {
       return [];
     });
 }
+export async function getMyPendingApprovals(accessToken) {
+  return await fetch(`${BASE_URL}/approvals/my?status=IN_PROGRESS`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((json) => json.data ?? [])
+    .catch(() => []);
+}
