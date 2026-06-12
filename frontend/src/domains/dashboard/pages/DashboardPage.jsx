@@ -309,7 +309,7 @@ return (
                 <div key={a.employeeId} className={s.attendRow}>
                     <WSAvatar
                     name={a.employeeName}
-                    image={a.profileImage}
+                    src={a.profileImage}
                     size={28}
                     />
                     <span className={s.attendName}>{a.employeeName}</span>
