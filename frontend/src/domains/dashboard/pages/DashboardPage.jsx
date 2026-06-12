@@ -72,7 +72,7 @@ const fetchDashboard = async () => {
     try {
     setLoading(true);
     const today = new Date().toISOString().split("T")[0];
-    const [dashboardRes, taskRes, approvalRes, postRes, attendanceRes, myDocsRes] = await Promise.all([
+    const [dashboardRes, taskRes, approvalRes, postRes, attendanceRes, myDocsRes, unreadMsgRes] = await Promise.all([
         getDashboard(accessToken),
         getMyTaskList(accessToken),
         getPendingApprovals(accessToken),
