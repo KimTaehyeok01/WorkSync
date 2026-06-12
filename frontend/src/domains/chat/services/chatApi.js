@@ -151,3 +151,29 @@ export async function getMyInfo(accessToken) {
       console.log("에러발생: " + error);
     });
 }
+
+// 채팅방 입장
+export async function enterRoom(accessToken, roomId) {
+  return await fetch(`${BASE_URL}/chat/rooms/${roomId}/enter`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  }).catch((error) => {
+    console.log("에러발생: " + error);
+  });
+}
+
+// 채팅방 퇴장
+export async function leaveRoom(accessToken, roomId) {
+  return await fetch(`${BASE_URL}/chat/rooms/${roomId}/leave`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  }).catch((error) => {
+    console.log("에러발생: " + error);
+  });
+}
