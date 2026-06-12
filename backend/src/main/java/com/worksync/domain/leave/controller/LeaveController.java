@@ -32,8 +32,12 @@ public class LeaveController {
     //연차 잔여 조회
     @GetMapping("/balance")
     public ResponseEntity<ApiResponse<LeaveBalanceResponse>> getBalance(
-            @AuthenticationPrincipal CustomUserDetails userDetails){
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(required = false) Long employeeId) { 
 
-        return ResponseEntity.ok(ApiResponse.ok(leaveService.getBalance(userDetails.getId())));
+        // employeeId가 있으면 그 사람 잔여일, 없으면 본인 잔여일
+        Long targetId = (employeeId != null) ? employeeId : userDetails.getId();
+
+        return ResponseEntity.ok(ApiResponse.ok(leaveService.getBalance(targetId)));
     }
 }

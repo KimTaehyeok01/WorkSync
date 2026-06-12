@@ -37,6 +37,16 @@ public class AnnualLeaveBalance {
     @Builder.Default
     private BigDecimal usedDays = BigDecimal.ZERO;
 
+    @Column(name = "pending_days", nullable = false, precision = 4, scale = 1)
+    @Builder.Default
+    private BigDecimal pendingDays = BigDecimal.ZERO;
+
+    // JPA가 자동으로 동시 저장 충돌 감지
+    // OptimisticLockingFailureException 발생하고 트랜잭션이 롤백
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
@@ -46,6 +56,12 @@ public class AnnualLeaveBalance {
     }
 
     public BigDecimal getRemainingDays(){
-        return this.totalDays.subtract(this.usedDays);
+        return this.totalDays.subtract(this.usedDays).subtract(this.pendingDays);
+    }
+    public void addPendingDays(BigDecimal days) {
+        this.pendingDays = this.pendingDays.add(days);
+    }
+    public void subtractPendingDays(BigDecimal days){
+        this.pendingDays = this.pendingDays.subtract(days);
     }
 }
