@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
 import {
 MessageCircle,
 CalendarDays,
@@ -67,6 +69,24 @@ useEffect(() => {
     if (!accessToken) return;
     fetchDashboard();
 }, [accessToken]);
+useEffect(() => {
+    if (!accessToken) return;
+  
+    const client = new Client({
+      webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
+      reconnectDelay: 5000,
+      connectHeaders: { Authorization: `Bearer ${accessToken}` },
+      onConnect: () => {
+        client.subscribe(`/user/queue/chat/unread`, (frame) => {
+          const { unreadCount } = JSON.parse(frame.body);
+          setUnreadMessages((prev) => prev + unreadCount);
+        });
+      },
+    });
+  
+    client.activate();
+    return () => client.deactivate();
+  }, [accessToken]);
 
 const fetchDashboard = async () => {
     try {
