@@ -50,12 +50,14 @@ CREATE TABLE employee (
 
 -- ── 3. annual_leave_balance (연차 잔여) ──────────────────────
 CREATE TABLE annual_leave_balance (
-    id          BIGSERIAL    PRIMARY KEY,
-    employee_id BIGINT       NOT NULL REFERENCES employee(id) ON DELETE CASCADE,
-    year        SMALLINT     NOT NULL,
-    total_days  NUMERIC(4,1) NOT NULL DEFAULT 0,
-    used_days   NUMERIC(4,1) NOT NULL DEFAULT 0,
-    updated_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
+    id           BIGSERIAL    PRIMARY KEY,
+    employee_id  BIGINT       NOT NULL REFERENCES employee(id) ON DELETE CASCADE,
+    year         SMALLINT     NOT NULL,
+    total_days   NUMERIC(4,1) NOT NULL DEFAULT 0,
+    used_days    NUMERIC(4,1) NOT NULL DEFAULT 0,
+    pending_days NUMERIC(3,1) NOT NULL DEFAULT 0,
+    version      BIGINT       NOT NULL DEFAULT 0,
+    updated_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
     UNIQUE (employee_id, year)
 );
 
