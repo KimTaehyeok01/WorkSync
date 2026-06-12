@@ -18,6 +18,8 @@ import {
   getMessages,
   sendMessage,
   readMessage,
+  enterRoom,
+  leaveRoom,
 } from "../services/chatApi";
 import { getMyInfo } from "../../../components/service/TopBarApi";
 import {
@@ -46,30 +48,6 @@ export default function Messenger() {
   const [chatMessages, setChatMessages] = useState([]);
   const [my, setMy] = useState([]);
   const bottomRef = useRef(null);
-
-  // 새 메신저 아래로 스트롤 이동
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatMessages]);
-
-  // // 채팅방 입장해 있을 때, 새 메시지가 오면 바로 읽음 처리
-  // useEffect(() => {
-  //   if (!targetId || targetId === 0) return;
-  //   if (String(targetId) !== String(activeConvId)) return;
-
-  //   if (targetId === activeConvId) {
-
-  //   }
-  // }, [targetId, activeConvId]);
-
-  // 멤버 데이터 불러오기
-  useEffect(() => {
-    if (!accessToken || !activeConvId) return;
-
-    getMember(accessToken, activeConvId).then((data) => {
-      setTeamMember(Array.isArray(data.data) ? data.data : []);
-    });
-  }, [activeConvId]);
 
   // 구성원 상태 실시간 구독 — 누군가 온라인/자리비움 변경 시 점 즉시 갱신
   useEffect(() => {
@@ -103,11 +81,10 @@ export default function Messenger() {
       webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
       reconnectDelay: 5000,
       connectHeaders: { Authorization: `Bearer ${accessToken}` },
+
       onConnect: () => {
         client.subscribe(`/topic/room/${activeConvId}`, (frame) => {
           const msg = JSON.parse(frame.body);
-          console.log(msg);
-
           setChatMessages((prev) => {
             const exists = prev.some((m) => m.id === msg.id);
             // 이미 있는 메시지면 무시 (중복 방지)
@@ -134,6 +111,59 @@ export default function Messenger() {
     client.activate();
     return () => client.deactivate();
   }, [activeConvId, my]);
+
+  // 실시간 대화 안읽음 뱃지
+  useEffect(() => {
+    if (!accessToken) return;
+
+    const client = new Client({
+      webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
+      reconnectDelay: 5000,
+      connectHeaders: { Authorization: `Bearer ${accessToken}` },
+
+      debug: (str) => {
+        console.log("STOMP:", str);
+      },
+
+      onConnect: () => {
+        console.log("연결");
+
+        client.subscribe(`/user/queue/chat/unread`, (frame) => {
+          const { roomId, unreadCount } = JSON.parse(frame.body);
+          setConversation((prev) =>
+            prev.map((conv) =>
+              conv.id === roomId ? { ...conv, unreadCount: unreadCount } : conv,
+            ),
+          );
+        });
+      },
+    });
+
+    client.activate();
+    return () => client.deactivate();
+  }, [accessToken]);
+
+  // 새 메신저 아래로 스트롤 이동
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages]);
+
+  // 내 데이터 불러오기
+  useEffect(() => {
+    if (!accessToken) return;
+    getMyInfo(accessToken).then((data) => {
+      setMy(data.data || {});
+    });
+  }, [accessToken]);
+
+  // 멤버 데이터 불러오기
+  useEffect(() => {
+    if (!accessToken || !activeConvId) return;
+
+    getMember(accessToken, activeConvId).then((data) => {
+      setTeamMember(Array.isArray(data.data) ? data.data : []);
+    });
+  }, [activeConvId]);
   const TEAM_MEMBERS = Array.isArray(teamMember)
     ? teamMember.map((member) => ({
         employeeId: member.employeeId,
@@ -144,20 +174,13 @@ export default function Messenger() {
       }))
     : [];
 
-  // 내 데이터 불러오기
-  useEffect(() => {
-    if (!accessToken) return;
-    getMyInfo(accessToken).then((data) => {
-      setMy(data.data || {});
-    });
-  }, [accessToken]);
-
   // 대화 데이터 불러오기
   useEffect(() => {
     if (!accessToken) return;
     getChatRoom(accessToken).then((data) => {
       setConversation(Array.isArray(data.data) ? data.data : []);
       setActiveConvId(data.data[0].id);
+      setUnread(data.data.unreadCount);
     });
   }, [accessToken, showNewConvModal]);
   const CONVERSATIONS = conversation.map((conv) => ({
@@ -205,10 +228,25 @@ export default function Messenger() {
     });
   }, [accessToken, activeConvId, my]);
 
+  // 채팅방 입/퇴장 처리
+  useEffect(() => {
+    if (!accessToken || !activeConvId) return;
+    enterRoom(accessToken, activeConvId);
+    return () => {
+      leaveRoom(accessToken, activeConvId);
+    };
+  }, [accessToken, activeConvId]);
+
   // 대화 리스트 클릭 시
   function handleConvClick(conv) {
     setActiveConvId(conv.id);
-    setUnread(conv.unreadCount);
+    setUnread(0);
+
+    if (!accessToken) return;
+    putNotifications(accessToken, {
+      targetType: "CHAT_ROOM",
+      targetId: conv.id,
+    });
   }
 
   // 기존 MESSAGES 더미 + 이후 전송한 텍스트/파일 메시지 통합 관리

@@ -1,4 +1,8 @@
+import { useState, useRef, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client/dist/sockjs";
+import useAuthContext from "../../store/AuthContext";
 import {
   LayoutDashboard,
   CheckSquare,
@@ -12,8 +16,9 @@ import {
   LogIn,
   Activity,
 } from "lucide-react";
-import { TEAM_MEMBERS } from "../../constants/mockData";
+import { getNotifications } from "../../domains/notification/services/notificationApi";
 import styles from "./Sidebar.module.css";
+import { log } from "sockjs-client/dist/sockjs";
 
 const MAIN_NAV = [
   { path: "/", label: "대시보드", icon: LayoutDashboard, id: "ws-dash" },
@@ -22,31 +27,102 @@ const MAIN_NAV = [
     label: "전자결재",
     icon: FileCheck,
     id: "ws-apv",
-    badge: 3,
+    type: "APPROVAL",
   },
-  { path: "/tasks", label: "업무", icon: CheckSquare, id: "ws-task" },
+  {
+    path: "/tasks",
+    label: "업무",
+    icon: CheckSquare,
+    id: "ws-task",
+    type: "TASK",
+  },
   {
     path: "/messenger",
     label: "메신저",
     icon: MessageSquare,
     id: "ws-msg",
-    badge: 5,
+    type: "MESSAGE",
   },
-  { path: "/organization", label: "조직도", icon: Users, id: "ws-org" },
-  { path: "/board", label: "게시판", icon: LayoutList, id: "ws-board" },
+  {
+    path: "/organization",
+    label: "조직도",
+    icon: Users,
+    id: "ws-org",
+    type: "ORGANIZATION",
+  },
+  {
+    path: "/board",
+    label: "게시판",
+    icon: LayoutList,
+    id: "ws-board",
+    type: "BOARD",
+  },
 ];
 
 const BOTTOM_NAV = [{ path: "/audit-log", label: "감사 로그", icon: Activity }];
 
-const me = TEAM_MEMBERS[3];
-
 export function Sidebar() {
   const location = useLocation();
+  const { accessToken } = useAuthContext();
+  const [unreadBadge, setUnreadBadge] = useState({});
+  const clientRef = useRef(null);
 
   const isMainActive = (path) =>
     path === "/"
       ? location.pathname === "/"
       : location.pathname === path || location.pathname.startsWith(path + "/");
+
+  // WebSocket 실시간 알림 갱신
+  useEffect(() => {
+    if (!accessToken) return;
+    if (clientRef.current?.active) return; // 이미 연결되어 있으면 skip
+    if (clientRef.current) {
+      clientRef.current.deactivate(); // 이전 연결 해제
+    }
+
+    const client = new Client({
+      webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
+      reconnectDelay: 5000,
+      connectHeaders: { Authorization: `Bearer ${accessToken}` },
+      onConnect: () => {
+        // 실시간 알림 목록으로 안읽음 갯수 카운트
+        client.subscribe("/user/queue/notifications", (frame) => {
+          const notifList = JSON.parse(frame.body);
+          const list = Array.isArray(notifList) ? notifList : [];
+          const listUnread = list.filter((item) => item.isRead === false);
+          const groupCount = listUnread.reduce((acc, item) => {
+            acc[item.type] = (acc[item.type] || 0) + 1;
+            return acc;
+          }, {});
+
+          setUnreadBadge(groupCount ? groupCount : 0);
+        });
+      },
+      onStompError: (frame) => {
+        console.error("STOMP ERROR", frame);
+      },
+      onWebSocketError: (event) => {
+        console.error("WS ERROR", event);
+      },
+    });
+    clientRef.current = client;
+    client.activate();
+    return () => client.deactivate();
+  }, [accessToken]);
+
+  // 알림 목록 전자결재/업무/메신저 별 안읽음 개수
+  useEffect(() => {
+    getNotifications(accessToken).then((data) => {
+      const list = Array.isArray(data) ? data : [];
+      const listUnread = list.filter((item) => item.isRead === false);
+      const groupCount = listUnread.reduce((acc, item) => {
+        acc[item.type] = (acc[item.type] || 0) + 1;
+        return acc;
+      }, {});
+
+      setUnreadBadge(groupCount ? groupCount : 0);
+    });
+  }, [accessToken]);
 
   return (
     <aside className={styles.aside}>
@@ -66,6 +142,7 @@ export function Sidebar() {
           {MAIN_NAV.map((item) => {
             const active = isMainActive(item.path);
             const Icon = item.icon;
+
             return (
               <NavLink
                 key={item.id}
@@ -77,10 +154,10 @@ export function Sidebar() {
               >
                 <Icon size={18} className={styles.navIcon} />
                 <span className={styles.navLabel}>{item.label}</span>
-                {item.badge && (
-                  <span className={styles.badge}>{item.badge}</span>
+                {item.type && unreadBadge[item.type] > 0 && (
+                  <span className={styles.badge}>{unreadBadge[item.type]}</span>
                 )}
-                {active && !item.badge && (
+                {active && !(item.type && unreadBadge[item.type] > 0) && (
                   <ChevronRight size={14} className={styles.chevron} />
                 )}
               </NavLink>
@@ -108,24 +185,6 @@ export function Sidebar() {
           })}
         </div>
       </nav>
-
-      <div className={styles.footer}>
-        <NavLink to="/login" className={styles.loginShortcut}>
-          <LogIn size={15} />
-          <span>로그인 화면 미리보기</span>
-        </NavLink>
-        {/* <div className={styles.profile}>
-          <div className={styles.avatarWrap}>
-            <img src={me.avatar} alt={me.name} className={styles.avatar} />
-            <span className={styles.status} />
-          </div>
-          <div className={styles.profileMeta}>
-            <div className={styles.profileName}>{me.name}</div>
-            <div className={styles.profileRole}>{me.role}</div>
-          </div>
-          <Settings size={14} className={styles.profileIcon} />
-        </div> */}
-      </div>
     </aside>
   );
 }
