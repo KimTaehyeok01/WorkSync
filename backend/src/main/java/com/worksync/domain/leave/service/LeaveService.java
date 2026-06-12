@@ -179,6 +179,7 @@ public class LeaveService {
         }
 
         balance.useLeave(leaveRequest.getDaysCount());
+        balance.subtractPendingDays(leaveRequest.getDaysCount()); // pendingDays 감소 추가
         leaveRequest.approve();
     }
 
@@ -198,7 +199,16 @@ public class LeaveService {
             return;
         }
 
+        // balance 조회 추가
+        short year = (short) leaveRequest.getStartDate().getYear();
+        AnnualLeaveBalance balance = annualLeaveBalanceRepository
+                .findByEmployeeIdAndYear(leaveRequest.getEmployee().getId(), year)
+                        .orElseThrow(() -> new CustomException(ErrorCode.LEAVE_BALANCE_NOT_FOUND));
+
         // 신청 시점에 차감하지 않았으므로 연차 복원은 불필요 — 상태만 REJECTED로 변경
         leaveRequest.reject();
+        balance.subtractPendingDays(leaveRequest.getDaysCount());
+        annualLeaveBalanceRepository.save(balance);
+
     }
 }

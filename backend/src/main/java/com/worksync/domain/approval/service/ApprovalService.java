@@ -158,6 +158,9 @@ public class ApprovalService {
                     .reason(items.get("reason"))
                     .build();
             leaveRequestRepository.save(leaveRequest);
+
+            balance.addPendingDays(daysCount);
+            annualLeaveBalanceRepository.save(balance);
         }
 
 
