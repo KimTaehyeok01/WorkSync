@@ -1,6 +1,7 @@
 package com.worksync.domain.attendance.repository;
 
 import com.worksync.domain.attendance.entity.Attendance;
+import com.worksync.domain.employee.entity.Employee;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,7 +21,11 @@ public interface AttendanceRepository extends JpaRepository<Attendance,Long> {
   // 전체 근태 목록 - ADMIN용
   List<Attendance> findByWorkDate(LocalDate workDate);
 
-  // 특정 부서 직원들의 특정 날짜 근태 목록 (대시보드 - 우리 부서 출퇴근 현황)
+  // 특정 부서 직원들의 특정 날짜 출근 기록 (출근/지각한 사람만)
   @Query("SELECT a FROM Attendance a WHERE a.employee.department.id = :deptId AND a.workDate = :date")
   List<Attendance> findByDepartmentAndWorkDate(@Param("deptId") Long deptId, @Param("date") LocalDate date);
+
+  // 특정 부서의 전체 직원 목록 (결근 직원 포함)
+  @Query("SELECT e FROM Employee e WHERE e.department.id = :deptId ORDER BY e.id")
+  List<Employee> findEmployeesByDepartment(@Param("deptId") Long deptId);
 }

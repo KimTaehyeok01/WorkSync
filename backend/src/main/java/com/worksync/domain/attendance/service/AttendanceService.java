@@ -1,6 +1,7 @@
 package com.worksync.domain.attendance.service;
 
 import com.worksync.domain.attendance.dto.AttendanceResponse;
+import com.worksync.domain.attendance.dto.DepartmentAttendanceResponse;
 import com.worksync.domain.attendance.entity.Attendance;
 import com.worksync.domain.attendance.entity.AttendanceStatus;
 import com.worksync.domain.attendance.repository.AttendanceRepository;
@@ -17,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -136,19 +139,29 @@ public class AttendanceService {
             .toList();
   }
 
-  // 내 부서 근태 조회 - 우리 부서원 출퇴근 현황
-  public List<AttendanceResponse> getMyDepartmentAttendance(Long employeeId, LocalDate date) {
-    Employee employee = employeeRepository.findById(employeeId)
+  // 내 부서 오늘 팀 현황 — 부서원 전체 + 직원별 출근/지각/결근 (대시보드)
+  public List<DepartmentAttendanceResponse> getMyDepartmentStatus(Long employeeId, LocalDate date) {
+    Employee me = employeeRepository.findById(employeeId)
             .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
 
     // 부서 미배정이면 빈 목록
-    if (employee.getDepartment() == null) {
+    if (me.getDepartment() == null) {
       return List.of();
     }
+    Long deptId = me.getDepartment().getId();
 
-    return attendanceRepository.findByDepartmentAndWorkDate(employee.getDepartment().getId(), date)
-            .stream()
-            .map(AttendanceResponse::from)
+    // 부서원 전체 목록
+    List<Employee> members = attendanceRepository.findEmployeesByDepartment(deptId);
+
+    // 해당 날짜 출근 기록을 employeeId 기준으로 매핑 (출근/지각한 사람만 존재)
+    Map<Long, Attendance> attendanceByEmployee =
+            attendanceRepository.findByDepartmentAndWorkDate(deptId, date)
+                    .stream()
+                    .collect(Collectors.toMap(a -> a.getEmployee().getId(), a -> a));
+
+    // 부서원별로 출근 기록 매칭 — 기록 없으면 결근(ABSENT)으로 표시
+    return members.stream()
+            .map(e -> DepartmentAttendanceResponse.of(e, attendanceByEmployee.get(e.getId())))
             .toList();
   }
 

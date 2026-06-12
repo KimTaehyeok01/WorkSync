@@ -1,6 +1,7 @@
 package com.worksync.domain.attendance.controller;
 
 import com.worksync.domain.attendance.dto.AttendanceResponse;
+import com.worksync.domain.attendance.dto.DepartmentAttendanceResponse;
 import com.worksync.domain.attendance.service.AttendanceService;
 import com.worksync.global.response.ApiResponse;
 import com.worksync.global.security.CustomUserDetails;
@@ -54,15 +55,15 @@ public class AttendanceController {
             attendanceService.getMyAttendance(userDetails.getId(), year, month)));
   }
 
-  // 내 부서 근태 조회 — 대시보드: 로그인 사용자의 부서원 출퇴근 현황 (특정 날짜)
+  // 내 부서 오늘 팀 현황 — 대시보드: 부서원 전체 + 각자 출근/지각/결근
   @GetMapping("/department")
-  public ResponseEntity<ApiResponse<List<AttendanceResponse>>> getMyDepartmentAttendance(
+  public ResponseEntity<ApiResponse<List<DepartmentAttendanceResponse>>> getMyDepartmentStatus(
           @AuthenticationPrincipal CustomUserDetails userDetails,
           @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
           LocalDate date) {
 
     return ResponseEntity.ok(ApiResponse.ok(
-            attendanceService.getMyDepartmentAttendance(userDetails.getId(), date)));
+            attendanceService.getMyDepartmentStatus(userDetails.getId(), date)));
   }
 
   // 단건 조회
