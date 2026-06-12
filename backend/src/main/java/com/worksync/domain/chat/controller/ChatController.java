@@ -39,7 +39,7 @@ public class ChatController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    // GET /api/chat/rooms/{roomId}/messages — 메시지 목록 (커서 기반 스크롤)
+    // GET /api/chat/rooms/{roomId}/messages — 메시지 목록
     @GetMapping("/rooms/{roomId}/messages")
     public ResponseEntity<ApiResponse<List<MessageResponse>>> getMessages(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -70,6 +70,26 @@ public class ChatController {
             @PathVariable Long roomId) {
 
         chatService.readMessages(roomId, userDetails.getId());
+        return ResponseEntity.ok(ApiResponse.ok(null));
+    }
+
+    // PUT /api/chat/rooms/{roomId}/enter — 채팅방 입장
+    @PutMapping("/rooms/{roomId}/enter")
+    public ResponseEntity<ApiResponse<Void>> enterRoom(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long roomId) {
+
+        chatService.enterRoom(roomId, userDetails.getId());
+        return ResponseEntity.ok(ApiResponse.ok(null));
+    }
+
+    // PUT /api/chat/rooms/{roomId}/leave — 채팅방 퇴장
+    @PutMapping("/rooms/{roomId}/leave")
+    public ResponseEntity<ApiResponse<Void>> leaveRoom(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long roomId) {
+
+        chatService.leaveRoom(roomId, userDetails.getId());
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 

@@ -219,20 +219,18 @@ public class ChatService {
         messageRepository.save(message);
         room.updateLastMessageAt(LocalDateTime.now());
 
-        // 나를 제외한 채팅방 멤버들에게 알림 전송
+        // 나를 제외하고, 현재 채팅방에 입장하지 않은 멤버들에게만 알림 전송
         String notificationContent = sender.getName() + ": " + request.getContent();
         room.getMembers().stream()
                 .filter(m -> !m.getEmployee().getId().equals(myId))
-                .forEach(m -> {
-                    System.out.println("알림 전송 대상: " + m.getEmployee().getId());
-                    notificationService.send(
-                            m.getEmployee().getId(),
-                            NotificationType.MESSAGE,
-                            notificationContent,
-                            "CHAT_ROOM",
-                            roomId
-                    );
-                });
+                .filter(m -> !m.isInRoom())
+                .forEach(m -> notificationService.send(
+                        m.getEmployee().getId(),
+                        NotificationType.MESSAGE,
+                        notificationContent,
+                        "CHAT_ROOM",
+                        roomId
+                ));
 
         // 채팅방 구독자에게 실시간 메시지 전송 (WebSocket)
         MessageResponse response = MessageResponse.from(message);
@@ -259,6 +257,36 @@ public class ChatService {
         // 일 그만 시켜...ㅠㅠ
         messageRepository.findTopByRoomIdOrderByIdDesc(roomId)
                 .ifPresent(latest -> myMember.updateLastRead(latest.getId()));
+    }
+
+    // 채팅방 입장
+    @Transactional
+    public void enterRoom(Long roomId, Long myId) {
+
+        if (!chatRoomRepository.existsById(roomId)) {
+            throw new CustomException(ErrorCode.CHAT_ROOM_NOT_FOUND);
+        }
+
+        ChatMember myMember = chatMemberRepository
+                .findByRoomIdAndEmployeeId(roomId, myId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_CHAT_MEMBER));
+
+        myMember.enterRoom();
+    }
+
+    // 채팅방 퇴장
+    @Transactional
+    public void leaveRoom(Long roomId, Long myId) {
+
+        if (!chatRoomRepository.existsById(roomId)) {
+            throw new CustomException(ErrorCode.CHAT_ROOM_NOT_FOUND);
+        }
+
+        ChatMember myMember = chatMemberRepository
+                .findByRoomIdAndEmployeeId(roomId, myId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_CHAT_MEMBER));
+
+        myMember.leaveRoom();
     }
 
     // 구성원 목록

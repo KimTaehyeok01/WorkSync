@@ -32,11 +32,23 @@ public class ChatMember {
     @Column(name = "last_read_message_id")
     private Long lastReadMessageId;
 
+    @Column(name = "in_room", nullable = false)
+    @Builder.Default
+    private boolean inRoom = false;
+
     @CreatedDate
     @Column(name = "joined_at", nullable = false, updatable = false)
     private LocalDateTime joinedAt;
 
     public void updateLastRead(Long messageId) {
         this.lastReadMessageId = messageId;
+    }
+
+    public void enterRoom() {
+        this.inRoom = true;
+    }
+
+    public void leaveRoom() {
+        this.inRoom = false;
     }
 }
