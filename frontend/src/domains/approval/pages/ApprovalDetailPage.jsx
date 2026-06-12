@@ -124,11 +124,16 @@ function LeaveDetail({ items, approval }) {
               <td>{LEAVE_TYPE[items.leaveType] ?? "-"}</td>
               <th>잔여일</th>
               <td>
-                {approval?.items?.remainingDays
-                  ? `${approval.items.remainingDays}일`
-                  : balance
+                {approval?.status === "REJECTED" ||
+                approval?.status === "APPROVED"
+                  ? balance
                     ? `${balance.remainingDays}일`
-                    : "0일"}
+                    : "0일"
+                  : approval?.items?.remainingDays
+                    ? `${approval.items.remainingDays}일`
+                    : balance
+                      ? `${balance.remainingDays}일`
+                      : "0일"}
               </td>
             </tr>
             <tr>
