@@ -1,0 +1,331 @@
+.root {
+  max-width: 100%;
+  margin: 0 auto;
+}
+.section {
+  background: #fff;
+  border: 1px solid var(--ws-border);
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.headerRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.headerLeft {
+  flex: 1;
+}
+.statusBadge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--status-bg);
+  color: var(--status-color);
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.title {
+  color: var(--ws-text-900);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0 0 12px;
+}
+.requesterRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.requesterName {
+  color: var(--ws-text-800);
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+}
+.requesterDate {
+  color: var(--ws-text-500);
+  font-size: 12px;
+  margin: 0;
+}
+.closeBtn {
+  padding: 4px;
+  color: var(--ws-text-400);
+  transition: color 0.15s;
+}
+.closeBtn:hover {
+  color: var(--ws-text-600);
+}
+
+.sectionTitle {
+  color: var(--ws-text-900);
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+.sectionSubTitle {
+  color: var(--ws-text-800);
+  font-size: 13px;
+  font-weight: 700;
+  margin: 5px 0 5px 0px;
+}
+.sectionSub {
+  color: var(--ws-text-400);
+  font-size: 11.5px;
+  margin: 0 0 16px;
+}
+.sectionDivider {
+  border-top: 1px solid var(--ws-border);
+  padding-top: 20px;
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ws-text-800);
+  margin-bottom: 8px;
+}
+
+.stepsRow {
+  display: flex;
+  align-items: center;
+}
+.stepGroup {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 24px;
+  border-radius: 8px;
+  border: 1px solid;
+  min-width: 140px;
+  flex: 1;
+}
+.stepApproved {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+.stepRejected {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+.stepPending {
+  background: #f9fafb;
+  border-color: var(--ws-border);
+}
+.stepStatusRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.stepStatusLabel {
+  color: var(--step-color);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.stepName {
+  color: var(--ws-text-800);
+  text-align: center;
+  font-size: 12.5px;
+  font-weight: 600;
+  margin: 8px 0 2px;
+}
+.stepRole {
+  color: var(--ws-text-500);
+  text-align: center;
+  font-size: 11px;
+  margin: 0;
+}
+.stepArrow {
+  color: var(--ws-text-300);
+  margin: 0 8px;
+  flex-shrink: 0;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.previewStack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.infoLabel {
+  color: var(--ws-text-500);
+  margin: 0 0 4px;
+  font-size: 12px;
+}
+.infoValue {
+  color: var(--ws-text-800);
+  margin: 0;
+  font-size: 13px;
+}
+.infoValueBold {
+  font-weight: 600;
+}
+.infoFull {
+  grid-column: span 2;
+}
+
+.tableWrap {
+  border: 1px solid var(--ws-border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 24px;
+}
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+}
+.tbl th {
+  text-align: left;
+  padding: 12px 16px;
+  color: var(--ws-text-700);
+  border-bottom: 1px solid var(--ws-border);
+  background: #f9fafb;
+  font-size: 12px;
+  font-weight: 600;
+}
+.tbl td {
+  padding: 12px 16px;
+  color: var(--ws-text-800);
+  font-size: 12.5px;
+}
+.tdAmount {
+  font-weight: 600;
+}
+
+.attach {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid var(--ws-border);
+}
+.attachLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.attachIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #10b981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+.attachName {
+  color: var(--ws-text-800);
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+}
+.attachSize {
+  color: var(--ws-text-500);
+  font-size: 11.5px;
+  margin: 0;
+}
+.attachDl {
+  color: var(--ws-text-400);
+  transition: color 0.15s;
+}
+.attachDl:hover {
+  color: var(--ws-text-600);
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+.btnReject {
+  flex: 1;
+  padding: 12px;
+  border: 2px solid var(--ws-text-300);
+  border-radius: 8px;
+  color: var(--ws-text-700);
+  font-size: 14px;
+  font-weight: 700;
+  transition: background 0.15s;
+}
+.btnReject:hover {
+  background: #f9fafb;
+}
+.btnApprove {
+  flex: 1;
+  padding: 12px;
+  background: var(--ws-primary);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  transition: opacity 0.15s;
+}
+.btnApprove:hover {
+  opacity: 0.92;
+}
+
+.notFound {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 256px;
+  color: var(--ws-text-400);
+}
+.notFound p {
+  color: var(--ws-text-500);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.detailTableWrap {
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.detailTable {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.detailTable th {
+  background: #f9fafb;
+  padding: 15px 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ws-text-500);
+  text-align: left;
+  border: 1px solid #f0f0f0;
+  width: 120px;
+}
+
+.detailTable td {
+  padding: 15px 20px;
+  font-size: 13px;
+  color: var(--ws-text-800);
+  border: 1px solid #f0f0f0;
+}
+
+/* .detailTable tr:last-child th,
+.detailTable tr:last-child td {
+  border-bottom: none;
+} */
