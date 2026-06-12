@@ -1,11 +1,6 @@
 package com.worksync.domain.approval.controller;
 
-import com.worksync.domain.approval.dto.ApprovalCreateRequest;
-import com.worksync.domain.approval.dto.ApprovalDetailResponse;
-import com.worksync.domain.approval.dto.ApprovalFormResponse;
-import com.worksync.domain.approval.dto.ApprovalListResponse;
-import com.worksync.domain.approval.dto.ApprovalProcessRequest;
-import com.worksync.domain.approval.dto.ApprovalUpdateRequest;
+import com.worksync.domain.approval.dto.*;
 import com.worksync.domain.approval.entity.ApprovalDocStatus;
 import com.worksync.domain.approval.service.ApprovalService;
 import com.worksync.global.response.ApiResponse;
@@ -15,15 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -58,7 +45,7 @@ public class ApprovalController {
         return ResponseEntity.status(201).body(ApiResponse.created(
                 approvalService.submit(userDetails.getId(), request)));
     }
-
+    
     // 내가 상신한 문서 목록 (status=IN_PROGRESS|APPROVED|REJECTED)
     @GetMapping("/my")
     public ResponseEntity<ApiResponse<List<ApprovalListResponse>>> getMyDocs(
@@ -74,6 +61,25 @@ public class ApprovalController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(ApiResponse.ok(
                 approvalService.getPendingDocs(userDetails.getId())));
+    }
+
+    // 결재함 - 내가 결재선에 포함된 문서 (REVIEW/APPROVE)
+    @GetMapping("/inbox")
+    public ResponseEntity<ApiResponse<List<ApprovalListResponse>>> getApprovalBox (
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(required = false) ApprovalDocStatus status) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                approvalService.getApprovalBoxDocs(userDetails.getId(), status)
+        ));
+    }
+
+    // 참조함 - 내가 REFERENCE로 지정된 문서
+    @GetMapping("/reference")
+    public ResponseEntity<ApiResponse<List<ApprovalListResponse>>> getReference (
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                approvalService.getReferenceDocs(userDetails.getId())
+        ));
     }
 
     // 결재 문서 상세 조회

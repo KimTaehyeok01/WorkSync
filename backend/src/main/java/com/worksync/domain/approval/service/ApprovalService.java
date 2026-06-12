@@ -1,19 +1,8 @@
 package com.worksync.domain.approval.service;
 
-import com.worksync.domain.approval.dto.ApprovalCreateRequest;
-import com.worksync.domain.approval.dto.ApprovalDetailResponse;
-import com.worksync.domain.approval.dto.ApprovalFormResponse;
-import com.worksync.domain.approval.dto.ApprovalListResponse;
-import com.worksync.domain.approval.dto.ApprovalProcessRequest;
-import com.worksync.domain.approval.dto.ApprovalUpdateRequest;
+import com.worksync.domain.approval.dto.*;
+import com.worksync.domain.approval.entity.*;
 import com.worksync.domain.approval.event.ApprovalApprovedEvent;
-import com.worksync.domain.approval.entity.ApprovalDoc;
-import com.worksync.domain.approval.entity.ApprovalDocItem;
-import com.worksync.domain.approval.entity.ApprovalDocStatus;
-import com.worksync.domain.approval.entity.ApprovalForm;
-import com.worksync.domain.approval.entity.ApprovalLine;
-import com.worksync.domain.approval.entity.ApprovalLineStatus;
-import com.worksync.domain.approval.entity.StepType;
 import com.worksync.domain.approval.event.ApprovalRejectedEvent;
 import com.worksync.domain.approval.repository.ApprovalDocRepository;
 import com.worksync.domain.approval.repository.ApprovalFormRepository;
@@ -21,6 +10,11 @@ import com.worksync.domain.approval.repository.ApprovalLineRepository;
 import com.worksync.domain.audit.service.AuditLogService;
 import com.worksync.domain.employee.entity.Employee;
 import com.worksync.domain.employee.repository.EmployeeRepository;
+import com.worksync.domain.leave.entity.AnnualLeaveBalance;
+import com.worksync.domain.leave.entity.LeaveRequest;
+import com.worksync.domain.leave.entity.LeaveType;
+import com.worksync.domain.leave.repository.AnnualLeaveBalanceRepository;
+import com.worksync.domain.leave.repository.LeaveRequestRepository;
 import com.worksync.domain.notification.entity.NotificationType;
 import com.worksync.domain.notification.service.NotificationService;
 import com.worksync.global.exception.CustomException;
@@ -30,7 +24,11 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -47,6 +45,8 @@ public class ApprovalService {
     private final NotificationService notificationService;
     private final ApplicationEventPublisher eventPublisher;
     private final AuditLogService auditLogService;
+    private final AnnualLeaveBalanceRepository annualLeaveBalanceRepository;
+    private final LeaveRequestRepository leaveRequestRepository;
 
     // 감사 로그 카테고리 / 액션명
     private static final String CATEGORY_APPROVAL = "APPROVAL";
@@ -98,6 +98,71 @@ public class ApprovalService {
         }
 
         approvalDocRepository.save(doc);
+
+// ─────────────────────────────────────────────
+// 전자결재 시스템을 통해 LEAVE(연차/휴가) 양식을 제출하면
+// ApprovalDoc만 생성되고 LeaveRequest는 생성되지 않는다.
+// 그런데 연차 차감 이벤트(onApprovalApproved)는
+// LeaveRequest를 조회해서 차감 처리하는 구조이므로,
+// LeaveRequest가 없으면 최종 승인이 되어도 연차가 차감되지 않는다.
+// 따라서 LEAVE 타입 결재 문서 생성 시 LeaveRequest도 함께 생성해야 한다.
+// ─────────────────────────────────────────────
+        if ("LEAVE".equals(form.getFormType())) {
+            Map<String, String> items = request.getItems();
+            System.out.println("items:" + items);
+
+            // null 체크
+            String leaveTypeStr = items.get("leaveType");
+            if (leaveTypeStr == null || leaveTypeStr.isBlank()) {
+                throw new CustomException(ErrorCode.INVALID_LEAVE_TYPE);
+            }
+
+            boolean isHalf = "HALF".equals(leaveTypeStr);
+
+            // 날짜 파싱
+            LocalDate startDate = isHalf
+                    ? LocalDate.parse(items.get("halfDate"))
+                    : LocalDate.parse(items.get("startDate"));
+            LocalDate endDate = isHalf ? startDate : LocalDate.parse(items.get("endDate"));
+
+            // 일수 계산
+            BigDecimal daysCount = isHalf
+                    ? BigDecimal.valueOf(0.5)
+                    : BigDecimal.valueOf(ChronoUnit.DAYS.between(startDate, endDate) + 1);
+
+            System.out.println("daysCount: " + daysCount);
+
+            // 잔여 연차 검증
+            short leaveYear = (short) startDate.getYear();
+            AnnualLeaveBalance balance = annualLeaveBalanceRepository
+                    .findByEmployeeIdAndYear(drafterId, leaveYear)
+                    .orElseGet(() -> annualLeaveBalanceRepository.save(
+                            AnnualLeaveBalance.builder()
+                                    .employee(drafter)
+                                    .year(leaveYear)
+                                    .totalDays(BigDecimal.valueOf(15))
+                                    .build()));
+
+            if (balance.getRemainingDays().compareTo(daysCount) < 0) {
+                throw new CustomException(ErrorCode.INSUFFICIENT_LEAVE_BALANCE);
+            }
+
+            // LeaveRequest 생성
+            LeaveRequest leaveRequest = LeaveRequest.builder()
+                    .employee(drafter)
+                    .approvalDoc(doc)
+                    .leaveType(LeaveType.valueOf(leaveTypeStr))
+                    .startDate(startDate)
+                    .endDate(endDate)
+                    .daysCount(daysCount)
+                    .reason(items.get("reason"))
+                    .build();
+            leaveRequestRepository.save(leaveRequest);
+
+            balance.addPendingDays(daysCount);
+            annualLeaveBalanceRepository.save(balance);
+        }
+
 
         // 결재선 생성 — doc 컬렉션에 직접 추가
         for (ApprovalCreateRequest.ApprovalLineRequest lineReq : request.getApprovalLines()) {
@@ -152,6 +217,30 @@ public class ApprovalService {
                 ));
 
         return ApprovalDetailResponse.from(doc);
+    }
+
+    // 결재함 - 내가 결재선에 REVIEW/APPROVE로 포함된 문서 전체 (상태 필터링 가능)
+    public  List<ApprovalListResponse> getApprovalBoxDocs(Long approverId, ApprovalDocStatus status){
+        return approvalLineRepository
+                .findByApproverId(approverId)
+                .stream()
+                .sorted(Comparator.comparing(line -> line.getDoc().getCreatedAt(), Comparator.reverseOrder())) // 정렬 기준: 문서 생성일, 방향: 내림차순 (최신순)
+                .filter(line -> line.getStepType() == StepType.REVIEW
+                || line.getStepType() == StepType.APPROVE)
+                .filter(line -> status == null || line.getDoc().getStatus() == status)
+                .map(line -> ApprovalListResponse.from(line.getDoc()))
+                .distinct() // 중복제거
+                .collect(Collectors.toList());
+    }
+    // 참조함 - 내가 REFERENCE로 지정된 문서
+    public List<ApprovalListResponse> getReferenceDocs(Long approverId) {
+        return approvalLineRepository
+                .findByApproverId(approverId)// 내가 결재자로 지정된 결재선들을 가져온 다음
+                .stream()
+                .filter(line -> line.getStepType() == StepType.REFERENCE)
+                .map(line -> ApprovalListResponse.from(line.getDoc())) // 그 결재선이 속한 문서를 꺼냄
+                .distinct()
+                .collect(Collectors.toList());
     }
 
     // 내가 상신한 문서 목록
