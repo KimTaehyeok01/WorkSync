@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client/dist/sockjs";
+import useAuthContext from "../../store/AuthContext";
 import {
   Search,
   Bell,
@@ -19,8 +20,6 @@ import {
   UserRound,
 } from "lucide-react";
 import { WSAvatar } from "../../components/common/CommonWidgets";
-import styles from "./TopBar.module.css";
-import useAuthContext from "../../store/AuthContext";
 import { getMyInfo, patchStatus } from "../service/TopBarApi";
 import {
   getNotifications,
@@ -28,6 +27,7 @@ import {
   putNotifications,
 } from "../../domains/notification/services/notificationApi";
 import { getEmployee } from "../../domains/chat/services/chatApi";
+import styles from "./TopBar.module.css";
 
 const PAGE_TITLES = {
   "/": { title: "대시보드", breadcrumb: ["홈", "대시보드"] },
@@ -168,9 +168,7 @@ export function TopBar({ pathname }) {
   // WebSocket 실시간 알림 갱신
   useEffect(() => {
     if (!accessToken) return;
-
     if (clientRef.current?.active) return; // 이미 연결되어 있으면 skip
-
     if (clientRef.current) {
       clientRef.current.deactivate(); // 이전 연결 해제
     }
@@ -179,14 +177,7 @@ export function TopBar({ pathname }) {
       webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
       reconnectDelay: 5000,
       connectHeaders: { Authorization: `Bearer ${accessToken}` },
-
-      debug: (str) => {
-        console.log("STOMP:", str);
-      },
-
       onConnect: () => {
-        console.log("연결 성공");
-
         // 알림 목록 실시간 불러오기
         client.subscribe("/user/queue/notifications", (frame) => {
           const notifList = JSON.parse(frame.body);
@@ -199,11 +190,9 @@ export function TopBar({ pathname }) {
           setUnreadCount(unreadCount || 0);
         });
       },
-
       onStompError: (frame) => {
         console.error("STOMP ERROR", frame);
       },
-
       onWebSocketError: (event) => {
         console.error("WS ERROR", event);
       },
