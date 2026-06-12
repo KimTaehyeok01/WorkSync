@@ -11,7 +11,7 @@ ArrowRight,
 Newspaper,
 CheckCircle2,
 } from "lucide-react";
-import { getDashboard, getPendingApprovals, getRecentPosts, getDepartmentAttendance, getMyPendingApprovals } from "../services/dashboardApi";
+import { getDashboard, getPendingApprovals, getRecentPosts, getDepartmentAttendance, getMyPendingApprovals , getUnreadMessageCount} from "../services/dashboardApi";
 import { getMyTaskList } from "../../task/services/taskApi";
 import { WSCard, WSStatCard, WSAvatar, WSButton } from "../../../components/common/CommonWidgets";
 import useAuthContext from "../../../store/AuthContext";
@@ -56,6 +56,7 @@ const [loading,         setLoading]         = useState(true);
 const [dashboard,       setDashboard]       = useState(null);
 const [tasks,           setTasks]           = useState([]);
 const [myPendingDocs, setMyPendingDocs] = useState([]);
+const [unreadMessages, setUnreadMessages] = useState(0);
 const [pendingDocs,     setPendingDocs]     = useState([]);
 const [recentPosts,     setRecentPosts]     = useState([]);
 const [teamAttendance,  setTeamAttendance]  = useState([]);
@@ -67,18 +68,21 @@ useEffect(() => {
     fetchDashboard();
 }, [accessToken]);
 
+
 const fetchDashboard = async () => {
     try {
     setLoading(true);
     const today = new Date().toISOString().split("T")[0];
-    const [dashboardRes, taskRes, approvalRes, postRes, attendanceRes, myDocsRes] = await Promise.all([
+    const [dashboardRes, taskRes, approvalRes, postRes, attendanceRes, myDocsRes, unreadMsgRes] = await Promise.all([
         getDashboard(accessToken),
         getMyTaskList(accessToken),
         getPendingApprovals(accessToken),
         getRecentPosts(accessToken),
         getDepartmentAttendance(accessToken, today),
         getMyPendingApprovals(accessToken),
+        getUnreadMessageCount(accessToken),
       ]);
+      setUnreadMessages(unreadMsgRes ?? 0);
       setDashboard(dashboardRes ?? null);
       setTasks(taskRes?.content ?? []);
       setPendingDocs(approvalRes ?? []);
@@ -166,7 +170,7 @@ return (
         />
         <WSStatCard
         label="읽지 않은 메세지"
-        value={String(dashboard.unreadMessageCount ?? 0)}
+        value={String(unreadMessages)}
         icon={<MessageCircle size={22} />}
         color="#10B981"
         />
