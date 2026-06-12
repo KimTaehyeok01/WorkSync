@@ -41,6 +41,12 @@ public class AnnualLeaveBalance {
     @Builder.Default
     private BigDecimal pendingDays = BigDecimal.ZERO;
 
+    // JPA가 자동으로 동시 저장 충돌 감지
+    // OptimisticLockingFailureException 발생하고 트랜잭션이 롤백
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
