@@ -17,7 +17,7 @@ import {
 import { WSFileList } from "../../../components/common/FormComponents";
 import s from "./TaskDetailPage.module.css";
 import useFileUpload from "../../../hooks/useFileUpload";
-import { getFile, saveFile, deleteFile } from "../../file/services/FileApi";
+import { getFile, saveFile, deleteFile } from "../../file/services/fileApi";
 
 export default function TaskDetail() {
   const { id } = useParams();

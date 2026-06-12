@@ -11,7 +11,7 @@ import s from "./BoardCreatePage.module.css";
 import { getMyInfo, getPostById, getUpdatePosts } from "../services/boardApi";
 import useAuthContext from "../../../store/AuthContext";
 import useFileUpload from "../../../hooks/useFileUpload";
-import { getFile, saveFile, deleteFile } from "../../file/services/FileApi";
+import { getFile, saveFile, deleteFile } from "../../file/services/fileApi";
 
 const CATEGORY_OPTIONS = [
   { value: "notice", label: "공지사항", color: "#EF4444" },

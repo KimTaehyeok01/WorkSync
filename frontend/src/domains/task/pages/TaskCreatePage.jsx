@@ -14,7 +14,7 @@ import {
 } from "../../../components/common/FormComponents";
 import s from "./TaskCreatePage.module.css";
 import useFileUpload from "../../../hooks/useFileUpload";
-import { saveFile, deleteFile } from "../../file/services/FileApi";
+import { saveFile, deleteFile } from "../../file/services/fileApi";
 
 const STATUS_OPTIONS = [
   { key: "TODO", label: "대기중" },

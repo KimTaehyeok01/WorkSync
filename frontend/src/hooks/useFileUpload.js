@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { uploadFile, deleteFile } from "../domains/file/services/FileApi";
+import { uploadFile, deleteFile } from "../domains/file/services/fileApi";
 
 export default function useFileUpload(accessToken, refType) {
   const [files, setFiles] = useState([]); //파일 목록

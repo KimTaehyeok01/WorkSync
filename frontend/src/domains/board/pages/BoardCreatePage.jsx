@@ -16,7 +16,7 @@ import {
 import s from "./BoardCreatePage.module.css";
 import useAuthContext from "../../../store/AuthContext";
 import useFileUpload from "../../../hooks/useFileUpload";
-import { saveFile, deleteFile } from "../../file/services/FileApi";
+import { saveFile, deleteFile } from "../../file/services/fileApi";
 
 const BOARD_COLORS = {
   1: "#EF4444", // 공지사항 - 빨강

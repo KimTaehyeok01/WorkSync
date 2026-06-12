@@ -8,7 +8,7 @@ import {
 import { WSSuccessScreen } from "../../../components/common/LayoutComponents";
 import useFileUpload from "../../../hooks/useFileUpload";
 import EmployeeForm from "../components/EmployeeForm";
-import { saveFile, deleteFile } from "../../file/services/FileApi";
+import { saveFile, deleteFile } from "../../file/services/fileApi";
 
 export default function EmployeeAdd() {
   const { accessToken } = useAuthContext();

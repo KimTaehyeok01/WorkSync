@@ -17,7 +17,7 @@ import {
 import { WSFileList } from "../../../components/common/FormComponents";
 import useAuthContext from "../../../store/AuthContext";
 import useFileUpload from "../../../hooks/useFileUpload";
-import { getFile, saveFile, deleteFile } from "../../file/services/FileApi";
+import { getFile, saveFile, deleteFile } from "../../file/services/fileApi";
 
 export default function BoardDetail() {
   const { accessToken } = useAuthContext();
