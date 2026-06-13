@@ -17,7 +17,7 @@ CREATE TYPE msg_type_enum          AS ENUM ('TEXT', 'FILE', 'IMAGE', 'SYSTEM');
 CREATE TYPE attendance_status_type AS ENUM ('NORMAL', 'LATE', 'EARLY_LEAVE', 'ABSENT');
 CREATE TYPE board_type_enum        AS ENUM ('NOTICE', 'DEPARTMENT', 'FREE', 'FILES');
 CREATE TYPE notification_type_enum AS ENUM ('APPROVAL', 'TASK', 'MESSAGE');
-CREATE TYPE leave_type_enum        AS ENUM ('ANNUAL', 'HALF', 'SICK', 'FAMILY');
+CREATE TYPE leave_type_enum        AS ENUM ('ANNUAL', 'HALF', 'SICK', 'FAMILY', 'OTHER');
 CREATE TYPE leave_status_enum      AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
 
 -- ── 1. department (부서) ──────────────────────────────────────
