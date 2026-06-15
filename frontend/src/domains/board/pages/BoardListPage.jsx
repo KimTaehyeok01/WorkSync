@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import useAuthContext from "../../../store/AuthContext";
+import s from "./BoardListPage.module.css";
 import {
   getBoards,
   getMyInfo,
@@ -8,31 +9,20 @@ import {
   getDepartments,
 } from "../services/boardApi";
 import { useNavigate } from "react-router-dom";
-import { Plus, Search, ChevronDown } from "lucide-react";
+import { Plus, Search, ChevronDown, ClipboardList } from "lucide-react";
 import {
   WSCard,
   WSAvatar,
   WSButton,
   WSPagination,
+  WSEmptyState,
 } from "../../../components/common/CommonWidgets";
-import s from "./BoardListPage.module.css";
-
-// const CATEGORIES = [
-//   { value: "all", label: "전체" },
-//   { value: "notice", label: "공지사항" },
-//   { value: "dept", label: "부서 게시판" },
-//   { value: "free", label: "자유 게시판" },
-// ];
 
 export default function Board() {
   const navigate = useNavigate();
   const { accessToken } = useAuthContext();
   const [posts, setPosts] = useState([]);
   const [category, setCategory] = useState("all"); // 현재 선택된 값
-  const [categories, setCategories] = useState([
-    // 드롭다운 목록 전체
-    { value: "all", label: "전체" },
-  ]); // 전체 -> 고정으로 유지
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [myDepartmentName, setMyDepartmentName] = useState("");
@@ -40,6 +30,11 @@ export default function Board() {
   const [deptBoardId, setDeptBoardId] = useState(null); // 내 부서게시판 id
   const [departments, setDepartments] = useState([]); // ADMIN 부서 필터 목록
   const [deptFilter, setDeptFilter] = useState("all"); // ADMIN 선택한 부서 필터
+  const [isLoading, setIsLoading] = useState(true);
+  const [categories, setCategories] = useState([
+    // 드롭다운 목록 전체
+    { value: "all", label: "전체" },
+  ]); // 전체 -> 고정으로 유지
 
   // 카테고리 + 검색어 적용하여 정렬
   const filteredPosts = posts.filter((p) => {
@@ -112,7 +107,7 @@ export default function Board() {
 
   useEffect(() => {
     if (!accessToken) return;
-
+    setIsLoading(true);
     setPosts([]); // category 변경 시 stale 데이터 즉시 초기화
 
     if (category === "all") {
@@ -131,6 +126,7 @@ export default function Board() {
               (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
             );
             setPosts(sorted);
+            setIsLoading(false);
           },
         );
       });
@@ -146,6 +142,7 @@ export default function Board() {
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
         );
         setPosts(sorted);
+        setIsLoading(false);
       });
     } else {
       getPosts(category, accessToken).then((data) => {
@@ -155,9 +152,12 @@ export default function Board() {
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
         );
         setPosts(sorted);
+        setIsLoading(false);
       });
     }
   }, [category, accessToken, deptBoardId, role, deptFilter]);
+
+  if (isLoading) return <div className={s.loading}>로딩 중...</div>;
 
   return (
     <div className={s.root}>
@@ -236,13 +236,15 @@ export default function Board() {
       <WSCard>
         {pagePosts.length === 0 ? (
           <div className={s.empty}>
-            <p className={s.emptyTitle}>게시글이 없습니다</p>
-            <p className={s.emptyDesc}>첫 번째 게시글을 작성해 보세요.</p>
+            <WSEmptyState
+              icon={<ClipboardList size={32} />}
+              title="등록된 게시글이 없습니다"
+              description="첫 게시글을 등록하거나 검색 조건을 변경해 보세요."
+            />
           </div>
         ) : (
           <div className={s.list}>
             {pagePosts.map((post) => {
-              console.log(post);
               const isNotice = post.boardName === "공지사항";
               return (
                 <div

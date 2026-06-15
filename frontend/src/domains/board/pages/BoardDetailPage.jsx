@@ -23,10 +23,31 @@ export default function BoardDetail() {
   const { accessToken } = useAuthContext();
   const { boardId, postId } = useParams();
   const [allPosts, setAllPosts] = useState([]);
-  const navigate = useNavigate();
   const [post, setPost] = useState(null);
   const [me, setMe] = useState(null);
   const [attachments, setAttachments] = useState(MOCK_ATTACHMENTS);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!accessToken) return;
+    setIsLoading(true); // 로딩 시작
+    // api 모두 실행
+    Promise.all([
+      getPostById(boardId, postId, accessToken),
+      getPosts(boardId, accessToken),
+      getMyInfo(accessToken),
+    ]).then(([postData, allPostsData, myData]) => {
+      setPost(postData);
+      setAllPosts(allPostsData);
+      setMe(myData);
+
+      setIsLoading(false); // api 호출 종료 후에 로딩 끝날 수 있도록
+    });
+  }, [boardId, postId, accessToken]);
+
+  if (isLoading) return <div>로딩 중...</div>;
+
   // 현재 글의 위치 찾기
   const postIndex = allPosts.findIndex((p) => p.id === Number(postId));
   // 이전글
@@ -34,22 +55,6 @@ export default function BoardDetail() {
   // 다음글
   const nextPost =
     postIndex < allPosts.length - 1 ? allPosts[postIndex + 1] : null;
-
-  useEffect(() => {
-    if (!accessToken) return;
-    // 게시글 하나
-    getPostById(boardId, postId, accessToken).then((data) => {
-      setPost(data);
-    });
-    // 게시글 전체 목록
-    getPosts(boardId, accessToken).then((data) => {
-      setAllPosts(data);
-    });
-    // 내 정보
-    getMyInfo(accessToken).then((data) => {
-      setMe(data);
-    });
-  }, [boardId, postId, accessToken]);
 
   if (!post) {
     return (
