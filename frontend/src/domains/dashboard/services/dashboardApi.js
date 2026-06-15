@@ -114,3 +114,19 @@ export async function getMyPendingApprovals(accessToken) {
     .then((json) => json.data ?? [])
     .catch(() => []);
 }
+
+export async function getUnreadMessageCount(accessToken) {
+  return await fetch(`${BASE_URL}/chat/rooms`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((json) => {
+      const rooms = json.data ?? [];
+      return rooms.reduce((sum, room) => sum + (room.unreadCount ?? 0), 0);
+    })
+    .catch(() => 0);
+}
