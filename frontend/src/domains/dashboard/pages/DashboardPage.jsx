@@ -89,6 +89,19 @@ const refreshUnreadMessages = async () => {
     setUnreadMessages(unreadMsgRes ?? 0);
 };
 
+// 나의 팀 출근 현황 갱신
+const refreshAttendance = async () => {
+    const today = new Date().toISOString().split("T")[0];
+    const attendanceRes = await getDepartmentAttendance(accessToken, today);
+    setTeamAttendance(attendanceRes ?? []);
+};
+
+// 최근 게시글(공지) 갱신
+const refreshRecentPosts = async () => {
+    const postRes = await getRecentPosts(accessToken);
+    setRecentPosts(postRes ?? []);
+};
+
 const fetchDashboard = async () => {
     try {
     setLoading(true);
@@ -135,6 +148,22 @@ useEffect(() => {
             // 읽지 않은 메세지
             client.subscribe("/user/queue/chat/unread", () => {
                 refreshUnreadMessages();
+            });
+
+            // 업무 상태 변경 → 업무 진행률 갱신
+            client.subscribe("/user/queue/tasks/status", (frame) => {
+                const counts = JSON.parse(frame.body);
+                setDashboard((prev) => (prev ? { ...prev, ...counts } : prev));
+            });
+
+            // 같은 부서원 출퇴근 → 나의 팀 현황 갱신
+            client.subscribe("/topic/attendance/*", () => {
+                refreshAttendance();
+            });
+
+            // 새 공지 게시글 → 최근 게시글 갱신
+            client.subscribe("/topic/board/notice", () => {
+                refreshRecentPosts();
             });
         },
         onStompError: (frame) => {
