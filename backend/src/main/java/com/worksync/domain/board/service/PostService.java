@@ -9,7 +9,9 @@ import com.worksync.domain.board.entity.BoardType;
 import com.worksync.domain.board.entity.Post;
 import com.worksync.domain.board.repository.BoardRepository;
 import com.worksync.domain.board.repository.PostRepository;
+import com.worksync.domain.employee.entity.Employee;
 import com.worksync.domain.employee.entity.EmployeeRole;
+import com.worksync.domain.employee.repository.EmployeeRepository;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
 import com.worksync.global.security.CustomUserDetails;
@@ -26,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class PostService {
     private  final PostRepository postRepository;
     private final BoardRepository boardRepository;
+    private final EmployeeRepository employeeRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
     //게시글 목록 조회(페이징+제목검색)
@@ -100,9 +103,13 @@ public class PostService {
                 throw new CustomException(ErrorCode.FORBIDDEN);
             }
         }
+
+        Employee author = employeeRepository.findById(user.getId())
+                .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
+
         Post post=Post.builder()
                 .board(board)
-                .author(user.getEmployee())
+                .author(author)
                 .title(req.getTitle())
                 .content(req.getContent())
                 .build();
