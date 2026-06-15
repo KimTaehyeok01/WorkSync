@@ -129,6 +129,14 @@ public class AttendanceService {
             .clientIp(clientIp)
             .build();
     attendanceRepository.save(attendance);
+
+    // 로그인 연동 출근 시 같은 부서원에게 팀 근태 현황 실시간 갱신 - webSocket
+    if (employee.getDepartment() != null) {
+      messagingTemplate.convertAndSend(
+              "/topic/attendance/" + employee.getDepartment().getId(),
+              Map.of("employeeId", employeeId, "status", "CHECK_IN")
+      );
+    }
   }
 
   // 로그아웃 연동 퇴근 — 오늘 출근 기록이 있고 아직 퇴근 전일 때만 퇴근 처리
@@ -138,7 +146,18 @@ public class AttendanceService {
     LocalDate today = LocalDate.now();
     attendanceRepository.findByEmployeeIdAndWorkDate(employeeId, today)
             .filter(attendance -> attendance.getCheckOutTime() == null)
-            .ifPresent(attendance -> attendance.checkOut(LocalDateTime.now()));
+            .ifPresent(attendance -> {
+              attendance.checkOut(LocalDateTime.now());
+
+              // (webSocket) 로그아웃 연동 퇴근 시 같은 부서원에게 팀 근태 현황 실시간 갱신
+              Employee employee = attendance.getEmployee();
+              if (employee.getDepartment() != null) {
+                messagingTemplate.convertAndSend(
+                        "/topic/attendance/" + employee.getDepartment().getId(),
+                        Map.of("employeeId", employeeId, "status", "CHECK_OUT")
+                );
+              }
+            });
   }
 
   // 내 근태 조회
