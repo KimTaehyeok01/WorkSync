@@ -12,7 +12,6 @@ Newspaper,
 CheckCircle2,
 } from "lucide-react";
 import { getDashboard, getPendingApprovals, getRecentPosts, getDepartmentAttendance, getMyPendingApprovals , getUnreadMessageCount} from "../services/dashboardApi";
-import { getMyTaskList } from "../../task/services/taskApi";
 import { WSCard, WSStatCard, WSAvatar, WSButton } from "../../../components/common/CommonWidgets";
 import useAuthContext from "../../../store/AuthContext";
 import s from "./DashboardPage.module.css";
@@ -54,7 +53,6 @@ const { accessToken } = useAuthContext();
 
 const [loading,         setLoading]         = useState(true);
 const [dashboard,       setDashboard]       = useState(null);
-const [tasks,           setTasks]           = useState([]);
 const [myPendingDocs, setMyPendingDocs] = useState([]);
 const [unreadMessages, setUnreadMessages] = useState(0);
 const [pendingDocs,     setPendingDocs]     = useState([]);
@@ -73,9 +71,8 @@ const fetchDashboard = async () => {
     try {
     setLoading(true);
     const today = new Date().toISOString().split("T")[0];
-    const [dashboardRes, taskRes, approvalRes, postRes, attendanceRes, myDocsRes, unreadMsgRes] = await Promise.all([
+    const [dashboardRes, approvalRes, postRes, attendanceRes, myDocsRes, unreadMsgRes] = await Promise.all([
         getDashboard(accessToken),
-        getMyTaskList(accessToken),
         getPendingApprovals(accessToken),
         getRecentPosts(accessToken),
         getDepartmentAttendance(accessToken, today),
@@ -84,7 +81,6 @@ const fetchDashboard = async () => {
       ]);
       setUnreadMessages(unreadMsgRes ?? 0);
       setDashboard(dashboardRes ?? null);
-      setTasks(taskRes?.content ?? []);
       setPendingDocs(approvalRes ?? []);
       setRecentPosts(postRes ?? []);
       setTeamAttendance(attendanceRes ?? []);
