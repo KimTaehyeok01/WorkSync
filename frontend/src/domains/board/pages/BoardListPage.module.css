@@ -168,3 +168,11 @@
   color: var(--ws-text-400);
   font-size: 12px;
 }
+.spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  color: var(--ws-text-secondary);
+  font-size: 14px;
+}

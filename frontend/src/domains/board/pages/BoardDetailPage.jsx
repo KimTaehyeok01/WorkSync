@@ -46,8 +46,6 @@ export default function BoardDetail() {
     });
   }, [boardId, postId, accessToken]);
 
-  if (isLoading) return <div>로딩 중...</div>;
-
   // 현재 글의 위치 찾기
   const postIndex = allPosts.findIndex((p) => p.id === Number(postId));
   // 이전글
@@ -66,6 +64,8 @@ export default function BoardDetail() {
         </button>
       </div>
     );
+  } else if (!isLoading) {
+    return <div className={s.spinner}>로딩 중...</div>;
   }
 
   return (
