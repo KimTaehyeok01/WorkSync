@@ -40,6 +40,7 @@ public class FileAttachment {
     @Column(name = "mime_type", length = 100)
     private String mimeType;
 
+    @Builder.Default
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "ref_type", nullable = false, columnDefinition = "ref_type")
     private RefType refType = RefType.APPROVAL;
