@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
 import {
 MessageCircle,
 CalendarDays,
@@ -66,36 +68,83 @@ useEffect(() => {
     fetchDashboard();
 }, [accessToken]);
 
+// 결재 대기 문서(나의 결재함 + 내 기안 문서) 갱신
+const refreshApprovals = async () => {
+    const [approvalRes, myDocsRes] = await Promise.all([
+        getPendingApprovals(accessToken),
+        getMyPendingApprovals(accessToken),
+    ]);
+    setPendingDocs(approvalRes ?? []);
+
+    const combined = [...(approvalRes ?? []), ...(myDocsRes ?? [])];
+    const unique = combined.filter((item, index, self) =>
+        self.findIndex((i) => i.id === item.id) === index
+    );
+    setMyPendingDocs(unique);
+};
+
+// 읽지 않은 메세지 수 갱신
+const refreshUnreadMessages = async () => {
+    const unreadMsgRes = await getUnreadMessageCount(accessToken);
+    setUnreadMessages(unreadMsgRes ?? 0);
+};
 
 const fetchDashboard = async () => {
     try {
     setLoading(true);
     const today = new Date().toISOString().split("T")[0];
-    const [dashboardRes, approvalRes, postRes, attendanceRes, myDocsRes, unreadMsgRes] = await Promise.all([
+    const [dashboardRes, postRes, attendanceRes] = await Promise.all([
         getDashboard(accessToken),
-        getPendingApprovals(accessToken),
         getRecentPosts(accessToken),
         getDepartmentAttendance(accessToken, today),
-        getMyPendingApprovals(accessToken),
-        getUnreadMessageCount(accessToken),
+        refreshApprovals(),
+        refreshUnreadMessages(),
       ]);
-      setUnreadMessages(unreadMsgRes ?? 0);
       setDashboard(dashboardRes ?? null);
-      setPendingDocs(approvalRes ?? []);
       setRecentPosts(postRes ?? []);
       setTeamAttendance(attendanceRes ?? []);
-      
-      const combined = [...(approvalRes ?? []), ...(myDocsRes ?? [])];
-      const unique = combined.filter((item, index, self) =>
-        self.findIndex((i) => i.id === item.id) === index
-      );
-      setMyPendingDocs(unique);
     } catch (error) {
     console.error("Dashboard API Error", error);
     } finally {
     setLoading(false);
     }
 };
+
+// 실시간 알림/메세지 구독 — 결재 대기, 새 알림, 읽지 않은 메세지 위젯 즉시 갱신
+useEffect(() => {
+    if (!accessToken) return;
+
+    const client = new Client({
+        webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
+        reconnectDelay: 5000,
+        connectHeaders: { Authorization: `Bearer ${accessToken}` },
+        onConnect: () => {
+            // 새 알림 수
+            client.subscribe("/user/queue/notifications/unread-count", (frame) => {
+                const unreadCount = JSON.parse(frame.body);
+                setDashboard((prev) =>
+                    prev ? { ...prev, unreadNotificationCount: unreadCount ?? 0 } : prev
+                );
+            });
+
+            // 결재 대기 문서 (알림 목록 변경 시 재조회)
+            client.subscribe("/user/queue/notifications", () => {
+                refreshApprovals();
+            });
+
+            // 읽지 않은 메세지
+            client.subscribe("/user/queue/chat/unread", () => {
+                refreshUnreadMessages();
+            });
+        },
+        onStompError: (frame) => {
+            console.error("STOMP ERROR", frame);
+        },
+    });
+
+    client.activate();
+    return () => client.deactivate();
+}, [accessToken]);
 
 const taskProgress = useMemo(() => {
     if (!dashboard) return "0/0";
