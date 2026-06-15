@@ -1,8 +1,13 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Download, Pencil } from "lucide-react";
+import { ArrowLeft, ChevronDown, Download, Pencil } from "lucide-react";
 import useAuthContext from "../../../store/AuthContext";
-import { getTaskById, deleteTask, getMyInfo } from "../services/taskApi";
+import {
+  getTaskById,
+  deleteTask,
+  getMyInfo,
+  getTaskList,
+} from "../services/taskApi";
 import {
   WSAvatar,
   WSButton,
@@ -16,8 +21,16 @@ export default function TaskDetail() {
   const navigate = useNavigate();
   const { accessToken } = useAuthContext();
   const [task, setTask] = useState(null);
+  const [allTasks, setAllTasks] = useState([]);
   const [myId, setMyId] = useState(null);
   const [role, setRole] = useState(null);
+  // 현재 업무의 위치 찾기
+  const taskIndex = allTasks.findIndex((p) => p.id === Number(id));
+  // 이전 업무
+  const prevTask = taskIndex > 0 ? allTasks[taskIndex - 1] : null;
+  // 다음 업무
+  const nextTask =
+    taskIndex < allTasks.length - 1 ? allTasks[taskIndex + 1] : null;
 
   useEffect(() => {
     if (!accessToken) return;
@@ -34,8 +47,11 @@ export default function TaskDetail() {
 
     getTaskById(accessToken, id).then((data) => {
       if (!data) return;
-
       setTask(data);
+    });
+    getTaskList(accessToken, 0, 9999).then((data) => {
+      if (!data) return;
+      setAllTasks(data.content);
     });
   }, [accessToken, id]);
 
@@ -149,6 +165,36 @@ export default function TaskDetail() {
           </div>
         </div>
       </div>
+      {prevTask && (
+        <button
+          onClick={() => navigate(`/tasks/${prevTask.id}`)}
+          className={s.nextBtn}
+        >
+          <div className={s.nextLeft}>
+            <span className={s.nextLabel}>이전 업무</span>
+            <ChevronDown size={14} className={s.nextArrow} />
+            <span className={s.nextTitle}>{prevTask.title}</span>
+          </div>
+          <span className={s.nextDate}>
+            {new Date(prevTask.createdAt).toLocaleDateString("ko-KR")}
+          </span>
+        </button>
+      )}
+      {nextTask && (
+        <button
+          onClick={() => navigate(`/tasks/${nextTask.id}`)}
+          className={s.nextBtn}
+        >
+          <div className={s.nextLeft}>
+            <span className={s.nextLabel}>다음 업무</span>
+            <ChevronDown size={14} className={s.nextArrow} />
+            <span className={s.nextTitle}>{nextTask.title}</span>
+          </div>
+          <span className={s.nextDate}>
+            {new Date(nextTask.createdAt).toLocaleDateString("ko-KR")}
+          </span>
+        </button>
+      )}
     </div>
   );
 }

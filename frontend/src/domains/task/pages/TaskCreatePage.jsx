@@ -43,6 +43,12 @@ export default function TaskNew() {
   const { accessToken } = useAuthContext();
   const [members, setMembers] = useState([]);
   const [role, setRole] = useState(null);
+  const [files, setFiles] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [myDepartmentId, setMyDepartmentId] = useState(null);
+  const [myId, setMyId] = useState(null);
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -53,12 +59,6 @@ export default function TaskNew() {
     startDate: "",
     dueDate: "",
   });
-  const [files, setFiles] = useState([]);
-  const [isDragging, setIsDragging] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [myDepartmentId, setMyDepartmentId] = useState(null);
-  const [myId, setMyId] = useState(null);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -119,11 +119,37 @@ export default function TaskNew() {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   }
 
-  const isValid = form.title.trim().length > 0;
+  const isValid = () => {
+    if (!form.assigneeId) {
+      alert("담당자를 선택하세요.");
+      return false;
+    }
+    if (!form.startDate) {
+      alert("프로젝트 시작일을 입력하세요.");
+      return false;
+    }
+    if (!form.dueDate) {
+      alert("프로젝트 종료일을 입력하세요.");
+      return false;
+    }
+    if (form.startDate > form.dueDate) {
+      alert("시작일이 종료일보다 늦을 수 없습니다.");
+      return false;
+    }
+    if (!form.title.trim()) {
+      alert("제목을 입력하세요.");
+      return false;
+    }
+    if (!form.description.trim()) {
+      alert("상세 설명을 입력하세요.");
+      return false;
+    }
+    return true;
+  };
   const isTitleTooLong = form.title.length > 30;
 
   function handleSubmit() {
-    if (!isValid) return;
+    if (!isValid()) return;
 
     const data = {
       title: form.title,
@@ -182,7 +208,9 @@ export default function TaskNew() {
             <div className={s.formGrid}>
               <div className={s.row2}>
                 <div>
-                  <label className={s.label}>담당자</label>
+                  <label className={s.label}>
+                    담당자 <span className={s.required}>*</span>
+                  </label>
                   <WSSelect
                     placeholder="담당자 선택"
                     value={form.assigneeId}
@@ -209,7 +237,9 @@ export default function TaskNew() {
                   />
                 </div>
                 <div>
-                  <label className={s.label}>프로젝트 기간</label>
+                  <label className={s.label}>
+                    프로젝트 기간 <span className={s.required}>*</span>
+                  </label>
                   <WSCalendarpicker
                     startValue={form.start_date}
                     endValue={form.due_date}
@@ -235,22 +265,13 @@ export default function TaskNew() {
                   }
                   className={s.input}
                 />
-                {isTitleTooLong && (
-                  <p
-                    style={{
-                      color: `red`,
-                      fontSize: `12px`,
-                      marginTop: `4px`,
-                    }}
-                  >
-                    제목을 30자 이내로 입력해주세요.
-                  </p>
-                )}
               </div>
 
               <div className={s.row2}>
                 <div>
-                  <label className={s.label}>상태</label>
+                  <label className={s.label}>
+                    상태 <span className={s.required}>*</span>
+                  </label>
                   <WSSelect
                     placeholder="상태 선택"
                     value={form.status}
@@ -265,7 +286,9 @@ export default function TaskNew() {
                   />
                 </div>
                 <div>
-                  <label className={s.label}>진행률</label>
+                  <label className={s.label}>
+                    진행률 <span className={s.required}>*</span>
+                  </label>
                   <WSSelect
                     placeholder="진행률 선택"
                     value={form.progress}
