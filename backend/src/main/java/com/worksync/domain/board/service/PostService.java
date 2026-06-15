@@ -16,6 +16,7 @@ import com.worksync.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class PostService {
     private  final PostRepository postRepository;
     private final BoardRepository boardRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     //게시글 목록 조회(페이징+제목검색)
     //departmentId: ADMIN이 부서게시판에서 특정 부서만 골라볼 때 사용 (null이면 전체 부서)
@@ -104,7 +106,14 @@ public class PostService {
                 .title(req.getTitle())
                 .content(req.getContent())
                 .build();
-        return postRepository.save(post).getId();
+        Post saved = postRepository.save(post);
+
+        // (webSocket) 공지 게시글 작성 시 전체 사용자에게 새 게시글 실시간 push
+        if (board.getBoardType() == BoardType.NOTICE) {
+            messagingTemplate.convertAndSend("/topic/board/notice", PostResponse.from(saved));
+        }
+
+        return saved.getId();
     }
 
     //게시글 수정(본인만 가능)
@@ -128,7 +137,7 @@ public class PostService {
     @Transactional
     public void deletePost(Long boardId,Long postId,CustomUserDetails user){
         Post post=postRepository.findById(postId)
-                    .orElseThrow(()->new CustomException(ErrorCode.POST_NOT_FOUND));
+                    .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
 
         //본인확인 로직
         if(!post.getAuthor().getId().equals(user.getEmployee().getId())){

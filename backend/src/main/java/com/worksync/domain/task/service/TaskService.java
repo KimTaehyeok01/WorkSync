@@ -22,10 +22,12 @@ import com.worksync.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +39,7 @@ public class TaskService {
     private final FileAttachmentRepository fileAttachmentRepository;
     private final NotificationService notificationService;
     private final AuditLogService auditLogService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     // 감사 로그 카테고리 / 액션명
     private static final String CATEGORY_TASK = "TASK";
@@ -190,6 +193,20 @@ public class TaskService {
         String actorName = employeeRepository.findById(requesterId)
                 .map(Employee::getName).orElse(null);
         auditLogService.log(requesterId, actorName, ACTION_UPDATE, CATEGORY_TASK, taskId, null, null);
+
+        // 업무 상태 변경 시 담당자 대쉬보드 진행률 실시간 갱신 - websocket
+        if (request.getStatus() != null && task.getAssignee() != null) {
+            Long assigneeId = task.getAssignee().getId();
+            messagingTemplate.convertAndSendToUser(
+                    String.valueOf(assigneeId),
+                    "/queue/tasks/status",
+                    Map.of(
+                            "todoTaskCount", taskRepository.countByAssigneeIdAndStatus(assigneeId, TaskStatus.TODO),
+                            "inProgressTaskCount", taskRepository.countByAssigneeIdAndStatus(assigneeId, TaskStatus.IN_PROGRESS),
+                            "doneTaskCount", taskRepository.countByAssigneeIdAndStatus(assigneeId, TaskStatus.DONE)
+                    )
+            );
+        }
 
         return TaskResponse.from(task,attachments);
     }
