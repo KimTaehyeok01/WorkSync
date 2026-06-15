@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Setter
 @Builder
 public class FileSaveRequest {
+    private Long id;
     private String originalName;
     private String filePath;
     private Long fileSize;
@@ -22,6 +23,7 @@ public class FileSaveRequest {
 
     public static FileSaveRequest from(FileAttachment file) {
         return FileSaveRequest.builder()
+                .id(file.getId())
                 .originalName(file.getOriginalName())
                 .filePath(file.getFilePath())
                 .fileSize(file.getFileSize())
