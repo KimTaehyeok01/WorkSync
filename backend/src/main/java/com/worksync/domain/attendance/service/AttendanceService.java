@@ -12,6 +12,7 @@ import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
 import com.worksync.global.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,7 @@ public class AttendanceService {
 
   private final AttendanceRepository attendanceRepository;
   private final EmployeeRepository employeeRepository;
+  private final SimpMessagingTemplate messagingTemplate;
 
   @Transactional
   // 출근체크
@@ -58,7 +60,17 @@ public class AttendanceService {
             .build();
 
     //DB 저장후 dto로 변환해서 반환
-    return AttendanceResponse.from(attendanceRepository.save(attendance));
+    AttendanceResponse response = AttendanceResponse.from(attendanceRepository.save(attendance));
+
+    // (webSocket) 출근 시 같은 부서원에게 팀 근태 현황 실시간 갱신
+    if (employee.getDepartment() != null) {
+      messagingTemplate.convertAndSend(
+              "/topic/attendance/" + employee.getDepartment().getId(),
+              Map.of("employeeId", employeeId, "status", "CHECK_IN")
+      );
+    }
+
+    return response;
   }
 
   // 퇴근 체크
@@ -80,6 +92,15 @@ public class AttendanceService {
 
     // 퇴근 시간 업데이트 자동으로 update실행
     attendance.checkOut(now);
+
+    // 퇴근 시 같은 부서원에게 팀 근태 현황 실시간 갱신 - websocket
+    Employee employee = attendance.getEmployee();
+    if (employee.getDepartment() != null) {
+      messagingTemplate.convertAndSend(
+              "/topic/attendance/" + employee.getDepartment().getId(),
+              Map.of("employeeId", employeeId, "status", "CHECK_OUT")
+      );
+    }
 
     return AttendanceResponse.from(attendance);
   }
