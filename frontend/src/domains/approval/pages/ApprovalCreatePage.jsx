@@ -1,14 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  getMyInfo,
-  getForms,
-  getEmployees,
-  createApproval,
-  getLeaveBalance,
-} from "../services/approvalApi";
 import useAuthContext from "../../../store/AuthContext";
 import ApprovalFormPanel from "../components/ApprovalFormPanel";
+import { TEAM_MEMBERS } from "../../../constants/mockData";
+import { WSCard, WSAvatar } from "../../../components/common/CommonWidgets";
+import s from "./ApprovalCreatePage.module.css";
 import {
   ArrowLeft,
   X,
@@ -22,44 +18,14 @@ import {
   Send,
   Save,
   UserPlus,
-  Info,
 } from "lucide-react";
-import { TEAM_MEMBERS } from "../../../constants/mockData";
-import { WSCard, WSAvatar } from "../../../components/common/CommonWidgets";
-import s from "./ApprovalCreatePage.module.css";
-import { getEmployee } from "../../organization/services/organizationListApi";
-
-const DOC_TYPES = [
-  "예산",
-  "인사 정책",
-  "IT 요청",
-  "구매",
-  "행사",
-  "인사",
-  "기타",
-];
-const PRIORITIES = [
-  { value: "low", label: "낮음", color: "#6B7280", bg: "#F3F4F6" },
-  { value: "medium", label: "보통", color: "#D97706", bg: "#FEF3C7" },
-  { value: "high", label: "높음", color: "#DC2626", bg: "#FEE2E2" },
-  { value: "urgent", label: "긴급", color: "#7C3AED", bg: "#EDE9FE" },
-];
-const DEPARTMENTS = [
-  "경영진",
-  "제품팀",
-  "개발팀",
-  "디자인팀",
-  "마케팅팀",
-  "인사팀",
-  "재무팀",
-];
-
-const MOCK_TEMPLATES = [
-  { id: "tpl1", name: "예산 요청 양식", type: "예산" },
-  { id: "tpl2", name: "인사 정책 변경", type: "인사 정책" },
-  { id: "tpl3", name: "IT 장비 구매 신청", type: "IT 요청" },
-  { id: "tpl4", name: "행사 기획안", type: "행사" },
-];
+import {
+  getMyInfo,
+  getForms,
+  getEmployees,
+  createApproval,
+  getLeaveBalance,
+} from "../services/approvalApi";
 
 const fileIconColor = {
   pdf: "#EF4444",
@@ -71,7 +37,6 @@ const fileIconColor = {
 
 export default function ApprovalNew() {
   const navigate = useNavigate();
-
   const [title, setTitle] = useState("");
   const [docType, setDocType] = useState("");
   const [priority, setPriority] = useState("medium");
@@ -79,17 +44,28 @@ export default function ApprovalNew() {
   const [content, setContent] = useState("");
   const [showTemplate, setShowTemplate] = useState(false);
   const [templates, setTemplates] = useState(false);
-  const [selectedForm, setSelectedForm] = useState({
-    formType: "EXPENSE",
-    formName: "지출결의서",
-  });
   const [formValues, setFormValues] = useState({});
   const [employees, setEmployees] = useState([]);
   const [myInfo, setMyInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [balance, setBalance] = useState(null);
+  const [approvers, setApprovers] = useState([]);
+  const [showMemberPicker, setShowMemberPicker] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const fileInputRef = useRef(null);
+  const [submitted, setSubmitted] = useState(false);
+  const [saved, setSaved] = useState(false);
   const { accessToken } = useAuthContext();
   const validateRef = useRef(null);
+  const [selectedForm, setSelectedForm] = useState({
+    formType: "EXPENSE",
+    formName: "지출결의서",
+  });
+  const [attachments, setAttachments] = useState([
+    { id: "f1", name: "Q3_예산_초안.xlsx", size: "1.2 MB", type: "xlsx" },
+  ]);
+  const isValid =
+    title.trim().length > 0 && docType !== "" && approvers.length > 0;
 
   useEffect(() => {
     if (!accessToken) return;
@@ -114,21 +90,6 @@ export default function ApprovalNew() {
       setSelectedForm(templates[0]);
     }
   }, [templates]);
-
-  const [approvers, setApprovers] = useState([]);
-  const [showMemberPicker, setShowMemberPicker] = useState(false);
-
-  const [attachments, setAttachments] = useState([
-    { id: "f1", name: "Q3_예산_초안.xlsx", size: "1.2 MB", type: "xlsx" },
-  ]);
-  const [isDragOver, setIsDragOver] = useState(false);
-  const fileInputRef = useRef(null);
-
-  const [submitted, setSubmitted] = useState(false);
-  const [saved, setSaved] = useState(false);
-
-  const isValid =
-    title.trim().length > 0 && docType !== "" && approvers.length > 0;
 
   const handleAddApprover = (member) => {
     if (approvers.find((a) => a.member.id === member.id)) return;
@@ -173,11 +134,6 @@ export default function ApprovalNew() {
 
   const handleRemoveFile = (id) =>
     setAttachments((prev) => prev.filter((f) => f.id !== id));
-
-  const handleSaveDraft = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
-  };
 
   const handleSubmit = async () => {
     // items 중 amount는 숫자 items는 배열로 보낼 시 오류터짐 방지
@@ -229,8 +185,6 @@ export default function ApprovalNew() {
     }
     setIsLoading(false);
   };
-
-  const selectedPriority = PRIORITIES.find((p) => p.value === priority);
 
   if (submitted) {
     return (
@@ -301,7 +255,6 @@ export default function ApprovalNew() {
                   <FileText size={14} color="#9CA3AF" />
                   <div>
                     <p className={s.tplItemName}>{tpl.formName}</p>
-                    <p className={s.tplItemType}>{tpl.formType}</p>
                   </div>
                 </button>
               ))}

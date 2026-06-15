@@ -150,7 +150,6 @@
   z-index: 10;
   min-width: 100px;
 }
-
 .statusBadge {
   display: inline-block;
   padding: 4px 10px;
@@ -169,7 +168,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 300px;
+  max-width: 250px;
 }
 .requesterRow {
   display: flex;
@@ -178,6 +177,7 @@
   margin-bottom: 16px;
 }
 .requesterName {
+  min-height: 20px;
   color: var(--ws-text-800);
   font-size: 12.5px;
   font-weight: 600;

@@ -1,5 +1,9 @@
 import { useParams, useNavigate } from "react-router-dom";
 import useAuthContext from "../../../store/AuthContext";
+import { APPROVAL_DOCS, TEAM_MEMBERS } from "../../../constants/mockData";
+import { WSAvatar } from "../../../components/common/CommonWidgets";
+import s from "./ApprovalDetailPage.module.css";
+import { useState, useEffect, Fragment } from "react";
 import {
   CheckCircle,
   XCircle,
@@ -8,16 +12,12 @@ import {
   X,
   Clock,
 } from "lucide-react";
-import { APPROVAL_DOCS, TEAM_MEMBERS } from "../../../constants/mockData";
-import { WSAvatar } from "../../../components/common/CommonWidgets";
 import {
   getMyInfo,
   getApprovalById,
   processApproval,
   getLeaveBalance,
 } from "../services/approvalApi";
-import s from "./ApprovalDetailPage.module.css";
-import { useState, useEffect, Fragment } from "react";
 
 const STATUS_CONFIG = {
   IN_PROGRESS: { label: "대기", bg: "#FEF3C7", text: "#92400E" },

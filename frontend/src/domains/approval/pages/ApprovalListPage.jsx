@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Plus, MoreVertical, ChevronDown, Search } from "lucide-react";
 import { APPROVAL_DOCS } from "../../../constants/mockData";
+import useAuthContext from "../../../store/AuthContext";
+import s from "./ApprovalListPage.module.css";
 import {
   getMyInfo,
   getMyApprovals,
@@ -15,8 +17,6 @@ import {
   WSAvatar,
   WSPagination,
 } from "../../../components/common/CommonWidgets";
-import useAuthContext from "../../../store/AuthContext";
-import s from "./ApprovalListPage.module.css";
 
 const STATUS_CONFIG = {
   IN_PROGRESS: { label: "대기", bg: "#FEF3C7", text: "#92400E" },
