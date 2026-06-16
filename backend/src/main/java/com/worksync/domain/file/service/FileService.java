@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
@@ -33,6 +34,7 @@ public class FileService {
 
     private final FileAttachmentRepository fileAttachmentRepository;
     private final EmployeeRepository employeeRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     private final RestClient restClient = RestClient.create();
 
@@ -91,7 +93,7 @@ public class FileService {
 
     // 최종 저장시 refId 추가
     @Transactional
-    public void updateRefId(Long uploaderId, FileSaveRequest request) {
+    public FileUploadResponse updateRefId(Long uploaderId, FileSaveRequest request) {
         // 업로드 사원 조회
         Employee uploader = employeeRepository.findById(uploaderId)
                 .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
@@ -111,7 +113,17 @@ public class FileService {
                 .build();
 
         // refId 최종 저장
-        FileUploadResponse.from(fileAttachmentRepository.save(fileAttachment));
+        FileAttachment saved = fileAttachmentRepository.save(fileAttachment);
+
+        // (WebSocket) 저장 완료 후 채팅방 실시간 푸쉬
+        if ("CHAT".equals(request.getRefType())) {
+            messagingTemplate.convertAndSend(
+                    "/topic/chat/" + request.getRefId() + "/files",
+                    FileUploadResponse.from(saved)
+            );
+        }
+
+        return FileUploadResponse.from(saved);
     }
 
     // 파일 단건 조회

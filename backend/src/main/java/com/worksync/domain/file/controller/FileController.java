@@ -29,11 +29,10 @@ public class FileController {
 
   // 파일 DB 저장
   @PostMapping("/save")
-  public ResponseEntity<ApiResponse<Void>> saveFile(
+  public ResponseEntity<ApiResponse<FileUploadResponse>> saveFile(
           @AuthenticationPrincipal CustomUserDetails userDetails,
           @RequestBody FileSaveRequest request) {
-    fileService.updateRefId(userDetails.getId(), request);
-    return ResponseEntity.ok(ApiResponse.ok(null));
+    return ResponseEntity.ok(ApiResponse.ok(fileService.updateRefId(userDetails.getId(), request)));
   }
 
   // 파일 단건 조회

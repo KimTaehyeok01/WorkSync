@@ -63,13 +63,13 @@ public class TaskService {
                     .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
         }
 
-    Department department=null;
+        Department department=null;
         if(request.getDepartmentId() !=null){
             department=departmentRepository.findById(request.getDepartmentId())
                     .orElseThrow(()->new CustomException(ErrorCode.DEPARTMENT_NOT_FOUND));
         }
 
-    // 진행률 10단위 검증
+        // 진행률 10단위 검증
         if (request.getProgress() !=null && request.getProgress()%10 !=0){
             throw new CustomException(ErrorCode.INVALID_PROGRESS);
         }

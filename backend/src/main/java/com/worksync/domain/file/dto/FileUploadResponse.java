@@ -20,10 +20,12 @@ public class FileUploadResponse {
 
     public static FileUploadResponse from(FileAttachment file) {
         return FileUploadResponse.builder()
+                .id(file.getId())
                 .originalName(file.getOriginalName())
                 .filePath(file.getFilePath())
                 .fileSize(file.getFileSize())
                 .mimeType(file.getMimeType())
+                .createdAt(file.getCreatedAt())
                 .build();
     }
 }
