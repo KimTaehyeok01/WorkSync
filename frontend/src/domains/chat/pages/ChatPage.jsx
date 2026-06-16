@@ -148,10 +148,6 @@ export default function Messenger() {
       reconnectDelay: 5000,
       connectHeaders: { Authorization: `Bearer ${accessToken}` },
 
-      // debug: (str) => {
-      //   console.log("STOMP:", str);
-      // },
-
       onConnect: () => {
         client.subscribe(`/user/queue/chat/unread`, (frame) => {
           const { roomId, unreadCount } = JSON.parse(frame.body);
@@ -177,13 +173,7 @@ export default function Messenger() {
       reconnectDelay: 5000,
       connectHeaders: { Authorization: `Bearer ${accessToken}` },
 
-      debug: (str) => {
-        console.log("STOMP:", str);
-      },
-
       onConnect: () => {
-        console.log("연결");
-
         client.subscribe(`/topic/chat/${activeConvId}/files`, (frame) => {
           const file = JSON.parse(frame.body);
           setSharedFiles((prev) => [
@@ -362,7 +352,6 @@ export default function Messenger() {
         const fileId = saved?.data?.id;
 
         if (!fileId) {
-          console.log("fileId 없음" + saved.data);
           continue;
         }
 

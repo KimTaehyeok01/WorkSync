@@ -71,7 +71,6 @@ export default function Approval() {
       return;
     }
 
-    console.log("cache: ", cache);
     setIsLoading(true); // 캐시 없을 때만 로딩 시작
 
     let api;

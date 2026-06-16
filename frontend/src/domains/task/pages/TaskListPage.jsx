@@ -107,7 +107,6 @@ export default function Tasks() {
         filters={[{ label: "상태", key: "status", options: STATUS_OPTIONS }]}
         filterValues={{ status: statusFilter }}
         onFilterChange={(_key, value) => {
-          console.log("key:", _key, "value:", value);
           setStatusFilter(value);
           setPage(1);
         }}

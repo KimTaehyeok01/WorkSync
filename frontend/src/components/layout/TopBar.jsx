@@ -140,7 +140,6 @@ export function TopBar({ pathname }) {
     });
 
     getUnreadCount(accessToken).then((data) => {
-      // console.log(data);
       setUnreadCount(data.unreadCount || 0);
     });
   }, [accessToken]);

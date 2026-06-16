@@ -87,7 +87,6 @@ export default function ApprovalUpdate() {
     // 파일 데이터 불러오기
     getFile(accessToken, "APPROVAL", id).then((data) => {
       const fileList = Array.isArray(data.data) ? data.data : [];
-      // console.log(fileList);
       setFiles(
         fileList.map((f) => ({
           file: {

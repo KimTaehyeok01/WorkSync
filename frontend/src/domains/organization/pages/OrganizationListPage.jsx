@@ -48,7 +48,6 @@ export default function OrganizationListPage() {
   useEffect(() => {
     if (!accessToken) return;
     getMyInfo(accessToken).then((data) => {
-      // console.log(data);
       setMyRole(data.data.role);
     });
   }, [accessToken]);
@@ -57,7 +56,6 @@ export default function OrganizationListPage() {
   useEffect(() => {
     if (!accessToken) return;
     getDepartments(accessToken).then((data) => {
-      // console.log(data);
       setDepartments(Array.isArray(data.data) ? data.data : []);
     });
   }, [accessToken]);
@@ -74,7 +72,6 @@ export default function OrganizationListPage() {
   useEffect(() => {
     if (!accessToken) return;
     getEmployee(accessToken).then((data) => {
-      // console.log(data);
       setEmployee(Array.isArray(data.data) ? data.data : []);
     });
   }, [accessToken]);
@@ -106,8 +103,6 @@ export default function OrganizationListPage() {
   async function handleAdd() {
     if (addDeptName.trim()) {
       await createDepartments(accessToken, addDeptName).then((response) => {
-        // console.log("추가콘솔: " + response.data);
-        // console.log("추가콘솔: " + departments);
         setDepartments([...departments, response.data]);
       });
 
@@ -128,8 +123,6 @@ export default function OrganizationListPage() {
 
       if (editDeptId) {
         await deleteDepartments(accessToken, editDeptId).then((response) => {
-          // console.log("삭제콘솔: " + editDeptId);
-          // console.log("삭제콘솔: " + departments);
           setDepartments(
             departments.filter((dept) => dept.id !== Number(editDeptId)),
           );
