@@ -197,3 +197,11 @@
   border-top: 1px solid #f0f0f0;
   margin: 15px 0;
 }
+.spinner {
+  display: flex;
+  justify-content: center;
+  align-items: cetner;
+  padding: 40px;
+  color: var(--ws-text-secondary);
+  font-size: 14px;
+}

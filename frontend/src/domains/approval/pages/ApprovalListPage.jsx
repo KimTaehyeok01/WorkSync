@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { Plus, MoreVertical, ChevronDown, Search } from "lucide-react";
+import {
+  Plus,
+  MoreVertical,
+  ChevronDown,
+  Search,
+  ClipboardList,
+} from "lucide-react";
 import { APPROVAL_DOCS } from "../../../constants/mockData";
 import useAuthContext from "../../../store/AuthContext";
 import s from "./ApprovalListPage.module.css";
@@ -16,6 +22,7 @@ import {
 import {
   WSAvatar,
   WSPagination,
+  WSEmptyState,
 } from "../../../components/common/CommonWidgets";
 
 const STATUS_CONFIG = {
@@ -41,24 +48,43 @@ export default function Approval() {
   const [search, setSearch] = useState("");
   // 뒤로가기 버튼 눌렀을 때 이전 화면으로 돌아갈 수 있도록 URL 저장
   const [searchParams, setSearchParams] = useSearchParams();
+  const [cache, setCache] = useState({}); // 캐시 저장소
   const [page, setPage] = useState(1);
   const [openDropdown, setOpenDropdown] = useState(null);
-  const navigate = useNavigate();
-  const { accessToken } = useAuthContext();
+  const [docs, setDocs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const boxType = searchParams.get("box") ?? "inbox"; // 기본값
   const status = searchParams.get("status") ?? "all";
-  const [docs, setDocs] = useState([]);
+  const navigate = useNavigate();
+  const { accessToken } = useAuthContext();
 
-  // boxType of statusFilter 바뀔 때 마다 API 호출
+  // 탭/상태 전환 시 매번 api 재호출로 인한 로딩 지연 문제 해결
+  // 동일한 탭/상태 재방문 시 기존 데이터 즉시 반환
   useEffect(() => {
     if (!accessToken) return;
-    if (boxType === "inbox") {
-      getApprovalInbox(accessToken, status).then((data) => setDocs(data ?? []));
-    } else if (boxType === "my") {
-      getMyApprovals(accessToken, status).then((data) => setDocs(data ?? []));
-    } else if (boxType === "reference") {
-      getReferenceApprovals(accessToken).then((data) => setDocs(data ?? []));
+
+    const cacheKey = `${boxType}-${status}`;
+
+    // 캐시에 있으면 API 안 부르고 바로 사용
+    if (cache[cacheKey]) {
+      setDocs(cache[cacheKey]);
+      return;
     }
+
+    console.log("cache: ", cache);
+    setIsLoading(true); // 캐시 없을 때만 로딩 시작
+
+    let api;
+    if (boxType === "inbox") api = getApprovalInbox(accessToken, status);
+    else if (boxType === "my") api = getMyApprovals(accessToken, status);
+    else api = getReferenceApprovals(accessToken, status);
+
+    api
+      .then((data) => {
+        setDocs(data ?? []);
+        setCache((prev) => ({ ...prev, [cacheKey]: data ?? [] }));
+      })
+      .finally(() => setIsLoading(false));
   }, [accessToken, boxType, status]);
 
   const filtered = (docs ?? []).filter((doc) => {
@@ -81,6 +107,10 @@ export default function Approval() {
     BOX_OPTIONS.find((o) => o.key === boxType)?.label || "기안함";
   const statusLabel =
     STATUS_OPTIONS.find((o) => o.key === status)?.label || "전체";
+
+  if (isLoading) {
+    return null;
+  }
 
   return (
     <div>
@@ -170,106 +200,118 @@ export default function Approval() {
         </div>
       </div>
 
-      <div className={s.grid}>
-        {paginatedDocs.map((doc) => {
-          const config = STATUS_CONFIG[doc.status] ?? {
-            label: doc.status,
-            bg: "#E5E7EB",
-            text: "#374151",
-          };
-          return (
-            <div
-              key={doc.id}
-              className={s.card}
-              onClick={() => navigate(`/approval/${doc.id}`)}
-            >
-              <>
-                {boxType === "my" && (
-                  <div className={s.cardMore}>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenDropdown(
-                          openDropdown === doc.id ? null : doc.id,
-                        );
-                      }}
-                      className={s.cardMoreBtn}
-                    >
-                      <MoreVertical size={16} />
-                    </button>
-                    {openDropdown === doc.id && (
-                      <div className={s.cardMoreMenu}>
-                        <button
-                          className={s.ddItem}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenDropdown(null);
-                            if (doc.status !== "IN_PROGRESS") {
-                              alert("대기 중인 문서만 수정할 수 있습니다.");
-                              return;
-                            }
-                            navigate(`/approval/${doc.id}/edit`);
-                          }}
-                        >
-                          수정
-                        </button>
-                        <button
-                          className={`${s.ddItem} ${s.ddItemDanger}`}
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            setOpenDropdown(null);
-                            if (confirm("게시글을 삭제하시겠습니까?")) {
+      {paginatedDocs.length === 0 ? (
+        <div className={s.empty}>
+          <WSEmptyState
+            icon={<ClipboardList size={32} />}
+            title="등록된 결재가 없습니다"
+            description="첫 결재를 등록하거나 검색 조건을 변경해 보세요."
+          />
+        </div>
+      ) : (
+        <div className={s.grid}>
+          {paginatedDocs.map((doc) => {
+            const config = STATUS_CONFIG[doc.status] ?? {
+              label: doc.status,
+              bg: "#E5E7EB",
+              text: "#374151",
+            };
+            return (
+              <div
+                key={doc.id}
+                className={s.card}
+                onClick={() => navigate(`/approval/${doc.id}`)}
+              >
+                <>
+                  {boxType === "my" && (
+                    <div className={s.cardMore}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenDropdown(
+                            openDropdown === doc.id ? null : doc.id,
+                          );
+                        }}
+                        className={s.cardMoreBtn}
+                      >
+                        <MoreVertical size={16} />
+                      </button>
+                      {openDropdown === doc.id && (
+                        <div className={s.cardMoreMenu}>
+                          <button
+                            className={s.ddItem}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenDropdown(null);
                               if (doc.status !== "IN_PROGRESS") {
-                                alert("대기 중인 문서만 삭제할 수 있습니다.");
+                                alert("대기 중인 문서만 수정할 수 있습니다.");
                                 return;
                               }
-                              try {
-                                await deleteApproval(accessToken, doc.id);
-                                setDocs((prev) =>
-                                  prev.filter((d) => d.id !== doc.id),
-                                );
-                              } catch (err) {
-                                alert("삭제 실패했습니다.");
+                              navigate(`/approval/${doc.id}/edit`);
+                            }}
+                          >
+                            수정
+                          </button>
+                          <button
+                            className={`${s.ddItem} ${s.ddItemDanger}`}
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              setOpenDropdown(null);
+                              if (confirm("게시글을 삭제하시겠습니까?")) {
+                                if (doc.status !== "IN_PROGRESS") {
+                                  alert("대기 중인 문서만 삭제할 수 있습니다.");
+                                  return;
+                                }
+                                try {
+                                  await deleteApproval(accessToken, doc.id);
+                                  setDocs((prev) =>
+                                    prev.filter((d) => d.id !== doc.id),
+                                  );
+                                } catch (err) {
+                                  alert("삭제 실패했습니다.");
+                                }
                               }
-                            }
-                          }}
-                        >
-                          삭제
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </>
+                            }}
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
 
-              <div
-                className={s.statusBadge}
-                style={{
-                  "--status-bg": config.bg,
-                  "--status-color": config.text,
-                }}
-              >
-                {config.label}
+                <div
+                  className={s.statusBadge}
+                  style={{
+                    "--status-bg": config.bg,
+                    "--status-color": config.text,
+                  }}
+                >
+                  {config.label}
+                </div>
+
+                <h3 className={s.cardTitle}>{doc.title}</h3>
+
+                <div className={s.requesterRow}>
+                  <WSAvatar src={null} name={doc.drafterName} size={28} />
+
+                  <p className={s.requesterName}>{doc.drafterName}</p>
+                </div>
+                <hr className={s.divider} />
+                <div
+                  style={{ display: `flex`, justifyContent: `space-between` }}
+                >
+                  <p className={s.cardDate}>
+                    {new Date(doc.createdAt).toLocaleDateString("ko-KR")}
+                  </p>
+                  <p className={s.requesterRole}>{doc.formName}</p>
+                </div>
               </div>
-
-              <h3 className={s.cardTitle}>{doc.title}</h3>
-
-              <div className={s.requesterRow}>
-                <WSAvatar src={null} name={doc.drafterName} size={28} />
-
-                <p className={s.requesterName}>{doc.drafterName}</p>
-              </div>
-              <hr className={s.divider} />
-              <div style={{ display: `flex`, justifyContent: `space-between` }}>
-                <p className={s.cardDate}>
-                  {new Date(doc.createdAt).toLocaleDateString("ko-KR")}
-                </p>
-                <p className={s.requesterRole}>{doc.formName}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       <WSPagination
         total={filtered.length}

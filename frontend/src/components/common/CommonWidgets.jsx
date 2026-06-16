@@ -161,12 +161,12 @@ export function WSPagination({ total, page, perPage = 10, onPageChange }) {
   const start = (page - 1) * perPage + 1;
   const end = Math.min(page * perPage, total);
 
-  const pages = Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-    if (totalPages <= 5) return i + 1;
-    if (page <= 3) return i + 1;
-    if (page >= totalPages - 2) return totalPages - 4 + i;
-    return page - 2 + i;
-  });
+  const pages = Array.from({ length: Math.min(10, totalPages) }, (_, i) => {
+    if (totalPages <= 10) return i + 1;
+    // 현재 페이지 기준으로 10개 묶음 계산
+    const groupStart = Math.floor((page - 1) / 10) * 10 + 1;
+    return Math.min(groupStart + i, totalPages);
+  }).filter((p) => p <= totalPages);
 
   return (
     <div className={s.pagination}>
@@ -189,18 +189,6 @@ export function WSPagination({ total, page, perPage = 10, onPageChange }) {
             {p}
           </button>
         ))}
-        {totalPages > 5 && page < totalPages - 2 && (
-          <>
-            <span className={s.pagerEllipsis}>...</span>
-            <button
-              onClick={() => onPageChange?.(totalPages)}
-              className={s.pagerBtn}
-              aria-label={`마지막 페이지 ${totalPages}`}
-            >
-              {totalPages}
-            </button>
-          </>
-        )}
         <button
           onClick={() => onPageChange?.(page + 1)}
           disabled={page >= totalPages}

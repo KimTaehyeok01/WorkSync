@@ -325,7 +325,11 @@
   border: 1px solid #f0f0f0;
 }
 
-/* .detailTable tr:last-child th,
-.detailTable tr:last-child td {
-  border-bottom: none;
-} */
+.spinner {
+  display: flex;
+  justify-content: center;
+  align-items: cetner;
+  padding: 40px;
+  color: var(--ws-text-secondary);
+  font-size: 14px;
+}

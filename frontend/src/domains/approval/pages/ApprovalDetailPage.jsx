@@ -60,10 +60,6 @@ function LeaveDetail({ items, approval }) {
   const [balance, setBalance] = useState(null);
 
   useEffect(() => {
-    console.log("items:", JSON.stringify(items));
-  }, [items]);
-
-  useEffect(() => {
     if (!approval?.drafterId) return;
     getLeaveBalance(accessToken, approval.drafterId).then((data) => {
       // 작성자 id를 넘겨서 작성자 잔여일 반환
@@ -404,6 +400,7 @@ export default function ApprovalDetail() {
   const [approvalLines, setApprovalLines] = useState([]);
   const [approval, setApproval] = useState(null);
   const [me, setMe] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const fallbackStatusConfig = {
     label: "알 수 없음",
     bg: "#E5E7EB",
@@ -424,12 +421,14 @@ export default function ApprovalDetail() {
 
   useEffect(() => {
     if (!accessToken) return;
+    setIsLoading(true);
     getApprovalById(accessToken, id).then((data) => {
       if (!data) return;
 
       setApproval(data);
       setStatus(data.status);
       setApprovalLines(data.approvalLines ?? []);
+      setIsLoading(false);
     });
 
     // 파일 데이터 불러오기
@@ -458,12 +457,8 @@ export default function ApprovalDetail() {
     });
   }, [accessToken]);
 
-  if (!approval) {
-    return (
-      <div className={s.notFound}>
-        <p>문서를 찾을 수 없습니다</p>
-      </div>
-    );
+  if (isLoading) {
+    return null;
   }
 
   // 결재자 확인
@@ -497,7 +492,6 @@ export default function ApprovalDetail() {
       setApproval(data);
       setStatus(data.status);
       setApprovalLines(data.approvalLines ?? []);
-      console.log("approvalLines: ", approvalLines);
     });
   };
 
