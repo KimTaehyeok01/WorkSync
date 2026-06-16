@@ -49,7 +49,6 @@ export default function BoardDetail() {
         setIsLoading(false);
       });
   }, [boardId, postId, accessToken]);
-  console.log("post:", post);
 
   // 현재 글의 위치 찾기
   const postIndex = allPosts.findIndex((p) => p.id === Number(postId));

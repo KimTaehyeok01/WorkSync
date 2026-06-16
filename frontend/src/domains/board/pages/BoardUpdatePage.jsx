@@ -64,13 +64,16 @@ export default function BoardNew() {
   };
 
   useEffect(() => {
+    if (!accessToken) return;
     getPostById(boardId, postId, accessToken).then((data) => {
+      if (!data) return;
       setTitle(data.title);
       setContent(data.content);
       setCategory(getCategoryValue(data.boardName));
     });
     // 내 정보 조회(부서명 세팅)
     getMyInfo(accessToken).then((data) => {
+      if (!data) return;
       setMyDepartmentName(data.departmentName);
       setRole(data.role);
     });

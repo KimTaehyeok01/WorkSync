@@ -113,7 +113,7 @@ export default function Board() {
     if (category === "all") {
       // 전체 조회: DEPARTMENT 타입 중 내 부서 게시판만 포함
       getBoards(accessToken).then((data) => {
-        if (!data) return;
+        if (!data) { setIsLoading(false); return; }
         const nonDeptIds = data
           .filter((b) => b.boardType !== "DEPARTMENT")
           .map((b) => b.id);
@@ -133,7 +133,7 @@ export default function Board() {
     } else if (category === "DEPARTMENT") {
       // 부서게시판: 내 부서 게시판 id로 조회
       // ADMIN이면 deptFilter(특정 부서 or 전체) 전 부서 글 조회
-      if (!deptBoardId) return;
+      if (!deptBoardId) { setIsLoading(false); return; }
       const departmentId =
         role === "ADMIN" && deptFilter !== "all" ? deptFilter : undefined;
       getPosts(deptBoardId, accessToken, departmentId).then((data) => {
@@ -147,7 +147,7 @@ export default function Board() {
     } else {
       getPosts(category, accessToken).then((data) => {
         // 자유 게시판 최신순 정렬
-        if (!data) return;
+        if (!data) { setIsLoading(false); return; }
         const sorted = data.sort(
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
         );
