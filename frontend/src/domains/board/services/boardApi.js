@@ -11,7 +11,6 @@ export async function getBoards(accessToken) {
   })
     .then((response) => response.json())
     .then((json) => {
-      // console.log(json);
       return json.data;
     })
     .catch((error) => {
@@ -33,8 +32,7 @@ export async function getPosts(boardId, accessToken, departmentId) {
   })
     .then((response) => response.json())
     .then((json) => {
-      // console.log(json);
-      return json.data?.content.reverse() ?? []; //최신순으로 변경
+      return json.data?.content ?? [];
     })
     .catch((error) => {
       console.log("에러발생: " + error);
@@ -89,7 +87,6 @@ export async function getCreatePosts(boardId, data, accessToken) {
   })
     .then((response) => response.json())
     .then((json) => {
-      // console.log(json);
       return json.data;
     })
     .catch((error) => {
@@ -109,7 +106,6 @@ export async function getUpdatePosts(boardId, postId, data, accessToken) {
   })
     .then((response) => response.json())
     .then((json) => {
-      // console.log(json);
       return json.data;
     })
     .catch((error) => {
@@ -128,7 +124,6 @@ export async function getPostById(boardId, postId, accessToken) {
   })
     .then((response) => response.json())
     .then((json) => {
-      // console.log(json);
       return json.data;
     })
     .catch((error) => {
@@ -146,11 +141,9 @@ export async function deletePost(boardId, postId, accessToken) {
     },
   })
     .then((response) => {
-      // console.log("삭제 상태코드 : ", response.status);
       return response.json();
     })
     .then((json) => {
-      // console.log("삭제 응답 : ", json);
       return json;
     })
     .catch((error) => {
@@ -184,15 +177,12 @@ export async function getMyInfo(accessToken) {
     },
   })
     .then((response) => {
-      // console.log("response 상태코드 : ", response.status);
       return response.json();
     })
     .then((json) => {
-      // console.log("getMyInfo 전체 응답 : ", json);
       return json.data;
     })
     .then((data) => {
-      //console.log("내 정보 : ", data);
       return data;
     })
     .catch((error) => {

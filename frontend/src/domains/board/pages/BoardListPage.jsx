@@ -1,32 +1,28 @@
 import { useState, useEffect, useMemo } from "react";
 import useAuthContext from "../../../store/AuthContext";
+import s from "./BoardListPage.module.css";
 import {
   getBoards,
   getMyInfo,
   getPosts,
   getDepartmentBoard,
   getDepartments,
-  getEmployee,
 } from "../services/boardApi";
 import { useNavigate } from "react-router-dom";
-import { Plus, Search, ChevronDown } from "lucide-react";
+import { Plus, Search, ChevronDown, ClipboardList } from "lucide-react";
 import {
   WSCard,
   WSAvatar,
   WSButton,
   WSPagination,
+  WSEmptyState,
 } from "../../../components/common/CommonWidgets";
-import s from "./BoardListPage.module.css";
 
 export default function Board() {
   const navigate = useNavigate();
   const { accessToken } = useAuthContext();
   const [posts, setPosts] = useState([]);
   const [category, setCategory] = useState("all"); // 현재 선택된 값
-  const [categories, setCategories] = useState([
-    // 드롭다운 목록 전체
-    { value: "all", label: "전체" },
-  ]); // 전체 -> 고정으로 유지
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [myDepartmentName, setMyDepartmentName] = useState("");
@@ -34,7 +30,11 @@ export default function Board() {
   const [deptBoardId, setDeptBoardId] = useState(null); // 내 부서게시판 id
   const [departments, setDepartments] = useState([]); // ADMIN 부서 필터 목록
   const [deptFilter, setDeptFilter] = useState("all"); // ADMIN 선택한 부서 필터
-  const [profile, setProfile] = useState([]); // 목록 프로필이미지
+  const [isLoading, setIsLoading] = useState(true);
+  const [categories, setCategories] = useState([
+    // 드롭다운 목록 전체
+    { value: "all", label: "전체" },
+  ]); // 전체 -> 고정으로 유지
 
   // 카테고리 + 검색어 적용하여 정렬
   const filteredPosts = posts.filter((p) => {
@@ -105,16 +105,10 @@ export default function Board() {
     });
   }, [accessToken]);
 
-  // 게시글 목록
   useEffect(() => {
     if (!accessToken) return;
-
+    setIsLoading(true);
     setPosts([]); // category 변경 시 stale 데이터 즉시 초기화
-
-    // 전 직원 프로필
-    getEmployee(accessToken).then((data) => {
-      setProfile(Array.isArray(data.data) ? data.data : []);
-    });
 
     if (category === "all") {
       // 전체 조회: DEPARTMENT 타입 중 내 부서 게시판만 포함
@@ -126,7 +120,13 @@ export default function Board() {
         const ids = deptBoardId ? [...nonDeptIds, deptBoardId] : nonDeptIds;
         Promise.all(ids.map((id) => getPosts(id, accessToken))).then(
           (results) => {
-            setPosts(results.flat().filter(Boolean));
+            // 전체 조회 최신순 정렬
+            const flat = results.flat().filter(Boolean);
+            const sorted = flat.sort(
+              (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+            );
+            setPosts(sorted);
+            setIsLoading(false);
           },
         );
       });
@@ -137,15 +137,27 @@ export default function Board() {
       const departmentId =
         role === "ADMIN" && deptFilter !== "all" ? deptFilter : undefined;
       getPosts(deptBoardId, accessToken, departmentId).then((data) => {
-        setPosts(data ?? []);
+        // 부서 게시판 최신순 정렬
+        const sorted = (data ?? []).sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+        );
+        setPosts(sorted);
+        setIsLoading(false);
       });
     } else {
       getPosts(category, accessToken).then((data) => {
+        // 자유 게시판 최신순 정렬
         if (!data) return;
-        setPosts(data);
+        const sorted = data.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+        );
+        setPosts(sorted);
+        setIsLoading(false);
       });
     }
   }, [category, accessToken, deptBoardId, role, deptFilter]);
+
+  if (isLoading) return null;
 
   return (
     <div className={s.root}>
@@ -224,8 +236,11 @@ export default function Board() {
       <WSCard>
         {pagePosts.length === 0 ? (
           <div className={s.empty}>
-            <p className={s.emptyTitle}>게시글이 없습니다</p>
-            <p className={s.emptyDesc}>첫 번째 게시글을 작성해 보세요.</p>
+            <WSEmptyState
+              icon={<ClipboardList size={32} />}
+              title="등록된 게시글이 없습니다"
+              description="첫 게시글을 등록하거나 검색 조건을 변경해 보세요."
+            />
           </div>
         ) : (
           <div className={s.list}>
@@ -255,14 +270,7 @@ export default function Board() {
 
                     <p className={s.rowContent}>{post.content.slice(0, 200)}</p>
                     <div className={s.rowMeta}>
-                      <WSAvatar
-                        src={
-                          profile.find((p) => p.id === post.authorId)
-                            ?.profileImage ?? null
-                        }
-                        name={post.authorName}
-                        size={20}
-                      />
+                      <WSAvatar src={null} name={post.authorName} size={20} />
                       <span className={s.rowAuthor}>{post.authorName}</span>
                       <span className={s.rowDot}>·</span>
                       <span className={s.rowDate}>

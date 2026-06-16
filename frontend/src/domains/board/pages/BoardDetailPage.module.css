@@ -374,3 +374,12 @@
 .cancelBtn:hover {
   color: var(--ws-text-600);
 }
+
+.spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  color: var(--ws-text-secondary);
+  font-size: 14px;
+}
