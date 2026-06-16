@@ -256,7 +256,7 @@ export function TopBar({ pathname }) {
         </div>
       </div>
 
-      <div className={styles.search}>
+      {/* <div className={styles.search}>
         <Search size={15} className={styles.searchIcon} />
         <input
           type="text"
@@ -274,7 +274,7 @@ export function TopBar({ pathname }) {
             <X size={13} />
           </button>
         )}
-      </div>
+      </div> */}
 
       <div className={styles.bellWrap} ref={notifRef}>
         <button

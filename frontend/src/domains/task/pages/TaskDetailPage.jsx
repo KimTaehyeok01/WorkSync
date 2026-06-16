@@ -204,9 +204,7 @@ export default function TaskDetail() {
           </WSCard>
 
           <div className={s.actionsCol}>
-            {(role === "ADMIN" ||
-              task.creatorId === myId ||
-              task.assigneeId === myId) && (
+            {(task.creatorId === myId || task.assigneeId === myId) && (
               <>
                 <WSButton
                   label="수정"

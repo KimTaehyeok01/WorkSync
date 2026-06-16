@@ -6,6 +6,7 @@ import {
   WSAvatar,
   WSButton,
 } from "../../../components/common/CommonWidgets";
+import { WSFileList } from "../../../components/common/FormComponents";
 import s from "./BoardDetailPage.module.css";
 import {
   getPostById,
@@ -14,6 +15,8 @@ import {
   getPosts,
 } from "../services/boardApi";
 import useAuthContext from "../../../store/AuthContext";
+import useFileUpload from "../../../hooks/useFileUpload";
+import { getFile, saveFile, deleteFile } from "../../file/services/fileApi";
 
 const MOCK_ATTACHMENTS = [
   { id: "a1", name: "03_제내_수정.xlsx", size: "1.2 MB", type: "XLSX" },
@@ -28,6 +31,18 @@ export default function BoardDetail() {
   const [attachments, setAttachments] = useState(MOCK_ATTACHMENTS);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+
+  // 파일 선언
+  const {
+    files,
+    setFiles,
+    isDragging,
+    setIsDragging,
+    uploadedFile,
+    addFiles,
+    removeFiles,
+    clearFiles,
+  } = useFileUpload(accessToken, "POST", postId);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -48,8 +63,39 @@ export default function BoardDetail() {
         console.error("데이터 불러오기 실패: ", err);
         setIsLoading(false);
       });
+
+    // 파일 데이터 불러오기
+    getFile(accessToken, "POST", postId).then((data) => {
+      const fileList = Array.isArray(data.data) ? data.data : [];
+      // console.log(fileList);
+      setFiles(
+        fileList.map((f) => ({
+          file: {
+            name: f.originalName,
+            size: f.fileSize,
+          },
+          url: f.filePath,
+          refType: f.refType,
+          refId: f.refId,
+        })),
+      );
+    });
   }, [boardId, postId, accessToken]);
   console.log("post:", post);
+
+  // 파일 다운로드
+  const handleDownload = async (file, idx) => {
+    const response = await fetch(file.url);
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file.name;
+    a.click();
+
+    URL.revokeObjectURL(url);
+  };
 
   // 현재 글의 위치 찾기
   const postIndex = allPosts.findIndex((p) => p.id === Number(postId));
@@ -107,18 +153,10 @@ export default function BoardDetail() {
 
         <div className={s.colSide}>
           <WSCard title="첨부 파일" subtitle="1개 파일 업로드">
-            <div className={s.attachRow}>
-              <div className={s.attachLeft}>
-                <div className={s.attachIcon}>XLSX</div>
-                <div>
-                  <p className={s.attachName}>Q3_예산_요청.xlsx</p>
-                  <p className={s.attachSize}>1.2 MB</p>
-                </div>
-              </div>
-              <button className={s.attachDl}>
-                <Download size={18} />
-              </button>
-            </div>
+            <WSFileList
+              files={files.map(({ file }) => file)}
+              onDownload={handleDownload}
+            />
           </WSCard>
           {me && post && (me.id === post.authorId || me.role === "ADMIN") && (
             <>

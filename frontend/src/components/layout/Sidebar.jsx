@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useParams } from "react-router-dom";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client/dist/sockjs";
 import useAuthContext from "../../store/AuthContext";
@@ -19,6 +19,7 @@ import {
 import { getNotifications } from "../../domains/notification/services/notificationApi";
 import styles from "./Sidebar.module.css";
 import { log } from "sockjs-client/dist/sockjs";
+import { getMyInfo } from "../service/TopBarApi";
 
 const MAIN_NAV = [
   { path: "/", label: "대시보드", icon: LayoutDashboard, id: "ws-dash" },
@@ -65,12 +66,21 @@ export function Sidebar() {
   const location = useLocation();
   const { accessToken } = useAuthContext();
   const [unreadBadge, setUnreadBadge] = useState({});
+  const [my, setMy] = useState({});
   const clientRef = useRef(null);
 
   const isMainActive = (path) =>
     path === "/"
       ? location.pathname === "/"
       : location.pathname === path || location.pathname.startsWith(path + "/");
+
+  // 내 데이터 불러오기
+  useEffect(() => {
+    if (!accessToken) return;
+    getMyInfo(accessToken).then((data) => {
+      setMy(data.data || {});
+    });
+  }, [accessToken]);
 
   // WebSocket 실시간 알림 갱신
   useEffect(() => {
@@ -165,25 +175,33 @@ export function Sidebar() {
           })}
         </div>
 
-        <div className={styles.sectionLabel}>시스템</div>
-        <div className={styles.navGroup}>
-          {BOTTOM_NAV.map((item) => {
-            const Icon = item.icon;
-            const active = location.pathname === item.path;
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={
-                  active ? `${styles.navItem} ${styles.active}` : styles.navItem
-                }
-              >
-                <Icon size={18} className={styles.navIcon} />
-                <span className={styles.navLabel}>{item.label}</span>
-              </NavLink>
-            );
-          })}
-        </div>
+        {my.role === "ADMIN" ? (
+          <>
+            <div className={styles.sectionLabel}>시스템</div>
+            <div className={styles.navGroup}>
+              {BOTTOM_NAV.map((item) => {
+                const Icon = item.icon;
+                const active = location.pathname === item.path;
+                return (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    className={
+                      active
+                        ? `${styles.navItem} ${styles.active}`
+                        : styles.navItem
+                    }
+                  >
+                    <Icon size={18} className={styles.navIcon} />
+                    <span className={styles.navLabel}>{item.label}</span>
+                  </NavLink>
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          <></>
+        )}
       </nav>
     </aside>
   );

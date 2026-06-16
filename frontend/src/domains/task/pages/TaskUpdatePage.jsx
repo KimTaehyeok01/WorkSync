@@ -151,10 +151,12 @@ export default function TaskUpdate() {
       startDate: form.startDate,
       dueDate: form.dueDate,
     };
+    console.log(data);
 
     try {
       await updateTask(accessToken, taskId, data).then((res) => {
         if (!res) return;
+        console.log(res.data);
       });
 
       // 파일 경로가 있으면 파일 저장

@@ -13,23 +13,15 @@ import {
   WSFileUploadZone,
   WSFileList,
 } from "../../../components/common/FormComponents";
-import s from "./BoardCreatePage.module.css";
 import useAuthContext from "../../../store/AuthContext";
+import useFileUpload from "../../../hooks/useFileUpload";
+import { getFile, saveFile, deleteFile } from "../../file/services/fileApi";
+import s from "./BoardCreatePage.module.css";
 
 const BOARD_COLORS = {
   1: "#EF4444", // 공지사항 - 빨강
   2: "#8B5CF6", // 부서게시판 - 보라
   3: "#10B981", // 자유게시판 - 초록
-};
-
-const fileIconColor = {
-  PDF: "#EF4444",
-  XLSX: "#10B981",
-  PPTX: "#F59E0B",
-  DOCX: "#3B82F6",
-  PNG: "#06B6D4",
-  ZIP: "#F97316",
-  default: "#6B7280",
 };
 
 const TOOLBAR_ITEMS = ["굵게", "기울임", "밑줄", "목록"];
@@ -40,8 +32,6 @@ export default function BoardNew() {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [content, setContent] = useState("");
-  const [files, setFiles] = useState([]);
-  const [isDragging, setIsDragging] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [boardId, setboardId] = useState("");
   const [role, setRole] = useState(null);
@@ -52,29 +42,22 @@ export default function BoardNew() {
   const MAX_CHARS = 3000;
   const { accessToken } = useAuthContext();
 
-  //파일 추가
-  const addFiles = (newFiles) => {
-    setFiles((prev) => [...prev, ...newFiles.map((f) => ({ file: f }))]);
-  };
-
-  //파일 삭제(index)
-  const removeFiles = (index) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-  };
-
   const isValid =
     title.trim().length > 0 && category !== "" && content.trim().length > 0;
 
-  function handleFileDrop(e) {
-    e.preventDefault();
-    setIsDragging(false);
-    addFiles(Array.from(e.dataTransfer.files));
-  }
+  // 파일 선언
+  const {
+    files,
+    isDragging,
+    setIsDragging,
+    uploadedFile,
+    uploadedFileRef,
+    addFiles,
+    removeFiles,
+    clearFiles,
+  } = useFileUpload(accessToken, "POST");
 
-  function handleFileInput(e) {
-    if (e.target.files) addFiles(Array.from(e.target.files));
-  }
-
+  // 폼 저장
   async function handleSubmit() {
     if (!accessToken || !isValid || isLoading) return;
 
@@ -84,7 +67,8 @@ export default function BoardNew() {
 
     setIsLoading(true);
     try {
-      await getCreatePosts(
+      // 게시물 저장
+      const result = await getCreatePosts(
         actualBoardId,
         {
           boardId: actualBoardId,
@@ -93,6 +77,19 @@ export default function BoardNew() {
         },
         accessToken,
       );
+      const postId = result;
+
+      // 파일 저장
+      for (const file of uploadedFile) {
+        if (file?.filePath) {
+          await saveFile(accessToken, {
+            ...file,
+            refType: "POST",
+            refId: postId,
+          });
+        }
+      }
+
       setSubmitted(true);
 
       setTimeout(() => navigate("/board"), 1800);
@@ -100,6 +97,8 @@ export default function BoardNew() {
       console.error("게시글 등록 실패", err);
     } finally {
       setIsLoading(false);
+      // 파일 초기화
+      clearFiles();
     }
   }
 
