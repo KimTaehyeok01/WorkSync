@@ -185,18 +185,16 @@ export function WSPagination({ total, page, perPage = 10, onPageChange }) {
             {p}
           </button>
         ))}
-        {totalPages > 5 && page < totalPages - 2 && (
-          <>
-            <span className={s.pagerEllipsis}>...</span>
-            <button
-              onClick={() => onPageChange?.(totalPages)}
-              className={s.pagerBtn}
-              aria-label={`마지막 페이지 ${totalPages}`}
-            >
-              {totalPages}
-            </button>
-          </>
-        )}
+        {totalPages > 5 &&
+          page < totalPages - 2 &&
+          pages[pages.length - 1] < totalPages - 1 && (
+            <>
+              <span className={s.pagerEllipsis}>...</span>
+              <button onClick={() => onPageChange?.(totalPages)}>
+                {totalPages}
+              </button>
+            </>
+          )}
         <button
           onClick={() => onPageChange?.(page + 1)}
           disabled={page >= totalPages}

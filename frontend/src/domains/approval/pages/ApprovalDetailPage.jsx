@@ -399,6 +399,7 @@ export default function ApprovalDetail() {
   const [approvalLines, setApprovalLines] = useState([]);
   const [approval, setApproval] = useState(null);
   const [me, setMe] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const fallbackStatusConfig = {
     label: "알 수 없음",
     bg: "#E5E7EB",
@@ -407,12 +408,14 @@ export default function ApprovalDetail() {
 
   useEffect(() => {
     if (!accessToken) return;
+    setIsLoading(true);
     getApprovalById(accessToken, id).then((data) => {
       if (!data) return;
 
       setApproval(data);
       setStatus(data.status);
       setApprovalLines(data.approvalLines ?? []);
+      setIsLoading(false);
     });
   }, [accessToken, id]);
 
@@ -424,12 +427,8 @@ export default function ApprovalDetail() {
     });
   }, [accessToken]);
 
-  if (!approval) {
-    return (
-      <div className={s.notFound}>
-        <p>문서를 찾을 수 없습니다</p>
-      </div>
-    );
+  if (isLoading) {
+    return null;
   }
   // 결재자 확인
   const myLine = approvalLines.find((line) => line.approverId === me?.id);
