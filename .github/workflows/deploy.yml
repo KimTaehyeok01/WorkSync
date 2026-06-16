@@ -26,7 +26,7 @@ jobs:
             # 백엔드 빌드
             export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
             cd backend
-            ./gradlew clean build -x test
+            ./gradlew build -x test
 
             # 백엔드 재시작
             sudo fuser -k 8080/tcp || true
