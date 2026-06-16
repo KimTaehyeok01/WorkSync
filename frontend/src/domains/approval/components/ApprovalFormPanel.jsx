@@ -124,8 +124,8 @@ function ExpenseForm({
               <input
                 type="text"
                 value={myInfo?.departmentName ?? ""}
-                readOnly
                 className={s.input}
+                disabled
               />
             </div>
             <div>
@@ -135,8 +135,8 @@ function ExpenseForm({
               <input
                 type="text"
                 value={myInfo?.name ?? ""}
-                readOnly
                 className={s.input}
+                disabled
               />
             </div>
           </div>
@@ -176,8 +176,8 @@ function ExpenseForm({
                   ? Number(formValues.amount).toLocaleString()
                   : "0"
               }
-              readOnly
               className={s.input}
+              disabled
             />
           </div>
         </div>
@@ -382,7 +382,7 @@ function LeaveForm({
               <input
                 type="text"
                 value={myInfo?.departmentName ?? ""}
-                readOnly
+                disabled
                 className={s.input}
               />
             </div>
@@ -393,7 +393,7 @@ function LeaveForm({
               <input
                 type="text"
                 value={myInfo?.name ?? ""}
-                readOnly
+                disabled
                 className={s.input}
               />
             </div>
@@ -418,9 +418,9 @@ function LeaveForm({
               <input
                 type="text"
                 value={leaveBalance?.remainingDays ?? 0}
-                일
                 onChange={(e) => setTitle(e.target.value)}
                 className={s.input}
+                disabled
               />
             </div>
           </div>
@@ -680,7 +680,7 @@ function PurchaseForm({
                 type="text"
                 value={myInfo?.departmentName ?? ""}
                 className={s.input}
-                readOnly
+                disabled
               />
             </div>
             <div>
@@ -691,7 +691,7 @@ function PurchaseForm({
                 type="text"
                 value={myInfo?.name ?? ""}
                 className={s.input}
-                readOnly
+                disabled
               />
             </div>
           </div>
@@ -741,7 +741,7 @@ function PurchaseForm({
             <input
               type="text"
               value={Number(formValues.amount).toLocaleString()}
-              readOnly
+              disabled
               className={s.input}
             />
           </div>
@@ -803,7 +803,7 @@ function PurchaseForm({
               value={
                 row.amount === "" ? "" : Number(row.amount).toLocaleString()
               }
-              readOnly
+              disabled
               className={s.tableInput}
               style={{ maxWidth: 160, flex: 1 }}
             />
@@ -980,7 +980,7 @@ function BusinessTripForm({
               <input
                 type="text"
                 value={myInfo?.name ?? ""}
-                readOnly
+                disabled
                 className={s.input}
               />
             </div>
@@ -991,7 +991,7 @@ function BusinessTripForm({
               <input
                 type="text"
                 value={myInfo?.departmentName ?? ""}
-                readOnly
+                disabled
                 className={s.input}
               />
             </div>
@@ -1187,7 +1187,7 @@ function BusinessTripForm({
               type="text"
               className={s.input}
               value={total ? Number(total).toLocaleString() : "0"}
-              readOnly
+              disabled
             />
             <span></span>
           </div>

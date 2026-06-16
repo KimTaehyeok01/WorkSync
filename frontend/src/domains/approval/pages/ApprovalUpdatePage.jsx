@@ -3,7 +3,6 @@ import ApprovalFormPanel from "../components/ApprovalFormPanel";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { WSCard } from "../../../components/common/CommonWidgets";
-import s from "./ApprovalCreatePage.module.css";
 import {
   ArrowLeft,
   Paperclip,
@@ -18,14 +17,10 @@ import {
   getEmployees,
   updateApproval,
 } from "../services/approvalApi";
+import useFileUpload from "../../../hooks/useFileUpload";
+import { getFile, saveFile, deleteFile } from "../../file/services/fileApi";
+import s from "./ApprovalCreatePage.module.css";
 
-const fileIconColor = {
-  pdf: "#EF4444",
-  xlsx: "#10B981",
-  pptx: "#F59E0B",
-  docx: "#3B82F6",
-  default: "#6B7280",
-};
 // formType 대신 formId로 매핑
 const FORM_TYPE_MAP = {
   1: "LEAVE",
@@ -49,6 +44,18 @@ export default function ApprovalUpdate() {
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef(null);
   const validateRef = useRef(null);
+
+  // 파일 선언
+  const {
+    files,
+    isDragging,
+    setIsDragging,
+    uploadedFile,
+    uploadedFileRef,
+    addFiles,
+    removeFiles,
+    clearFiles,
+  } = useFileUpload(accessToken, "APPROVAL");
 
   // 내 정보 불러오기
   useEffect(() => {
@@ -76,31 +83,24 @@ export default function ApprovalUpdate() {
 
       setFormValues(data.items ?? {});
     });
+
+    // 파일 데이터 불러오기
+    getFile(accessToken, "APPROVAL", id).then((data) => {
+      const fileList = Array.isArray(data.data) ? data.data : [];
+      // console.log(fileList);
+      setFiles(
+        fileList.map((f) => ({
+          file: {
+            name: f.originalName,
+            size: f.fileSize,
+          },
+          url: f.filePath,
+          refType: f.refType,
+          refId: f.refId,
+        })),
+      );
+    });
   }, [accessToken, id]);
-
-  const handleMockFile = () => {
-    const names = [
-      "보고서_최종.pdf",
-      "예산서_v2.xlsx",
-      "제안서.pptx",
-      "계획서.docx",
-    ];
-    const sizes = ["0.8 MB", "2.1 MB", "4.5 MB", "1.3 MB"];
-    const types = ["pdf", "xlsx", "pptx", "docx"];
-    const idx = Math.floor(Math.random() * 4);
-    setAttachments((prev) => [
-      ...prev,
-      {
-        id: "f" + Date.now(),
-        name: names[idx],
-        size: sizes[idx],
-        type: types[idx],
-      },
-    ]);
-  };
-
-  const handleRemoveFile = (id) =>
-    setAttachments((prev) => prev.filter((f) => f.id !== id));
 
   const handleSubmit = async () => {
     if (!title.trim()) return;
@@ -124,12 +124,34 @@ export default function ApprovalUpdate() {
     const body = { title, items: stringifiedItems };
 
     setIsLoading(true);
-    const result = await updateApproval(accessToken, id, body);
-    if (result?.status === 200) {
-      setSubmitted(true);
-      setTimeout(() => navigate("/approval"), 1600);
+    try {
+      // 전자결제 업로드
+      const result = await updateApproval(accessToken, id, body);
+
+      // 파일 경로가 있으면 파일 저장
+      for (const file of uploadedFile) {
+        if (file?.filePath && file?.isNew) {
+          // 파일 저장
+          await saveFile(accessToken, {
+            ...file,
+            refType: "APPROVAL",
+            refId: id,
+          });
+        }
+      }
+
+      if (result?.status === 200) {
+        setSubmitted(true);
+        setTimeout(() => navigate("/approval"), 1600);
+      }
+      setIsLoading(false);
+    } catch (error) {
+      console.error("게시글 등록 실패", err);
+    } finally {
+      setIsLoading(false);
+      // 파일 초기화
+      clearFiles();
     }
-    setIsLoading(false);
   };
 
   if (submitted) {
@@ -182,68 +204,20 @@ export default function ApprovalUpdate() {
             title="첨부 파일"
             subtitle={`${attachments.length}개 파일 첨부됨`}
           >
-            <div
-              className={`${s.dropzone} ${isDragOver ? s.dropzoneActive : ""}`}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setIsDragOver(true);
-              }}
-              onDragLeave={() => setIsDragOver(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setIsDragOver(false);
-                handleMockFile();
-              }}
-              onClick={() => fileInputRef.current?.click()}
-              role="button"
-              tabIndex={0}
-            >
-              <Paperclip
-                size={28}
-                className={`${s.dropzoneIcon} ${isDragOver ? s.dropzoneIconActive : ""}`}
-              />
-              <p className={s.dropzoneLabel}>
-                파일을 드래그하거나 클릭해서 추가
-              </p>
-              <p className={s.dropzoneHint}>
-                PDF, DOCX, XLSX, PPTX · 최대 50MB
-              </p>
-              <input
-                ref={fileInputRef}
-                type="file"
-                className={s.hiddenInput}
-                onChange={handleMockFile}
-              />
-            </div>
+            <WSFileUploadZone
+              onFilesAdded={addFiles}
+              isDragging={isDragging}
+              onDragStateChange={setIsDragging}
+              icon={<Paperclip size={28} />}
+              accept=".pdf,.ppt,.xlsx,.pptx"
+              label="파일을 드래그하거나 클릭하여 업로드"
+              helperText="PDF, DOCX, XLSX, PPTX - 최대 50MB"
+            />
 
-            {attachments.length > 0 && (
-              <div className={s.fileList}>
-                {attachments.map((f) => {
-                  const c = fileIconColor[f.type] || fileIconColor.default;
-                  return (
-                    <div key={f.id} className={s.fileRow}>
-                      <div
-                        className={s.fileIcon}
-                        style={{ "--file-bg": c + "20" }}
-                      >
-                        <FileText size={16} color={c} />
-                      </div>
-                      <div className={s.fileBody}>
-                        <p className={s.fileName}>{f.name}</p>
-                        <p className={s.fileSize}>{f.size}</p>
-                      </div>
-                      <button
-                        onClick={() => handleRemoveFile(f.id)}
-                        className={s.fileDel}
-                        type="button"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            <WSFileList
+              files={files.map(({ file }) => file)}
+              onRemove={removeFiles}
+            />
           </WSCard>
           <div className={s.actionsCol}>
             <button

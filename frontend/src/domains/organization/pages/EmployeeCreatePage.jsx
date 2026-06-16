@@ -77,13 +77,15 @@ export default function EmployeeAdd() {
       });
       const employeeId = response.data.id;
 
-      if (uploadedFile?.filePath) {
-        // 파일 저장
-        await saveFile(accessToken, {
-          ...uploadedFile,
-          refType: "EMPLOYEE",
-          refId: employeeId,
-        });
+      for (const file of uploadedFile) {
+        if (file?.filePath) {
+          // 파일 저장
+          await saveFile(accessToken, {
+            ...file,
+            refType: "EMPLOYEE",
+            refId: employeeId,
+          });
+        }
       }
 
       setSubmitted(true);

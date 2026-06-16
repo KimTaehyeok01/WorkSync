@@ -12,9 +12,9 @@ import {
   WSCalendarpicker,
   WSFileList,
 } from "../../../components/common/FormComponents";
-import s from "./TaskCreatePage.module.css";
 import useFileUpload from "../../../hooks/useFileUpload";
-import { saveFile, deleteFile } from "../../file/services/fileApi";
+import { getFile, saveFile, deleteFile } from "../../file/services/fileApi";
+import s from "./TaskCreatePage.module.css";
 
 const STATUS_OPTIONS = [
   { key: "TODO", label: "대기중" },
@@ -110,12 +110,14 @@ export default function TaskNew() {
       const taskId = Number(response.id);
 
       // 파일 저장
-      if (uploadedFile?.filePath) {
-        await saveFile(accessToken, {
-          ...uploadedFile,
-          refType: "TASK",
-          refId: taskId,
-        });
+      for (const file of uploadedFile) {
+        if (file?.filePath) {
+          await saveFile(accessToken, {
+            ...file,
+            refType: "TASK",
+            refId: taskId,
+          });
+        }
       }
 
       setSubmitted(true);

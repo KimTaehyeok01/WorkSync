@@ -37,7 +37,7 @@ import {
 import { ConvItem } from "../components/ConvItem";
 import { NewConvModal } from "../components/NewConvModal";
 import useFileUpload from "../../../hooks/useFileUpload";
-import { uploadFile, saveFile, getFile } from "../../file/services/fileApi";
+import { getFile, saveFile, deleteFile } from "../../file/services/fileApi";
 import { getSize, getFileMeta } from "../../file/components/fileUtil";
 import { FileBubble } from "../components/FileBubble";
 import s from "./ChatPage.module.css";

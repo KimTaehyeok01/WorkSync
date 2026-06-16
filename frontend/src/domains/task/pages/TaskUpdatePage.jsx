@@ -18,9 +18,9 @@ import {
   WSCalendarpicker,
   WSFileList,
 } from "../../../components/common/FormComponents";
-import s from "./TaskCreatePage.module.css";
 import useFileUpload from "../../../hooks/useFileUpload";
 import { getFile, saveFile, deleteFile } from "../../file/services/fileApi";
+import s from "./TaskCreatePage.module.css";
 
 const STATUS_OPTIONS = [
   { key: "TODO", label: "대기중" },
@@ -158,13 +158,15 @@ export default function TaskUpdate() {
       });
 
       // 파일 경로가 있으면 파일 저장
-      if (uploadedFile?.filePath && uploadedFile?.isNew) {
-        // 파일 저장
-        await saveFile(accessToken, {
-          ...uploadedFile,
-          refType: "TASK",
-          refId: taskId,
-        });
+      for (const file of uploadedFile) {
+        if (file?.filePath && file?.isNew) {
+          // 파일 저장
+          await saveFile(accessToken, {
+            ...file,
+            refType: "TASK",
+            refId: taskId,
+          });
+        }
       }
 
       setSubmitted(true);

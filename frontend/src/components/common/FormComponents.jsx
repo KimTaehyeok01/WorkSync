@@ -463,32 +463,40 @@ export function WSFileList({ files, onRemove, onDownload }) {
 
   return (
     <>
-      {files.map((file, idx) => (
-        <div key={idx} className={s.attachRow}>
-          <div className={s.attachLeft}>
-            <div className={s.attachIcon}>{getExt(file.name)}</div>
+      {files.map((file, idx) => {
+        const meta = getFileMeta(file.name);
+        return (
+          <div key={idx} className={s.attachRow}>
+            <div className={s.attachLeft}>
+              <div
+                className={s.attachIcon}
+                style={{ "--file-color": meta.color }}
+              >
+                {getExt(file.name)}
+              </div>
+              <div>
+                <p className={s.attachName}>{file.name}</p>
+                <p className={s.attachSize}>{getSize(file.size)}</p>
+              </div>
+            </div>
             <div>
-              <p className={s.attachName}>{file.name}</p>
-              <p className={s.attachSize}>{getSize(file.size)}</p>
+              {onDownload && (
+                <button
+                  className={s.attachDl}
+                  onClick={() => onDownload(file, idx)}
+                >
+                  <Download size={18} />
+                </button>
+              )}
+              {onRemove && (
+                <button className={s.attachDl} onClick={() => onRemove(idx)}>
+                  <X size={18} />
+                </button>
+              )}
             </div>
           </div>
-          <div>
-            {onDownload && (
-              <button
-                className={s.attachDl}
-                onClick={() => onDownload(file, idx)}
-              >
-                <Download size={18} />
-              </button>
-            )}
-            {onRemove && (
-              <button className={s.attachDl} onClick={() => onRemove(idx)}>
-                <X size={18} />
-              </button>
-            )}
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </>
   );
 }

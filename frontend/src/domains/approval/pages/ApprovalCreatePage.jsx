@@ -4,7 +4,13 @@ import useAuthContext from "../../../store/AuthContext";
 import ApprovalFormPanel from "../components/ApprovalFormPanel";
 import { TEAM_MEMBERS } from "../../../constants/mockData";
 import { WSCard, WSAvatar } from "../../../components/common/CommonWidgets";
-import s from "./ApprovalCreatePage.module.css";
+import {
+  WSFileUploadZone,
+  WSFileList,
+  WSSelect,
+} from "../../../components/common/FormComponents";
+import useFileUpload from "../../../hooks/useFileUpload";
+import { getFile, saveFile, deleteFile } from "../../file/services/fileApi";
 import {
   ArrowLeft,
   X,
@@ -26,14 +32,7 @@ import {
   createApproval,
   getLeaveBalance,
 } from "../services/approvalApi";
-
-const fileIconColor = {
-  pdf: "#EF4444",
-  xlsx: "#10B981",
-  pptx: "#F59E0B",
-  docx: "#3B82F6",
-  default: "#6B7280",
-};
+import s from "./ApprovalCreatePage.module.css";
 
 export default function ApprovalNew() {
   const navigate = useNavigate();
@@ -111,31 +110,21 @@ export default function ApprovalNew() {
   const handleRoleChange = (id, role) =>
     setApprovers((prev) => prev.map((a) => (a.id === id ? { ...a, role } : a)));
 
-  const handleMockFile = () => {
-    const names = [
-      "보고서_최종.pdf",
-      "예산서_v2.xlsx",
-      "제안서.pptx",
-      "계획서.docx",
-    ];
-    const sizes = ["0.8 MB", "2.1 MB", "4.5 MB", "1.3 MB"];
-    const types = ["pdf", "xlsx", "pptx", "docx"];
-    const idx = Math.floor(Math.random() * 4);
-    setAttachments((prev) => [
-      ...prev,
-      {
-        id: "f" + Date.now(),
-        name: names[idx],
-        size: sizes[idx],
-        type: types[idx],
-      },
-    ]);
-  };
-
-  const handleRemoveFile = (id) =>
-    setAttachments((prev) => prev.filter((f) => f.id !== id));
+  // 파일 선언
+  const {
+    files,
+    isDragging,
+    setIsDragging,
+    uploadedFile,
+    uploadedFileRef,
+    addFiles,
+    removeFiles,
+    clearFiles,
+  } = useFileUpload(accessToken, "APPROVAL");
 
   const handleSubmit = async () => {
+    if (!accessToken || !isValid || isLoading) return;
+
     // items 중 amount는 숫자 items는 배열로 보낼 시 오류터짐 방지
     const rawItems = {
       ...formValues,
@@ -178,12 +167,33 @@ export default function ApprovalNew() {
     };
 
     setIsLoading(true);
-    const result = await createApproval(accessToken, body);
-    if (result?.status === 201) {
-      setSubmitted(true);
-      setTimeout(() => navigate("/approval"), 1600);
+    try {
+      // 전자결제 저장
+      const result = await createApproval(accessToken, body);
+      const approvalId = result.data.id;
+
+      // 파일 저장
+      for (const file of uploadedFile) {
+        if (file?.filePath) {
+          await saveFile(accessToken, {
+            ...file,
+            refType: "APPROVAL",
+            refId: approvalId,
+          });
+        }
+      }
+
+      if (approvalId) {
+        setSubmitted(true);
+        setTimeout(() => navigate("/approval"), 1600);
+      }
+    } catch (error) {
+      console.error("게시글 등록 실패", err);
+    } finally {
+      setIsLoading(false);
+      // 파일 초기화
+      clearFiles();
     }
-    setIsLoading(false);
   };
 
   if (submitted) {
@@ -281,76 +291,20 @@ export default function ApprovalNew() {
             title="첨부 파일"
             subtitle={`${attachments.length}개 파일 첨부됨`}
           >
-            <div
-              className={`${s.dropzone} ${isDragOver ? s.dropzoneActive : ""}`}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setIsDragOver(true);
-              }}
-              onDragLeave={() => setIsDragOver(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setIsDragOver(false);
-                handleMockFile();
-              }}
-              onClick={() => fileInputRef.current?.click()}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  fileInputRef.current?.click();
-                }
-              }}
-              role="button"
-              tabIndex={0}
-              aria-label="결재 첨부 파일 추가"
-            >
-              <Paperclip
-                size={28}
-                className={`${s.dropzoneIcon} ${isDragOver ? s.dropzoneIconActive : ""}`}
-              />
-              <p className={s.dropzoneLabel}>
-                파일을 드래그하거나 클릭해서 추가
-              </p>
-              <p className={s.dropzoneHint}>
-                PDF, DOCX, XLSX, PPTX · 최대 50MB
-              </p>
-              <input
-                ref={fileInputRef}
-                type="file"
-                className={s.hiddenInput}
-                onChange={handleMockFile}
-              />
-            </div>
+            <WSFileUploadZone
+              onFilesAdded={addFiles}
+              isDragging={isDragging}
+              onDragStateChange={setIsDragging}
+              icon={<Paperclip size={28} />}
+              accept=".pdf,.ppt,.xlsx,.pptx"
+              label="파일을 드래그하거나 클릭하여 업로드"
+              helperText="PDF, DOCX, XLSX, PPTX - 최대 50MB"
+            />
 
-            {attachments.length > 0 && (
-              <div className={s.fileList}>
-                {attachments.map((f) => {
-                  const c = fileIconColor[f.type] || fileIconColor.default;
-                  return (
-                    <div key={f.id} className={s.fileRow}>
-                      <div
-                        className={s.fileIcon}
-                        style={{ "--file-bg": c + "20" }}
-                      >
-                        <FileText size={16} color={c} />
-                      </div>
-                      <div className={s.fileBody}>
-                        <p className={s.fileName}>{f.name}</p>
-                        <p className={s.fileSize}>{f.size}</p>
-                      </div>
-                      <button
-                        onClick={() => handleRemoveFile(f.id)}
-                        className={s.fileDel}
-                        type="button"
-                        aria-label={`${f.name} 삭제`}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            <WSFileList
+              files={files.map(({ file }) => file)}
+              onRemove={removeFiles}
+            />
           </WSCard>
         </div>
 
@@ -397,17 +351,16 @@ export default function ApprovalNew() {
                     />
                     <div className={s.approverBody}>
                       <p className={s.approverName}>{a.member.name}</p>
-                      <select
+                      <WSSelect
                         value={a.role}
                         onChange={(e) => handleRoleChange(a.id, e.target.value)}
                         className={s.roleSelect}
-                      >
-                        {["REVIEW", "APPROVE", "REFERENCE"].map((r) => (
-                          <option key={r} value={r}>
-                            {r}
-                          </option>
-                        ))}
-                      </select>
+                        options={[
+                          { value: "REVIEW", label: "검토자" },
+                          { value: "APPROVE", label: "최종승인자" },
+                          { value: "REFERENCE", label: "참조자" },
+                        ]}
+                      />
                     </div>
                     <button
                       onClick={() => handleRemoveApprover(a.id)}

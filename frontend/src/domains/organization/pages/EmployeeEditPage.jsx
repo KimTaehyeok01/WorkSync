@@ -128,13 +128,15 @@ export default function EmployeeEdit() {
       const employeeId = response.data.id;
 
       // 파일 경로가 있으면 파일 저장
-      if (uploadedFile?.filePath && uploadedFile?.isNew) {
-        // 파일 저장
-        await saveFile(accessToken, {
-          ...uploadedFile,
-          refType: "EMPLOYEE",
-          refId: employeeId,
-        });
+      for (const file of uploadedFile) {
+        if (file?.filePath && file?.isNew) {
+          // 파일 저장
+          await saveFile(accessToken, {
+            ...file,
+            refType: "EMPLOYEE",
+            refId: employeeId,
+          });
+        }
       }
 
       setSubmitted(true);

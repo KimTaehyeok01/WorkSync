@@ -7,27 +7,17 @@ import {
   WSFileUploadZone,
   WSFileList,
 } from "../../../components/common/FormComponents";
-import s from "./BoardCreatePage.module.css";
 import { getMyInfo, getPostById, getUpdatePosts } from "../services/boardApi";
 import useAuthContext from "../../../store/AuthContext";
 import useFileUpload from "../../../hooks/useFileUpload";
 import { getFile, saveFile, deleteFile } from "../../file/services/fileApi";
+import s from "./BoardCreatePage.module.css";
 
 const CATEGORY_OPTIONS = [
   { value: "notice", label: "공지사항", color: "#EF4444" },
   { value: "dept", label: "부서게시판", color: "#8B5CF6" },
   { value: "free", label: "자유게시판", color: "#10B981" },
 ];
-
-const fileIconColor = {
-  PDF: "#EF4444",
-  XLSX: "#10B981",
-  PPTX: "#F59E0B",
-  DOCX: "#3B82F6",
-  PNG: "#06B6D4",
-  ZIP: "#F97316",
-  default: "#6B7280",
-};
 
 const TOOLBAR_ITEMS = ["굵게", "기울임", "밑줄", "목록"];
 
@@ -112,13 +102,15 @@ export default function BoardNew() {
       );
 
       // 파일 경로가 있으면 파일 저장
-      if (uploadedFile?.filePath && uploadedFile?.isNew) {
-        // 파일 저장
-        await saveFile(accessToken, {
-          ...uploadedFile,
-          refType: "POST",
-          refId: postId,
-        });
+      for (const file of uploadedFile) {
+        if (file?.filePath && file?.isNew) {
+          // 파일 저장
+          await saveFile(accessToken, {
+            ...file,
+            refType: "POST",
+            refId: postId,
+          });
+        }
       }
 
       setSubmitted(true);
@@ -285,7 +277,7 @@ export default function BoardNew() {
 
             <WSFileList
               files={files.map(({ file }) => file)}
-              onRemove={handleRemoveFile}
+              onRemove={removeFiles}
             />
           </WSCard>
 

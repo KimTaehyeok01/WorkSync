@@ -13,25 +13,15 @@ import {
   WSFileUploadZone,
   WSFileList,
 } from "../../../components/common/FormComponents";
-import s from "./BoardCreatePage.module.css";
 import useAuthContext from "../../../store/AuthContext";
 import useFileUpload from "../../../hooks/useFileUpload";
-import { saveFile, deleteFile } from "../../file/services/fileApi";
+import { getFile, saveFile, deleteFile } from "../../file/services/fileApi";
+import s from "./BoardCreatePage.module.css";
 
 const BOARD_COLORS = {
   1: "#EF4444", // 공지사항 - 빨강
   2: "#8B5CF6", // 부서게시판 - 보라
   3: "#10B981", // 자유게시판 - 초록
-};
-
-const fileIconColor = {
-  PDF: "#EF4444",
-  XLSX: "#10B981",
-  PPTX: "#F59E0B",
-  DOCX: "#3B82F6",
-  PNG: "#06B6D4",
-  ZIP: "#F97316",
-  default: "#6B7280",
 };
 
 const TOOLBAR_ITEMS = ["굵게", "기울임", "밑줄", "목록"];
@@ -91,12 +81,14 @@ export default function BoardNew() {
       const postId = response;
 
       // 파일 저장
-      if (uploadedFile?.filePath) {
-        await saveFile(accessToken, {
-          ...uploadedFile,
-          refType: "POST",
-          refId: postId,
-        });
+      for (const file of uploadedFile) {
+        if (file?.filePath) {
+          await saveFile(accessToken, {
+            ...file,
+            refType: "POST",
+            refId: postId,
+          });
+        }
       }
 
       setSubmitted(true);
@@ -106,10 +98,9 @@ export default function BoardNew() {
       console.error("게시글 등록 실패", err);
     } finally {
       setIsLoading(false);
+      // 파일 초기화
+      clearFiles();
     }
-
-    // 파일 초기화
-    clearFiles();
   }
 
   // API에서 받아온 게시판 목록(드롭다운)
