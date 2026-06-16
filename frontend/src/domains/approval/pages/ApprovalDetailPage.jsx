@@ -57,10 +57,6 @@ function LeaveDetail({ items, approval }) {
   const [balance, setBalance] = useState(null);
 
   useEffect(() => {
-    console.log("items:", JSON.stringify(items));
-  }, [items]);
-
-  useEffect(() => {
     if (!approval?.drafterId) return;
     getLeaveBalance(accessToken, approval.drafterId).then((data) => {
       // 작성자 id를 넘겨서 작성자 잔여일 반환
@@ -460,7 +456,6 @@ export default function ApprovalDetail() {
       setApproval(data);
       setStatus(data.status);
       setApprovalLines(data.approvalLines ?? []);
-      console.log("approvalLines: ", approvalLines);
     });
   };
 
