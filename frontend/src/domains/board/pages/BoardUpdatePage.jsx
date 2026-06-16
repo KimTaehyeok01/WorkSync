@@ -70,7 +70,6 @@ export default function BoardNew() {
     if (!accessToken || !postId) return;
     getFile(accessToken, "POST", postId).then((data) => {
       const fileList = Array.isArray(data.data) ? data.data : [];
-      // console.log(fileList);
       setFiles(
         fileList.map((f) => ({
           file: {

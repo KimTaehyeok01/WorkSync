@@ -82,7 +82,6 @@ export default function TaskDetail() {
     if (!accessToken || !id) return;
     getFile(accessToken, "TASK", id).then((data) => {
       const fileList = Array.isArray(data.data) ? data.data : [];
-      // console.log(fileList);
       setFiles(
         fileList.map((f) => ({
           file: {

@@ -63,7 +63,6 @@ export default function EmployeeEdit() {
     if (!accessToken || !id) return;
     getFile(accessToken, "EMPLOYEE", id).then((data) => {
       const fileList = Array.isArray(data.data) ? data.data : [];
-      console.log(fileList);
 
       setFiles(
         fileList.map((f) => ({

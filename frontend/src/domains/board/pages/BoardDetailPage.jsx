@@ -67,7 +67,6 @@ export default function BoardDetail() {
     // 파일 데이터 불러오기
     getFile(accessToken, "POST", postId).then((data) => {
       const fileList = Array.isArray(data.data) ? data.data : [];
-      // console.log(fileList);
       setFiles(
         fileList.map((f) => ({
           file: {
@@ -81,7 +80,6 @@ export default function BoardDetail() {
       );
     });
   }, [boardId, postId, accessToken]);
-  console.log("post:", post);
 
   // 파일 다운로드
   const handleDownload = async (file, idx) => {

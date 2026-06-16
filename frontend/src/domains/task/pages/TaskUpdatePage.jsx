@@ -120,7 +120,6 @@ export default function TaskUpdate() {
     if (!accessToken || !taskId) return;
     getFile(accessToken, "TASK", taskId).then((data) => {
       const fileList = Array.isArray(data.data) ? data.data : [];
-      // console.log(fileList);
       setFiles(
         fileList.map((f) => ({
           file: {
@@ -151,12 +150,10 @@ export default function TaskUpdate() {
       startDate: form.startDate,
       dueDate: form.dueDate,
     };
-    console.log(data);
 
     try {
       await updateTask(accessToken, taskId, data).then((res) => {
         if (!res) return;
-        console.log(res.data);
       });
 
       // 파일 경로가 있으면 파일 저장
