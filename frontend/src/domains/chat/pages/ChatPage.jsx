@@ -151,11 +151,18 @@ export default function Messenger() {
       onConnect: () => {
         client.subscribe(`/user/queue/chat/unread`, (frame) => {
           const { roomId, unreadCount } = JSON.parse(frame.body);
-          setConversation((prev) =>
-            prev.map((conv) =>
+          setConversation((prev) => {
+            const exists = prev.some((conv) => conv.id === roomId);
+            if (!exists) {
+              getChatRoom(accessToken).then((data) => {
+                setConversation(Array.isArray(data.data) ? data.data : []);
+              });
+              return prev;
+            }
+            return prev.map((conv) =>
               conv.id === roomId ? { ...conv, unreadCount: unreadCount } : conv,
-            ),
-          );
+            );
+          });
         });
       },
     });
