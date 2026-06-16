@@ -157,6 +157,8 @@ export default function Board() {
     }
   }, [category, accessToken, deptBoardId, role, deptFilter]);
 
+  if (isLoading) return null;
+
   return (
     <div className={s.root}>
       <div className={s.toolbar}>
@@ -232,9 +234,7 @@ export default function Board() {
       </div>
 
       <WSCard>
-        {isLoading ? (
-          <div className={s.spinner}>로딩 중...</div>
-        ) : pagePosts.length === 0 ? (
+        {pagePosts.length === 0 ? (
           <div className={s.empty}>
             <WSEmptyState
               icon={<ClipboardList size={32} />}

@@ -37,14 +37,19 @@ export default function BoardDetail() {
       getPostById(boardId, postId, accessToken),
       getPosts(boardId, accessToken),
       getMyInfo(accessToken),
-    ]).then(([postData, allPostsData, myData]) => {
-      setPost(postData);
-      setAllPosts(allPostsData);
-      setMe(myData);
-
-      setIsLoading(false); // api 호출 종료 후에 로딩 끝날 수 있도록
-    });
+    ])
+      .then(([postData, allPostsData, myData]) => {
+        setPost(postData);
+        setAllPosts(allPostsData);
+        setMe(myData);
+        setIsLoading(false); // api 호출 종료 후에 로딩 끝날 수 있도록
+      })
+      .catch((err) => {
+        console.error("데이터 불러오기 실패: ", err);
+        setIsLoading(false);
+      });
   }, [boardId, postId, accessToken]);
+  console.log("post:", post);
 
   // 현재 글의 위치 찾기
   const postIndex = allPosts.findIndex((p) => p.id === Number(postId));
@@ -53,6 +58,10 @@ export default function BoardDetail() {
   // 다음글
   const nextPost =
     postIndex < allPosts.length - 1 ? allPosts[postIndex + 1] : null;
+
+  if (isLoading) {
+    return null;
+  }
 
   if (!post) {
     return (
@@ -64,8 +73,6 @@ export default function BoardDetail() {
         </button>
       </div>
     );
-  } else if (!isLoading) {
-    return <div className={s.spinner}>로딩 중...</div>;
   }
 
   return (
