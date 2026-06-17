@@ -12,7 +12,7 @@
 
 ### ✅ 배포 주소
 
-https://worksync.kr/
+https://worksync.kr
 
 ### ✅ 기획 배경
 
