@@ -554,7 +554,115 @@ erDiagram
 
 ## 🔥 트러블슈팅
 
-(작성 예정)
+### 1. 프론트엔드 API URL 하드코딩 문제 (localhost:8080)
+
+**문제**  
+로컬 개발 환경에서 `http://localhost:8080/api`로 하드코딩된 API 주소가 14개 파일에 산재해 있어, 배포 후 프론트엔드가 서버 API 대신 로컬호스트로 요청을 보내는 문제가 발생했습니다.
+
+**해결**  
+Nginx에서 `/api` 경로를 백엔드(localhost:8080)로 프록시하도록 설정하고, 프론트엔드의 모든 `BASE_URL`을 `/api`(상대 경로)로 통일했습니다.
+
+```js
+// Before
+const BASE_URL = "http://localhost:8080/api";
+
+// After
+const BASE_URL = "/api";
+```
+
+---
+
+### 2. WebSocket CORS 오류 (403 Forbidden)
+
+**문제**  
+배포 후 WebSocket(STOMP) 연결 시 403 에러가 발생했습니다. 실시간 메신저, 알림 등 WebSocket 기반 기능이 전혀 동작하지 않았습니다.
+
+**원인**  
+`WebSocketConfig`의 `setAllowedOrigins`가 환경변수 `FRONTEND_URL`을 참조하는데, 서버에 설정된 값이 `http://3.39.166.21:5173`(개발용)으로 남아 있어 `https://worksync.kr`에서 보내는 요청이 차단됐습니다.
+
+**해결**  
+systemd 서비스 파일의 환경변수를 실제 도메인으로 수정했습니다.
+
+```
+FRONTEND_URL=https://worksync.kr
+```
+
+---
+
+### 3. Nginx 정적 파일 권한 오류 (500 Internal Server Error)
+
+**문제**  
+배포 후 사이트 접속 시 500 에러가 발생했습니다. Nginx 에러 로그에 `Permission denied`가 찍혀 있었습니다.
+
+**원인**  
+Nginx 프로세스가 `/home/ubuntu` 디렉토리에 접근할 권한이 없어 프론트엔드 빌드 결과물(`dist/`)을 읽지 못했습니다.
+
+**해결**  
+홈 디렉토리 및 빌드 디렉토리에 실행 권한을 부여했습니다.
+
+```bash
+sudo chmod 755 /home/ubuntu
+sudo chmod -R 755 /home/ubuntu/WorkSync/frontend/dist
+```
+
+---
+
+### 4. GitHub Actions 빌드 타임아웃
+
+**문제**  
+초기 CI/CD 구성 시 EC2 서버에서 직접 빌드(`./gradlew build`)를 실행했더니 메모리 부족(OOM)으로 프로세스가 강제 종료되거나, 빌드 시간이 10분을 초과해 타임아웃이 발생했습니다.
+
+**해결**  
+빌드를 EC2가 아닌 GitHub Actions 러너에서 수행하고, 완성된 JAR 파일과 프론트엔드 빌드 결과물만 SCP로 서버에 전송하는 방식으로 전환했습니다.
+
+```
+GitHub Actions Runner
+  ├─ ./gradlew build -x test  → worksync.jar 생성
+  ├─ npm run build             → dist/ 생성
+  └─ SCP → EC2 전송 → systemd restart
+```
+
+---
+
+### 5. 로그인 계정 잠금 문제
+
+**문제**  
+테스트 중 비밀번호를 여러 번 틀려 계정이 잠기는 현상이 발생했습니다. (`locked_until` 컬럼에 미래 시각이 저장되어 로그인 불가)
+
+**해결**  
+Supabase에서 직접 잠금 상태를 초기화했습니다.
+
+```sql
+UPDATE employee SET locked_until = NULL, login_fail_count = 0;
+```
+
+---
+
+### 6. 메신저 대화 목록 실시간 갱신 안 됨
+
+**문제**  
+새 메시지가 도착해도 왼쪽 대화 목록에 즉시 반영되지 않고 새로고침을 해야 나타났습니다. 메시지 내용은 WebSocket으로 실시간 수신되는데 대화 목록은 갱신되지 않았습니다.
+
+**원인**  
+대화 목록은 페이지 최초 로드 시 1회만 API로 불러오고, WebSocket의 unread 이벤트 핸들러가 기존 방의 안읽음 수만 업데이트할 뿐 새 방을 목록에 추가하는 로직이 없었습니다.
+
+**해결**  
+unread 이벤트 수신 시 목록에 없는 `roomId`가 감지되면 대화 목록 전체를 재조회하도록 수정했습니다.
+
+```js
+setConversation((prev) => {
+  const exists = prev.some((conv) => conv.id === roomId);
+  if (!exists) {
+    getChatRoom(accessToken).then((data) => {
+      setConversation(Array.isArray(data.data) ? data.data : []);
+    });
+    return prev;
+  }
+  return prev.map((conv) =>
+    conv.id === roomId ? { ...conv, unreadCount } : conv
+  );
+});
+```
 
 ---
 
