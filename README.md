@@ -716,6 +716,87 @@ setConversation((prev) => {
 
 ---
 
+### 7. JWT 토큰 유실로 인한 자동 로그아웃
+
+**문제**  
+새로고침 시 메모리(`useState`)에 저장된 Access Token이 소실되어 이후 모든 API 요청이 401 오류를 반환하며 자동 로그아웃되는 문제가 발생했습니다.
+
+**원인**  
+Access Token을 React 상태(메모리)에만 보관해 페이지 새로고침 시 상태가 초기화되면서 토큰이 사라졌습니다.
+
+**해결**  
+Refresh Token을 `localStorage`에 저장하고, 앱 초기화 시 자동으로 Access Token을 재발급받도록 수정했습니다.
+
+```js
+// 앱 초기화 시 Refresh Token으로 Access Token 재발급
+useEffect(() => {
+  const refreshToken = localStorage.getItem("refreshToken");
+  if (refreshToken) {
+    axios.post("/api/auth/token/refresh", { refreshToken })
+      .then((res) => setAccessToken(res.data.accessToken));
+  }
+}, []);
+```
+
+---
+
+### 8. WebSocket 연결 시 Spring Security 401 오류
+
+**문제**  
+STOMP 핸드셰이크 과정에서 JWT 헤더가 전달되지 않아 Spring Security 인증에 실패하며 WebSocket 연결이 거부됐습니다. 실시간 채팅 및 알림 기능 전체가 동작하지 않았습니다.
+
+**원인**  
+일반 HTTP 요청과 달리 WebSocket 연결은 Spring Security 필터를 거치지 않아 토큰 검증 로직이 적용되지 않았습니다. 클라이언트도 STOMP 연결 시 `Authorization` 헤더를 포함하지 않고 있었습니다.
+
+**해결**  
+클라이언트의 `connectHeaders`에 `Authorization` 헤더를 추가하고, 서버에서 `ChannelInterceptor`로 STOMP 연결 시 토큰을 직접 검증하도록 수정했습니다.
+
+```js
+// 클라이언트: STOMP 연결 시 JWT 헤더 포함
+const client = new Client({
+  connectHeaders: { Authorization: `Bearer ${accessToken}` },
+});
+```
+
+```java
+// 서버: ChannelInterceptor로 토큰 검증
+@Override
+public Message<?> preSend(Message<?> message, MessageChannel channel) {
+    StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+    if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+        String token = accessor.getFirstNativeHeader("Authorization");
+        jwtProvider.validateToken(token.replace("Bearer ", ""));
+    }
+    return message;
+}
+```
+
+---
+
+### 9. 대시보드 다중 조회 시 N+1 쿼리 성능 저하
+
+**문제**  
+대시보드 진입 시 결재·업무·근태·알림을 개별 API로 각각 조회하면서 연관관계 지연 로딩이 반복 실행되어 응답 속도가 약 3배 저하됐습니다.
+
+**원인**  
+각 도메인 서비스가 목록을 전부 조회한 뒤 애플리케이션 레벨에서 카운팅하는 방식이어서 불필요한 쿼리가 다수 발생했습니다.
+
+**해결**  
+`countBy` 쿼리를 분리하고 `DashboardResponse` DTO에 필요한 집계값만 담아 단건으로 처리했습니다.
+
+```java
+// 집계값만 단건 조회
+public DashboardResponse getDashboard(Long employeeId) {
+    long pendingApprovals  = approvalLineRepository.countByApproverIdAndStatus(employeeId, WAITING);
+    long myTasks           = taskRepository.countByAssigneeIdAndStatusNot(employeeId, DONE);
+    long unreadNotifications = notificationRepository.countByReceiverIdAndIsReadFalse(employeeId);
+    AttendanceStatus todayStatus = attendanceRepository.findTodayStatus(employeeId);
+    return new DashboardResponse(pendingApprovals, myTasks, unreadNotifications, todayStatus);
+}
+```
+
+---
+
 <a id="cicd"></a>
 
 ## 🚀 CI/CD
