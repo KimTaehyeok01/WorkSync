@@ -11,7 +11,6 @@ import {
   Settings,
   FileCheck,
   ChevronRight,
-  Zap,
   LayoutList,
   LogIn,
   Activity,
@@ -19,6 +18,7 @@ import {
 import { getNotifications } from "../../domains/notification/services/notificationApi";
 import styles from "./Sidebar.module.css";
 import { getMyInfo } from "../service/TopBarApi";
+import logo from "/favicon_32x32.png";
 
 const MAIN_NAV = [
   { path: "/", label: "대시보드", icon: LayoutDashboard, id: "ws-dash" },
@@ -137,7 +137,7 @@ export function Sidebar() {
     <aside className={styles.aside}>
       <div className={styles.brand}>
         <div className={styles.brandLogo}>
-          <img src="/favicon_32x32.png" alt="WorkSync"/>
+          <img src={logo} alt="WorkSync" />
         </div>
         <div>
           <div className={styles.brandName}>WorkSync</div>

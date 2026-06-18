@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Zap, Eye, EyeOff, Mail, Lock, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, AlertCircle } from "lucide-react";
 import styles from "./LoginPage.module.css";
 import useAuthContext from "../../../store/AuthContext";
+import logo from "/favicon_32x32.png";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -19,8 +20,14 @@ export default function Login() {
   async function handleLogin(e) {
     if (e) e.preventDefault();
     setError("");
-    if (!empNo.trim()) { setError("사번을 입력해 주세요."); return; }
-    if (!password.trim()) { setError("비밀번호를 입력해 주세요."); return; }
+    if (!empNo.trim()) {
+      setError("사번을 입력해 주세요.");
+      return;
+    }
+    if (!password.trim()) {
+      setError("비밀번호를 입력해 주세요.");
+      return;
+    }
     setLoading(true);
     try {
       await login(empNo, password);
@@ -39,7 +46,7 @@ export default function Login() {
 
       <div className={styles.topbar}>
         <div className={styles.topLogo}>
-        <img src="/favicon_32x32.png" alt="WorkSync"/>
+          <img src={logo} alt="WorkSync" />
         </div>
         <div>
           <div className={styles.brandName}>WorkSync</div>
@@ -52,7 +59,9 @@ export default function Login() {
           <div className={styles.card}>
             <div className={styles.cardHeader}>
               <h2 className={styles.cardTitle}>로그인</h2>
-              <p className={styles.cardSubtitle}>계정에 로그인하여 그룹웨어를 시작하세요.</p>
+              <p className={styles.cardSubtitle}>
+                계정에 로그인하여 그룹웨어를 시작하세요.
+              </p>
             </div>
 
             {error && (
@@ -65,13 +74,21 @@ export default function Login() {
             <form onSubmit={handleLogin} className={styles.form}>
               <div className={styles.field}>
                 <label className={styles.label}>사번</label>
-                <div className={`${styles.inputBox} ${focusEmp ? styles.inputBoxFocus : ""}`}>
-                  <Mail size={15} className={`${styles.icon} ${focusEmp ? styles.iconFocus : ""}`} />
+                <div
+                  className={`${styles.inputBox} ${focusEmp ? styles.inputBoxFocus : ""}`}
+                >
+                  <Mail
+                    size={15}
+                    className={`${styles.icon} ${focusEmp ? styles.iconFocus : ""}`}
+                  />
                   <input
                     type="text"
                     placeholder="사번을 입력하세요"
                     value={empNo}
-                    onChange={(e) => { setEmpNo(e.target.value); setError(""); }}
+                    onChange={(e) => {
+                      setEmpNo(e.target.value);
+                      setError("");
+                    }}
                     onFocus={() => setFocusEmp(true)}
                     onBlur={() => setFocusEmp(false)}
                     autoComplete="username"
@@ -81,24 +98,40 @@ export default function Login() {
 
               <div className={styles.field}>
                 <label className={styles.label}>비밀번호</label>
-                <div className={`${styles.inputBox} ${focusPw ? styles.inputBoxFocus : ""}`}>
-                  <Lock size={15} className={`${styles.icon} ${focusPw ? styles.iconFocus : ""}`} />
+                <div
+                  className={`${styles.inputBox} ${focusPw ? styles.inputBoxFocus : ""}`}
+                >
+                  <Lock
+                    size={15}
+                    className={`${styles.icon} ${focusPw ? styles.iconFocus : ""}`}
+                  />
                   <input
                     type={showPw ? "text" : "password"}
                     placeholder="비밀번호를 입력하세요"
                     value={password}
-                    onChange={(e) => { setPassword(e.target.value); setError(""); }}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setError("");
+                    }}
                     onFocus={() => setFocusPw(true)}
                     onBlur={() => setFocusPw(false)}
                     autoComplete="current-password"
                   />
-                  <button type="button" onClick={() => setShowPw(!showPw)} className={styles.eyeBtn}>
+                  <button
+                    type="button"
+                    onClick={() => setShowPw(!showPw)}
+                    className={styles.eyeBtn}
+                  >
                     {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>
               </div>
 
-              <button type="submit" disabled={loading} className={styles.submit}>
+              <button
+                type="submit"
+                disabled={loading}
+                className={styles.submit}
+              >
                 {loading ? (
                   <div className={styles.spinnerRow}>
                     <div className={styles.spinner} />
@@ -114,9 +147,13 @@ export default function Login() {
           <div className={styles.footer}>
             <p>
               로그인에 문제가 발생하셨나요?{" "}
-              <span className={styles.footerLink}>0120 내선번호로 문의주세요</span>
+              <span className={styles.footerLink}>
+                0120 내선번호로 문의주세요
+              </span>
             </p>
-            <p className={styles.copyright}>© 2026 WorkSync Enterprise · v1.0</p>
+            <p className={styles.copyright}>
+              © 2026 WorkSync Enterprise · v1.0
+            </p>
           </div>
         </div>
       </div>
