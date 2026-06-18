@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import { getNotifications } from "../../domains/notification/services/notificationApi";
 import styles from "./Sidebar.module.css";
-import { log } from "sockjs-client/dist/sockjs";
 import { getMyInfo } from "../service/TopBarApi";
 
 const MAIN_NAV = [
@@ -138,7 +137,7 @@ export function Sidebar() {
     <aside className={styles.aside}>
       <div className={styles.brand}>
         <div className={styles.brandLogo}>
-          <Zap size={18} color="#fff" fill="#fff" />
+          <img src="/favicon_32x32.png" alt="WorkSync"/>
         </div>
         <div>
           <div className={styles.brandName}>WorkSync</div>

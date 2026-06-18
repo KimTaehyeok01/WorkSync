@@ -39,7 +39,7 @@ export default function Login() {
 
       <div className={styles.topbar}>
         <div className={styles.topLogo}>
-          <Zap size={20} color="#fff" fill="#fff" />
+        <img src="/favicon_32x32.png" alt="WorkSync"/>
         </div>
         <div>
           <div className={styles.brandName}>WorkSync</div>
