@@ -11,15 +11,14 @@ import {
   Settings,
   FileCheck,
   ChevronRight,
-  Zap,
   LayoutList,
   LogIn,
   Activity,
 } from "lucide-react";
 import { getNotifications } from "../../domains/notification/services/notificationApi";
 import styles from "./Sidebar.module.css";
-import { log } from "sockjs-client/dist/sockjs";
 import { getMyInfo } from "../service/TopBarApi";
+import logo from "/favicon_32x32.png";
 
 const MAIN_NAV = [
   { path: "/", label: "대시보드", icon: LayoutDashboard, id: "ws-dash" },
@@ -138,7 +137,7 @@ export function Sidebar() {
     <aside className={styles.aside}>
       <div className={styles.brand}>
         <div className={styles.brandLogo}>
-          <Zap size={18} color="#fff" fill="#fff" />
+          <img src={logo} alt="WorkSync" />
         </div>
         <div>
           <div className={styles.brandName}>WorkSync</div>
