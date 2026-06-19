@@ -121,6 +121,7 @@ https://worksync.kr
   <img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white"/>
   <img src="https://img.shields.io/badge/Docker Compose-2496ED?style=flat-square&logo=docker&logoColor=white"/>
   <img src="https://img.shields.io/badge/Nginx-009639?style=flat-square&logo=nginx&logoColor=white"/>
+  <img src="https://img.shields.io/badge/AWS Lightsail-FF9900?style=flat-square&logo=amazonwebservices&logoColor=white"/>
   <img src="https://img.shields.io/badge/GitHub Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white"/>
 </p>
 
@@ -130,6 +131,9 @@ https://worksync.kr
   <img src="https://img.shields.io/badge/Discord-5865F2?style=flat-square&logo=discord&logoColor=white"/>
   <a href="https://app.notion.com/p/383b487980fb815a98c3c057bd4eb176">
     <img src="https://img.shields.io/badge/Notion-000000?style=flat-square&logo=notion&logoColor=white"/>
+  </a>
+  <a href="https://www.figma.com/design/dxc6nTrb6qT9ZN82AZqMGe/%EA%B7%B8%EB%A3%B9%EC%9B%A8%EC%96%B4-%EC%8B%9C%EC%8A%A4%ED%85%9C---%EC%82%AC%EB%82%B4-%EB%A9%94%EC%8B%A0%EC%A0%80?node-id=0-1&p=f&t=jgAsOn7bZ5BopEV7-0">
+    <img src="https://img.shields.io/badge/Figma-F24E1E?style=flat-square&logo=figma&logoColor=white"/>
   </a>
 </p>
 
