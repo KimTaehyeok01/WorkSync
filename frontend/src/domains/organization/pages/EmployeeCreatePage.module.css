@@ -1,4 +1,4 @@
-.header {
+﻿.header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -220,8 +220,14 @@
   .layout {
     flex-direction: column;
   }
+  .colMain {
+    width: 100%;
+    max-width: 100%;
+  }
   .colSide {
     width: 100%;
+    max-width: 100%;
   }
 }
+
 

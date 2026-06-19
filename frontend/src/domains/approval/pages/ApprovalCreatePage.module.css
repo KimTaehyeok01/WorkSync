@@ -745,8 +745,22 @@
   .layout {
     flex-direction: column;
   }
+  .colMain {
+    width: 100%;
+    max-width: 100%;
+  }
   .colSide {
     width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 767px) {
+  .formRow2 {
+    grid-template-columns: 1fr;
+  }
+  .successCard {
+    padding: 28px 20px;
   }
 }
 

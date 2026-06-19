@@ -367,8 +367,13 @@
   .layout {
     flex-direction: column;
   }
+  .colMain {
+    width: 100%;
+    max-width: 100%;
+  }
   .colSide {
     width: 100%;
+    max-width: 100%;
   }
   .row2 {
     grid-template-columns: 1fr;

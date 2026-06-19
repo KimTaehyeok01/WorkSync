@@ -281,12 +281,26 @@
 
 @media (max-width: 767px) {
   .infoLabel {
-    width: 80px;
-    padding: 12px 12px;
+    width: 72px;
+    padding: 12px 8px 12px 12px;
     font-size: 11px;
+    flex-shrink: 0;
   }
   .infoValue {
-    padding: 0 12px;
+    padding: 0 8px;
     font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .infoCol {
+    align-items: flex-start;
+    flex-wrap: nowrap;
+  }
+  .assigneeValue {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .layout {
+    gap: 12px;
   }
 }

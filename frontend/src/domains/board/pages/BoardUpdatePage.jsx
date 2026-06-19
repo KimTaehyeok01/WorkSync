@@ -147,15 +147,7 @@ export default function BoardNew() {
       <div className={s.header}>
         <div className={s.headerLeft}>
           <button
-            onClick={() => {
-              if (
-                confirm(
-                  "페이지 이동 시 작성하신 수정 내용은 사라집니다. 이동하시겠습니까?",
-                )
-              ) {
-                navigate(-1);
-              }
-            }}
+            onClick={() => navigate(-1)}
             className={s.backBtn}
           >
             <ArrowLeft size={16} />

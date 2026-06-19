@@ -51,6 +51,21 @@
   .breadcrumb {
     display: none;
   }
+  /* 알림 드롭다운: 모바일에서 화면 전체 너비로 고정 */
+  .notifDropdown {
+    position: fixed;
+    top: var(--ws-topbar-h);
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+  .profileDropdown {
+    position: fixed;
+    top: var(--ws-topbar-h);
+    right: 12px;
+    left: auto;
+    width: 200px;
+  }
 }
 .titleArea {
   flex: 1;

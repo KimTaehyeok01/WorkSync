@@ -384,8 +384,23 @@
   .layout {
     flex-direction: column;
   }
+  .colMain {
+    width: 100%;
+    max-width: 100%;
+  }
   .colSide {
     width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 767px) {
+  .catRow {
+    flex-wrap: wrap;
+  }
+  .header {
+    flex-wrap: wrap;
+    gap: 8px;
   }
 }
 
