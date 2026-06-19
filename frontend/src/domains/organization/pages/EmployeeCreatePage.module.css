@@ -214,3 +214,14 @@
 .cancelBtn:hover {
   color: var(--ws-text-600);
 }
+
+
+@media (max-width: 1023px) {
+  .layout {
+    flex-direction: column;
+  }
+  .colSide {
+    width: 100%;
+  }
+}
+

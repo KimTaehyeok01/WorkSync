@@ -731,6 +731,10 @@
   cursor: not-allowed;
 }
 
+.backBtn {
+  display: none;
+}
+
 @media (max-width: 1023px) {
   .info {
     display: none;
@@ -743,20 +747,35 @@
 @media (max-width: 767px) {
   .sidebar {
     width: 100%;
-    position: absolute;
-    z-index: 10;
-    height: 100%;
-    transform: translateX(0);
+    flex-shrink: 0;
   }
-  .sidebarHidden {
-    transform: translateX(-100%);
+  .sidebarMobileHide {
     display: none;
   }
   .chat {
     width: 100%;
+    min-width: 0;
+  }
+  .chatMobileHide {
+    display: none;
+  }
+  .backBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    color: var(--ws-text-600);
+    flex-shrink: 0;
+    margin-right: 4px;
+    transition: background 0.15s;
+  }
+  .backBtn:hover {
+    background: #f3f4f6;
   }
   .msgBody {
-    max-width: 80vw;
+    max-width: 75vw;
   }
   .modal {
     max-width: calc(100vw - 32px);

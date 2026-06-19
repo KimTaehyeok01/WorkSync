@@ -739,3 +739,14 @@
 .labelMargin {
   margin-bottom: 17px;
 }
+
+
+@media (max-width: 1023px) {
+  .layout {
+    flex-direction: column;
+  }
+  .colSide {
+    width: 100%;
+  }
+}
+

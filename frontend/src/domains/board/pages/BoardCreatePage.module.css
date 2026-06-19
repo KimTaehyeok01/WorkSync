@@ -378,3 +378,14 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+
+@media (max-width: 1023px) {
+  .layout {
+    flex-direction: column;
+  }
+  .colSide {
+    width: 100%;
+  }
+}
+

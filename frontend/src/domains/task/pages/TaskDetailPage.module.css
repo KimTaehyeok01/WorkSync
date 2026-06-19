@@ -269,3 +269,24 @@
   color: var(--ws-text-400);
   transform: rotate(-90deg);
 }
+
+@media (max-width: 1023px) {
+  .layout {
+    flex-direction: column;
+  }
+  .colSide {
+    width: 100%;
+  }
+}
+
+@media (max-width: 767px) {
+  .infoLabel {
+    width: 80px;
+    padding: 12px 12px;
+    font-size: 11px;
+  }
+  .infoValue {
+    padding: 0 12px;
+    font-size: 12px;
+  }
+}

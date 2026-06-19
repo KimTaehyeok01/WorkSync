@@ -383,3 +383,14 @@
   color: var(--ws-text-secondary);
   font-size: 14px;
 }
+
+
+@media (max-width: 1023px) {
+  .layout {
+    flex-direction: column;
+  }
+  .colSide {
+    width: 100%;
+  }
+}
+
