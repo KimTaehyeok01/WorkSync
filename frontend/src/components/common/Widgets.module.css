@@ -1099,6 +1099,58 @@
   background: #f9fafb;
 }
 
+/* ====== Responsive ====== */
+@media (max-width: 1023px) {
+  .filterBar {
+    flex-wrap: wrap;
+  }
+  .filterBarSearch {
+    flex: 1;
+    min-width: 180px;
+  }
+}
+
+@media (max-width: 767px) {
+  .tableHeader {
+    display: none;
+  }
+  .tableRow {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding: 16px !important;
+    gap: 2px !important;
+  }
+  /* 조직도 6컬럼: 이메일(4번째)·입사일(6번째) 숨김 */
+  .tableRow > *:nth-child(4),
+  .tableRow > *:nth-child(6) {
+    display: none !important;
+  }
+  .filterBar {
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .filterBarAction span {
+    display: none;
+  }
+  .filterBarAction {
+    padding: 9px 12px;
+    min-width: 40px;
+    justify-content: center;
+  }
+  .filterDDBtn {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+  .searchInputCompactField {
+    width: 100%;
+  }
+  .modal {
+    max-width: calc(100vw - 32px);
+    margin: 0 16px;
+  }
+}
+
 /* ====== Page Header ====== */
 .pageHeader {
   display: flex;

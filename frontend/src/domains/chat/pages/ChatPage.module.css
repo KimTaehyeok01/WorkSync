@@ -1,6 +1,7 @@
 .root {
   display: flex;
   height: calc(100vh - 64px);
+  overflow: hidden;
 }
 
 /* Sidebar */
@@ -728,4 +729,56 @@
   background: #e5e7eb;
   color: #9ca3af;
   cursor: not-allowed;
+}
+
+.backBtn {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .info {
+    display: none;
+  }
+  .sidebar {
+    width: 240px;
+  }
+}
+
+@media (max-width: 767px) {
+  .sidebar {
+    width: 100%;
+    flex-shrink: 0;
+  }
+  .sidebarMobileHide {
+    display: none;
+  }
+  .chat {
+    width: 100%;
+    min-width: 0;
+  }
+  .chatMobileHide {
+    display: none;
+  }
+  .backBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    color: var(--ws-text-600);
+    flex-shrink: 0;
+    margin-right: 4px;
+    transition: background 0.15s;
+  }
+  .backBtn:hover {
+    background: #f3f4f6;
+  }
+  .msgBody {
+    max-width: 75vw;
+  }
+  .modal {
+    max-width: calc(100vw - 32px);
+    margin: 0 16px;
+  }
 }

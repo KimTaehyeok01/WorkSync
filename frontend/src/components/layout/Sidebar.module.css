@@ -158,3 +158,41 @@
   white-space: nowrap;
 }
 .profileIcon { color: rgba(255, 255, 255, 0.3); flex-shrink: 0; }
+
+.closeBtn {
+  display: none;
+  margin-left: auto;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 4px;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+.closeBtn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.overlay {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .aside {
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    z-index: 40;
+  }
+  .asideOpen {
+    transform: translateX(0);
+  }
+  .closeBtn {
+    display: flex;
+  }
+  .overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 39;
+  }
+}

@@ -18,6 +18,7 @@ import {
   AlertCircle,
   Coffee,
   UserRound,
+  Menu,
 } from "lucide-react";
 import { WSAvatar } from "../../components/common/CommonWidgets";
 import { getMyInfo, patchStatus } from "../service/TopBarApi";
@@ -83,7 +84,7 @@ const JOB_GRADE = {
   CEO: "대표",
 };
 
-export function TopBar({ pathname }) {
+export function TopBar({ pathname, onMenuClick }) {
   const navigate = useNavigate();
   // 상태(status)를 전역 Context와 연결 — 메신저 등 다른 화면에 즉시 반영
   const {
@@ -236,6 +237,9 @@ export function TopBar({ pathname }) {
 
   return (
     <header className={styles.header}>
+      <button className={styles.menuBtn} onClick={onMenuClick} aria-label="메뉴 열기">
+        <Menu size={20} />
+      </button>
       <div className={styles.titleArea}>
         <h1 className={styles.title}>{page.title}</h1>
         <div className={styles.breadcrumb}>

@@ -14,6 +14,7 @@ import {
   LayoutList,
   LogIn,
   Activity,
+  X,
 } from "lucide-react";
 import { getNotifications } from "../../domains/notification/services/notificationApi";
 import styles from "./Sidebar.module.css";
@@ -61,7 +62,7 @@ const MAIN_NAV = [
 
 const BOTTOM_NAV = [{ path: "/audit-log", label: "감사 로그", icon: Activity }];
 
-export function Sidebar() {
+export function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
   const { accessToken } = useAuthContext();
   const [unreadBadge, setUnreadBadge] = useState({});
@@ -134,7 +135,9 @@ export function Sidebar() {
   }, [accessToken]);
 
   return (
-    <aside className={styles.aside}>
+    <>
+      {isOpen && <div className={styles.overlay} onClick={onClose} />}
+      <aside className={`${styles.aside} ${isOpen ? styles.asideOpen : ""}`}>
       <div className={styles.brand}>
         <div className={styles.brandLogo}>
           <img src={logo} alt="WorkSync" />
@@ -143,6 +146,9 @@ export function Sidebar() {
           <div className={styles.brandName}>WorkSync</div>
           <div className={styles.brandSub}>ENTERPRISE v2.4</div>
         </div>
+        <button className={styles.closeBtn} onClick={onClose} aria-label="메뉴 닫기">
+          <X size={18} />
+        </button>
       </div>
 
       <nav className={styles.nav}>
@@ -202,6 +208,7 @@ export function Sidebar() {
           <></>
         )}
       </nav>
-    </aside>
+      </aside>
+    </>
   );
 }

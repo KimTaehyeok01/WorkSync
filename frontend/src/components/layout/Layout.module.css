@@ -8,3 +8,18 @@
   min-height: 100vh;
 }
 .padded { padding: 24px; }
+
+@media (max-width: 1023px) {
+  .main {
+    margin-left: 0;
+  }
+  .padded {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 767px) {
+  .padded {
+    padding: 12px;
+  }
+}

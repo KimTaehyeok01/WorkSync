@@ -176,3 +176,15 @@
   color: var(--ws-text-secondary);
   font-size: 14px;
 }
+
+@media (max-width: 767px) {
+  .toolbar {
+    flex-wrap: wrap;
+  }
+  .searchInput {
+    width: 100%;
+  }
+  .select {
+    min-width: 120px;
+  }
+}

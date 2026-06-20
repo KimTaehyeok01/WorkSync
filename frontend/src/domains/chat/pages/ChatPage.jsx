@@ -13,6 +13,7 @@ import {
   CheckCheck,
   X,
   Download,
+  ArrowLeft,
 } from "lucide-react";
 import { WSAvatar } from "../../../components/common/CommonWidgets";
 import { WSEmptyState } from "../../../components/common/LayoutComponents";
@@ -45,6 +46,7 @@ import s from "./ChatPage.module.css";
 export default function Messenger() {
   const { accessToken, myStatus } = useAuthContext();
   const [activeConvId, setActiveConvId] = useState(0);
+  const [mobileView, setMobileView] = useState("list");
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
   const [unread, setUnread] = useState(0);
@@ -300,6 +302,7 @@ export default function Messenger() {
   function handleConvClick(conv) {
     setActiveConvId(conv.id);
     setUnread(0);
+    setMobileView("chat");
 
     if (!accessToken) return;
     putNotifications(accessToken, {
@@ -409,7 +412,7 @@ export default function Messenger() {
 
   return (
     <div className={s.root}>
-      <div className={s.sidebar}>
+      <div className={`${s.sidebar} ${mobileView === "chat" ? s.sidebarMobileHide : ""}`}>
         <div className={s.sidebarHeader}>
           <div className={s.sidebarTitleRow}>
             <h2 className={s.sidebarTitle}>메시지</h2>
@@ -454,8 +457,16 @@ export default function Messenger() {
         </div>
       </div>
 
-      <div className={s.chat}>
+      <div className={`${s.chat} ${mobileView === "list" ? s.chatMobileHide : ""}`}>
         <div className={s.chatHeader}>
+          <button
+            className={s.backBtn}
+            onClick={() => setMobileView("list")}
+            aria-label="대화 목록으로 돌아가기"
+            type="button"
+          >
+            <ArrowLeft size={18} />
+          </button>
           {activeConv?.roomType === "DIRECT" ? (
             <div className={s.avatarWrap}>
               <WSAvatar src={activeAvatar} name={activeName} size={36} />

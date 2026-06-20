@@ -225,3 +225,17 @@
   font-size: 15px;
   font-weight: 700;
 }
+
+@media (max-width: 767px) {
+  .row2 {
+    grid-template-columns: 1fr;
+  }
+  .dateInput {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 13px;
+  }
+  .panel {
+    gap: 12px;
+  }
+}

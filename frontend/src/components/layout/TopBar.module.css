@@ -10,9 +10,67 @@
   align-items: center;
   padding: 0 24px;
   z-index: 20;
+  gap: 8px;
+}
+
+.menuBtn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  color: var(--ws-text-600);
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.menuBtn:hover {
+  background: #f3f4f6;
+}
+
+@media (max-width: 1023px) {
+  .header {
+    left: 0;
+    padding: 0 16px;
+  }
+  .menuBtn {
+    display: flex;
+  }
+}
+
+@media (max-width: 767px) {
+  .header {
+    padding: 0 12px;
+  }
+  .search {
+    display: none;
+  }
+  .title {
+    font-size: 15px;
+  }
+  .breadcrumb {
+    display: none;
+  }
+  /* 알림 드롭다운: 모바일에서 화면 전체 너비로 고정 */
+  .notifDropdown {
+    position: fixed;
+    top: var(--ws-topbar-h);
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+  .profileDropdown {
+    position: fixed;
+    top: var(--ws-topbar-h);
+    right: 12px;
+    left: auto;
+    width: 200px;
+  }
 }
 .titleArea {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 .title {
   color: var(--ws-text-900);
@@ -20,6 +78,9 @@
   font-weight: 700;
   line-height: 1.2;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .breadcrumb {
   display: flex;

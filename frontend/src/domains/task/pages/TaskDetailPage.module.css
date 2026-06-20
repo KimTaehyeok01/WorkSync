@@ -269,3 +269,66 @@
   color: var(--ws-text-400);
   transform: rotate(-90deg);
 }
+
+@media (max-width: 1023px) {
+  .layout {
+    flex-direction: column;
+  }
+  .colSide {
+    width: 100%;
+  }
+}
+
+@media (max-width: 767px) {
+  /* infoCol: flex → grid 2컬럼 (label | value 자동 쌍) */
+  .infoCol {
+    display: grid !important;
+    grid-template-columns: 68px 1fr;
+    align-items: stretch;
+    border-top: 1px solid #f3f4f6;
+    padding: 0;
+  }
+  .infoCol:nth-last-child(1) {
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .infoLabel {
+    width: auto;
+    padding: 10px 8px 10px 12px;
+    font-size: 11px;
+    background: #f9fafb;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    border-right: 1px solid #f3f4f6;
+  }
+  .infoValue {
+    padding: 10px 10px;
+    font-size: 12.5px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+  .assigneeValue {
+    flex-wrap: nowrap;
+    gap: 6px;
+    overflow: hidden;
+  }
+  .assigneeValue span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 120px;
+  }
+  .ColWrapper {
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .layout {
+    gap: 12px;
+  }
+  .infoGrid {
+    min-height: unset;
+    gap: 0;
+  }
+}

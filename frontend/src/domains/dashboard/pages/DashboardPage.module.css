@@ -388,3 +388,47 @@
   border-radius: 999px;
   background: var(--progress-color);
 }
+
+@media (max-width: 1023px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .mainGrid {
+    grid-template-columns: 1fr;
+  }
+  .mainColLeft {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 767px) {
+  .banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 16px 16px;
+  }
+  .bannerTitle {
+    font-size: 16px;
+  }
+  .bannerSub {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .bannerRight {
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .bannerCalIcon {
+    width: 40px;
+    height: 40px;
+  }
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .mainGrid {
+    gap: 12px;
+  }
+}

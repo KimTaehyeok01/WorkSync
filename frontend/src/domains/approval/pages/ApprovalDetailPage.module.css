@@ -1,4 +1,4 @@
-.root {
+﻿.root {
   max-width: 100%;
   margin: 0 auto;
 }
@@ -333,3 +333,20 @@
   color: var(--ws-text-secondary);
   font-size: 14px;
 }
+
+
+@media (max-width: 1023px) {
+  .layout {
+    flex-direction: column;
+  }
+  .colMain {
+    width: 100%;
+    max-width: 100%;
+  }
+  .colSide {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+

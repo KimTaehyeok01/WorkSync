@@ -157,3 +157,52 @@
   font-weight: 600;
   margin: 0;
 }
+
+@media (max-width: 1023px) {
+  .row {
+    grid-template-columns: 90px 1fr 100px 140px;
+  }
+  .row > *:last-child {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 6px 12px;
+    padding: 14px 16px;
+  }
+  .statusBadge {
+    width: 100%;
+    order: 0;
+  }
+  .title {
+    flex: 1;
+    order: 1;
+    font-size: 13.5px;
+    white-space: normal;
+  }
+  .progress {
+    order: 2;
+    font-size: 12px;
+    color: var(--ws-text-500);
+    white-space: nowrap;
+  }
+  .assignee {
+    order: 3;
+    flex: 1;
+    justify-content: flex-end;
+  }
+  .period {
+    display: none;
+  }
+  .filterBar {
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+}

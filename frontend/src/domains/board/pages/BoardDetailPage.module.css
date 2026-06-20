@@ -383,3 +383,30 @@
   color: var(--ws-text-secondary);
   font-size: 14px;
 }
+
+
+@media (max-width: 1023px) {
+  .layout {
+    flex-direction: column;
+    min-height: unset;
+  }
+  .colMain {
+    width: 100%;
+    max-width: 100%;
+  }
+  .colSide {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 767px) {
+  .layout {
+    gap: 12px;
+  }
+  .header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
