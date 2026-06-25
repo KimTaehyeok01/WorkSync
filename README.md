@@ -824,10 +824,39 @@ GitHub Actions 워크플로우 실행
 
 ## 👥 팀원 역할
 
-| 이름 | 역할 | 담당 도메인 |
-|------|------|-------------|
-| <nobr>**김태혁**</nobr> | Backend | Spring Security · JWT 인증 필터 · WebSocket 설정 · 전자결재 · 채팅 · 사원/부서 관리 · 알림 · 감사로그 · 파일 · CI/CD 구성 |
-| <nobr>**김민준**</nobr> | Backend | 게시판 · 업무(Task) · 연차/휴가 |
-| <nobr>**유재혁**</nobr> | Backend | 부서 · 근태(출퇴근) · 대시보드 집계 · 파일 업로드 |
-| <nobr>**정소희**</nobr> | Frontend | 공통 컴포넌트 설계 · 로그인/인증 · 대시보드 · 채팅 · 알림 · 조직관리 · 업무 |
-| <nobr>**이유리**</nobr> | Frontend | 전자결재 · 게시판 · 업무(Task) · 메신저 · 조직도 화면 |
+<table>
+  <thead>
+    <tr>
+      <th>이름</th>
+      <th>역할</th>
+      <th>담당 도메인</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>김태혁</b></td>
+      <td>Backend</td>
+      <td>Spring Security · JWT 인증 필터 · WebSocket 설정 · 전자결재 · 채팅 · 사원/부서 관리 · 알림 · 감사로그 · 파일 · CI/CD 구성</td>
+    </tr>
+    <tr>
+      <td><b>김민준</b></td>
+      <td>Backend</td>
+      <td>게시판 · 업무(Task) · 연차/휴가</td>
+    </tr>
+    <tr>
+      <td><b>유재혁</b></td>
+      <td>Backend</td>
+      <td>부서 · 근태(출퇴근) · 대시보드 집계 · 파일 업로드</td>
+    </tr>
+    <tr>
+      <td><b>정소희</b></td>
+      <td>Frontend</td>
+      <td>공통 컴포넌트 설계 · 로그인/인증 · 대시보드 · 채팅 · 알림 · 조직관리 · 업무</td>
+    </tr>
+    <tr>
+      <td><b>이유리</b></td>
+      <td>Frontend</td>
+      <td>전자결재 · 게시판 · 업무(Task) · 메신저 · 조직도 화면</td>
+    </tr>
+  </tbody>
+</table>
