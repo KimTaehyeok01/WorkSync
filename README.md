@@ -71,6 +71,7 @@ https://worksync.kr
 - **공지 / 부서 / 자유 / 자료** 게시판에서 글을 작성하고 첨부파일을 공유할 수 있다.
 - WebSocket(STOMP) 기반 **실시간 메신저**로 1:1 / 그룹 채팅을 주고받을 수 있다.
 - 채팅방에서 **파일을 첨부·공유**할 수 있고, 채팅방별 참여자 목록과 읽음 처리를 지원한다.
+- 채팅방 헤더의 ✦ 버튼으로 **AI 대화 요약**을 받을 수 있다. 최근 50개 메시지를 Groq(Llama 3.3 70B) 모델로 분석해 핵심 내용을 3~5줄로 요약해준다.
 - 업무(Task)를 생성하고 담당자·부서·진행 상태(`TODO`/`IN_PROGRESS`/`DONE`)·진행률로 관리할 수 있다.
 - 내 업무, 담당자별 업무, 부서별 업무를 필터링하여 조회할 수 있다.
 - 결재 · 업무 · 메신저 이벤트 발생 시 **실시간 알림**을 받고, 안 읽은 알림 수를 확인할 수 있다.
@@ -108,6 +109,7 @@ https://worksync.kr
   <img src="https://img.shields.io/badge/WebSocket (STOMP)-010101?style=flat-square&logo=socketdotio&logoColor=white"/>
   <img src="https://img.shields.io/badge/Swagger-85EA2D?style=flat-square&logo=swagger&logoColor=black"/>
   <img src="https://img.shields.io/badge/Lombok-CC0000?style=flat-square&logo=java&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Groq (Llama 3.3 70B)-F55036?style=flat-square&logo=groq&logoColor=white"/>
 </p>
 
 ### Frontend
@@ -182,6 +184,7 @@ https://worksync.kr
 - WebSocket(STOMP) 기반 채팅방에서 1:1 또는 그룹 채팅을 할 수 있습니다.
 - 채팅방 입장/퇴장, 읽음 처리, 참여자 목록 조회를 지원합니다.
 - 채팅방 내에서 파일을 공유하고 채팅방별 첨부파일 목록을 확인할 수 있습니다.
+- 채팅 헤더의 ✦ 버튼으로 **AI 대화 요약**을 요청하면, 최근 50개 메시지를 분석해 핵심 내용을 3~5줄로 요약해 보여줍니다.
 
 #### 7단계 — 업무(Task) 관리
 - 업무를 생성하고 담당자·부서·마감일·진행률을 지정합니다.
@@ -313,6 +316,7 @@ backend/src/main/java/com/worksync/
 └── global/
     ├── config/         # Security, JWT, WebSocket(STOMP), CORS, Swagger 설정
     ├── security/        # JWT 인증 필터 / UserDetails
+    ├── ai/              # Groq API 연동 (AI 채팅 요약)
     ├── exception/       # 전역 예외 처리
     └── response/         # 공통 API 응답 포맷
 
@@ -599,6 +603,11 @@ erDiagram
 **WebSocket(STOMP) 기반 실시간 메신저**  
 일반 HTTP 요청과 달리 WebSocket은 Spring Security 필터를 거치지 않기 때문에, STOMP 연결 시 `StompHandler`에서 JWT 토큰을 직접 검증하는 방식으로 인증을 처리했습니다.  
 채팅방(`ChatRoom`) - 채팅 멤버(`ChatMember`) - 메시지(`Message`) 구조로 1:1 / 그룹 채팅을 지원하며, `last_read_message_id`로 읽음 처리를 관리합니다.
+
+**AI 채팅 요약 (Groq API)**  
+채팅 헤더 ✦ 버튼 클릭 시 `GET /api/chat/rooms/{roomId}/summary`를 호출해 최근 50개 TEXT 메시지를 수집하고, `GroqService`가 Llama 3.3 70B 모델에 한국어 요약 프롬프트를 전달합니다.  
+결과는 채팅창 상단에 파란 배너로 표시되며, 닫기 버튼으로 해제하거나 채팅방 전환 시 자동 초기화됩니다.  
+API 키 등 시크릿은 `application-secret.yml`(로컬) / `GROQ_API_KEY` 환경변수(운영)로 분리해 관리합니다.
 
 **근태 자동 상태 판정**  
 출근(`check-in`) / 퇴근(`check-out`) 기록을 바탕으로 정상(`NORMAL`) / 지각(`LATE`) / 조퇴(`EARLY_LEAVE`) / 결근(`ABSENT`) 상태를 자동으로 판정하여 저장합니다.
