@@ -171,6 +171,22 @@ export async function enterRoom(accessToken, roomId) {
   });
 }
 
+// 채팅방 대화 요약
+export async function summarizeRoom(accessToken, roomId) {
+  return await fetch(`${BASE_URL}/chat/rooms/${roomId}/summary`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+    .then((response) => response.json())
+    .then((json) => json)
+    .catch((error) => {
+      console.log("에러발생: " + error);
+    });
+}
+
 // 채팅방 퇴장
 export async function leaveRoom(accessToken, roomId) {
   return await fetch(`${BASE_URL}/chat/rooms/${roomId}/leave`, {

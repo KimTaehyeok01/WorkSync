@@ -103,6 +103,16 @@ public class ChatController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
+    // GET /api/chat/rooms/{roomId}/summary — 대화 요약
+    @GetMapping("/rooms/{roomId}/summary")
+    public ResponseEntity<ApiResponse<String>> summarizeRoom(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long roomId) {
+
+        String summary = chatService.summarizeRoom(roomId, userDetails.getId());
+        return ResponseEntity.ok(ApiResponse.ok(summary));
+    }
+
     // GET /api/chat/rooms/{roomId}/files — 공유 파일 목록
     @GetMapping("/rooms/{roomId}/files")
     public ResponseEntity<ApiResponse<List<MessageResponse>>> getRoomFiles(

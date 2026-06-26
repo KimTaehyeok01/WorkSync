@@ -14,6 +14,7 @@ import {
   X,
   Download,
   ArrowLeft,
+  Sparkles,
 } from "lucide-react";
 import { WSAvatar } from "../../../components/common/CommonWidgets";
 import { WSEmptyState } from "../../../components/common/LayoutComponents";
@@ -25,6 +26,7 @@ import {
   readMessage,
   enterRoom,
   leaveRoom,
+  summarizeRoom,
 } from "../services/chatApi";
 import { getMyInfo } from "../../../components/service/TopBarApi";
 import { putNotifications } from "../../notification/services/notificationApi";
@@ -51,6 +53,8 @@ export default function Messenger() {
   const [search, setSearch] = useState("");
   const [unread, setUnread] = useState(0);
   const [showInfo, setShowInfo] = useState(true);
+  const [summary, setSummary] = useState(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
   const [showNewConvModal, setShowNewConvModal] = useState(false);
   const [conversation, setConversation] = useState([]);
   const [teamMember, setTeamMember] = useState([]);
@@ -309,6 +313,26 @@ export default function Messenger() {
     };
   }, [accessToken, activeConvId]);
 
+  // 채팅방 변경 시 요약 초기화
+  useEffect(() => {
+    setSummary(null);
+  }, [activeConvId]);
+
+  // 대화 요약 요청
+  async function handleSummarize() {
+    if (!accessToken || !activeConvId) return;
+    setSummaryLoading(true);
+    setSummary(null);
+    try {
+      const res = await summarizeRoom(accessToken, activeConvId);
+      setSummary(res?.data ?? "요약에 실패했습니다.");
+    } catch {
+      setSummary("요약에 실패했습니다.");
+    } finally {
+      setSummaryLoading(false);
+    }
+  }
+
   // 대화 리스트 클릭 시
   function handleConvClick(conv) {
     setActiveConvId(conv.id);
@@ -514,6 +538,15 @@ export default function Messenger() {
 
           <div className={s.chatActions}>
             <button
+              onClick={handleSummarize}
+              className={s.iconBtn}
+              type="button"
+              aria-label="대화 요약"
+              disabled={summaryLoading}
+            >
+              <Sparkles size={17} />
+            </button>
+            <button
               onClick={() => setShowInfo(!showInfo)}
               className={s.iconBtn}
               type="button"
@@ -524,6 +557,31 @@ export default function Messenger() {
             </button>
           </div>
         </div>
+
+        {(summaryLoading || summary) && (
+          <div className={s.summaryBanner}>
+            <div className={s.summaryHeader}>
+              <span className={s.summaryTitle}>
+                <Sparkles size={13} /> AI 대화 요약
+              </span>
+              {!summaryLoading && (
+                <button
+                  type="button"
+                  className={s.summaryClose}
+                  onClick={() => setSummary(null)}
+                  aria-label="요약 닫기"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+            {summaryLoading ? (
+              <p className={s.summaryText}>요약 중...</p>
+            ) : (
+              <p className={s.summaryText}>{summary}</p>
+            )}
+          </div>
+        )}
 
         <div className={s.messages}>
           {chatMessages.map((msg, index) => {

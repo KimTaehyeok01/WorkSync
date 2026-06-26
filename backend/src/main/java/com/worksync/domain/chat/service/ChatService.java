@@ -10,6 +10,7 @@ import com.worksync.domain.employee.entity.EmployeeStatus;
 import com.worksync.domain.employee.repository.EmployeeRepository;
 import com.worksync.domain.notification.entity.NotificationType;
 import com.worksync.domain.notification.service.NotificationService;
+import com.worksync.global.ai.GroqService;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +40,7 @@ public class ChatService {
     private final EmployeeRepository employeeRepository;
     private final NotificationService notificationService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final GroqService groqService;
 
     // 채팅방 생성
     @Transactional
@@ -318,6 +322,33 @@ public class ChatService {
         return chatMemberRepository.findByRoomId(roomId).stream()
                 .map(ChatMemberResponse::from)
                 .collect(Collectors.toList());
+    }
+
+    // 채팅방 대화 요약
+    public String summarizeRoom(Long roomId, Long myId) {
+        if (!chatMemberRepository.existsByRoomIdAndEmployeeId(roomId, myId)) {
+            throw new CustomException(ErrorCode.NOT_CHAT_MEMBER);
+        }
+
+        Pageable pageable = PageRequest.of(0, 50);
+        List<Message> messages = new ArrayList<>(
+                messageRepository.findByRoomIdOrderByIdDesc(roomId, pageable));
+        Collections.reverse(messages);
+
+        String conversation = messages.stream()
+                .filter(m -> m.getMsgType() == MessageType.TEXT)
+                .map(m -> {
+                    String sender = m.getSender() != null ? m.getSender().getName() : "시스템";
+                    return sender + ": " + m.getContent();
+                })
+                .collect(Collectors.joining("\n"));
+
+        if (conversation.isBlank()) {
+            return "요약할 대화 내용이 없습니다.";
+        }
+
+        String prompt = "다음은 업무용 메신저 대화입니다. 핵심 내용을 3~5줄로 한국어로 요약해주세요.\n\n" + conversation;
+        return groqService.generate(prompt);
     }
 
     // 공유 파일 목록
