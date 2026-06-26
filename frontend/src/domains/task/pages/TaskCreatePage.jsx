@@ -333,12 +333,12 @@ export default function TaskNew() {
               isDragging={isDragging}
               onDragStateChange={setIsDragging}
               icon={<Paperclip size={28} />}
-              accept=".pdf,.ppt,.xlsx,.pptx"
+              accept=".pdf,.docx,.xlsx,.pptx"
               label="파일을 드래그하거나 클릭하여 업로드"
               helperText="PDF, DOCX, XLSX, PPTX - 최대 50MB"
             />
 
-            <WSFileList files={files} onRemove={removeFiles} />
+            <WSFileList files={files.map(({ file }) => file)} onRemove={removeFiles} />
           </WSCard>
 
           <div className={s.actionsCol}>
