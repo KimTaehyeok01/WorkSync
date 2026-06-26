@@ -68,3 +68,8 @@ app:
   supabase:
     url: ${SUPABASE_URL}
     service-role-key: ${SUPABASE_SERVICE_ROLE_KEY}
+
+# Groq API (채팅 AI 요약). 로컬은 application-secret.yml, 운영은 GROQ_API_KEY 환경변수로 주입
+# 키가 없으면 빈 값으로 부팅되고 요약 기능만 동작하지 않음 (서버 전체는 정상 기동)
+groq:
+  api-key: ${GROQ_API_KEY:}
