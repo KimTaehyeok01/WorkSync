@@ -15,3 +15,6 @@ logs/
 .env
 .env.*
 !.env.example
+
+# Claude Code
+CLAUDE.md
