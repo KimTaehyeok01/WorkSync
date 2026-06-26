@@ -23,7 +23,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate   # 운영: validate 권장
+      ddl-auto: none   # 운영: validate 권장
     open-in-view: false
     properties:
       hibernate:
