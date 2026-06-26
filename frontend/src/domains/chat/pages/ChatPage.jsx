@@ -38,7 +38,7 @@ import {
 import { ConvItem } from "../components/ConvItem";
 import { NewConvModal } from "../components/NewConvModal";
 import useFileUpload from "../../../hooks/useFileUpload";
-import { getFile, saveFile, deleteFile } from "../../file/services/fileApi";
+import { getFile, saveFile, deleteFile, getFileId } from "../../file/services/fileApi";
 import { getSize, getFileMeta } from "../../file/components/fileUtil";
 import { FileBubble } from "../components/FileBubble";
 import s from "./ChatPage.module.css";
@@ -133,6 +133,17 @@ export default function Messenger() {
               },
             ];
           });
+          // 파일 메시지 수신 시 sharedFiles에 파일 정보 추가 (받는 사람 케이스)
+          if (msg.msgType === "FILE" && msg.fileId) {
+            getFileId(accessToken, msg.fileId).then((res) => {
+              if (!res?.data) return;
+              const f = res.data;
+              setSharedFiles((prev) => {
+                if (prev.some((sf) => sf.id === f.id)) return prev;
+                return [{ id: f.id, originalName: f.originalName, fileSize: getSize(f.fileSize), filePath: f.filePath, createdAt: f.createdAt }, ...prev];
+              });
+            });
+          }
         });
       },
     });
@@ -364,6 +375,18 @@ export default function Messenger() {
         if (!fileId) {
           continue;
         }
+
+        // 파일 보낸 사람 케이스: sharedFiles에 즉시 추가해야 FileBubble이 렌더링됨
+        setSharedFiles((prev) => [
+          {
+            id: fileId,
+            originalName: uploaded.originalName,
+            fileSize: getSize(uploaded.fileSize),
+            filePath: uploaded.filePath,
+            createdAt: new Date().toISOString(),
+          },
+          ...prev,
+        ]);
 
         await sendMessage(
           accessToken,
