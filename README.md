@@ -19,7 +19,7 @@
 <td><a href="#구현-포인트">💡 구현 포인트</a></td>
 <td><a href="#트러블슈팅">🔥 트러블슈팅</a></td>
 <td><a href="#cicd">🚀 CI/CD</a></td>
-<td></td>
+<td><a href="#팀원-역할">👥 프로젝트 구성원</a></td>
 </tr>
 </table>
 
@@ -347,6 +347,14 @@ frontend/src/
 <a id="프로젝트-산출물"></a>
 
 ## 📜 프로젝트 산출물
+
+### Git 버전 관리 스프레드시트
+
+[📊 Git 버전 관리 시트 보기](https://docs.google.com/spreadsheets/d/1yh9t5bGSPWXLshqWMkUy3sJ8JbTxuJYGnN5LDT7soYE/edit?gid=518701425#gid=518701425)
+
+> 팀원별 브랜치 전략, 커밋 내역, 버전 관리 현황을 기록한 스프레드시트입니다.
+
+---
 
 ### ERD
 
