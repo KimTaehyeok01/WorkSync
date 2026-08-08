@@ -5,12 +5,13 @@ import com.worksync.domain.approval.repository.ApprovalDocRepository;
 import com.worksync.domain.approval.repository.ApprovalLineRepository;
 import com.worksync.domain.attendance.entity.Attendance;
 import com.worksync.domain.attendance.repository.AttendanceRepository;
-import com.worksync.domain.dashboard.dto.DashboardResponse;
+import com.worksync.domain.dashboard.dto.DashboardDto;
 import com.worksync.domain.leave.repository.AnnualLeaveBalanceRepository;
 import com.worksync.domain.notification.repository.NotificationRepository;
 import com.worksync.domain.task.entity.TaskStatus;
 import com.worksync.domain.task.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +19,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -30,7 +32,7 @@ public class DashboardService {
   private final TaskRepository taskRepository;
   private final AnnualLeaveBalanceRepository annualLeaveBalanceRepository;
 
-  public DashboardResponse getDashboard(Long employeeId){
+  public DashboardDto.Response getDashboard(Long employeeId){
 
     // 오늘 근태
     Optional<Attendance> todayAttendance =
@@ -60,7 +62,7 @@ public class DashboardService {
             .map(b -> b.getTotalDays().subtract(b.getUsedDays()))
             .orElse(BigDecimal.ZERO);
 
-    return DashboardResponse.builder()
+    return DashboardDto.Response.builder()
             // 출근기록 있으면 상태(NORMAL/LATE), 없으면 NULL
             .todayAttendanceStatus(todayAttendance.map(Attendance::getStatus).orElse(null))
             // 출근 기록 자체가 존재하는지 확인

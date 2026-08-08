@@ -3,18 +3,16 @@ package com.worksync.domain.employee.service;
 import com.worksync.domain.audit.service.AuditLogService;
 import com.worksync.domain.department.entity.Department;
 import com.worksync.domain.department.repository.DepartmentRepository;
-import com.worksync.domain.employee.dto.EmployeeCreateRequest;
-import com.worksync.domain.employee.dto.EmployeeResponse;
-import com.worksync.domain.employee.dto.EmployeeUpdateRequest;
+import com.worksync.domain.employee.dto.EmployeeDto;
 import com.worksync.domain.employee.entity.Employee;
 import com.worksync.domain.employee.entity.EmployeeRole;
 import com.worksync.domain.employee.entity.EmployeeStatus;
 import com.worksync.domain.employee.repository.EmployeeRepository;
-import com.worksync.domain.file.service.FileService;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -42,7 +41,7 @@ public class EmployeeService {
     private static final String ACTION_RESIGN = "퇴사 처리";
 
     // 직원 목록 조회 (이름·부서·상태 필터링)
-    public List<EmployeeResponse> getEmployees(String name, Long departmentId, EmployeeStatus status) {
+    public List<EmployeeDto.Response> getEmployees(String name, Long departmentId, EmployeeStatus status) {
         Specification<Employee> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -60,27 +59,27 @@ public class EmployeeService {
         };
 
         return employeeRepository.findAll(spec).stream()
-                .map(EmployeeResponse::from)
+                .map(EmployeeDto.Response::from)
                 .toList();
     }
 
     // 직원 단건 조회 (관리자 + 일반 사용자)
-    public EmployeeResponse getEmployee(Long id) {
+    public EmployeeDto.Response getEmployee(Long id) {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
-        return EmployeeResponse.from(employee);
+        return EmployeeDto.Response.from(employee);
     }
 
     // 내 정보 조회 (본인)
-    public EmployeeResponse getMyInfo(Long id) {
+    public EmployeeDto.Response getMyInfo(Long id) {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
-        return EmployeeResponse.from(employee);
+        return EmployeeDto.Response.from(employee);
     }
 
     // 직원 등록 (ADMIN)
     @Transactional
-    public EmployeeResponse createEmployee(EmployeeCreateRequest request, Long actorId) {
+    public EmployeeDto.Response createEmployee(EmployeeDto.CreateRequest request, Long actorId) {
         if (employeeRepository.existsByEmail(request.getEmail())) {
             throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
         }
@@ -114,11 +113,11 @@ public class EmployeeService {
                 .map(Employee::getName).orElse(null);
         auditLogService.log(actorId, actorName, ACTION_HIRE, CATEGORY_HR, saved.getId(), null, null);
 
-        return EmployeeResponse.from(saved);
+        return EmployeeDto.Response.from(saved);
     }
 
     @Transactional
-    public EmployeeResponse updateEmployee(Long id, EmployeeUpdateRequest request) {
+    public EmployeeDto.Response updateEmployee(Long id, EmployeeDto.UpdateRequest request) {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
 
@@ -144,7 +143,7 @@ public class EmployeeService {
                 encodedPassword
         );
 
-        return EmployeeResponse.from(employee);
+        return EmployeeDto.Response.from(employee);
     }
 
     // 직원 삭제 (ADMIN)
@@ -156,7 +155,7 @@ public class EmployeeService {
     }
 
     @Transactional
-    public EmployeeResponse updateMyStatus(Long id, EmployeeStatus status, Long actorId) {
+    public EmployeeDto.Response updateMyStatus(Long id, EmployeeStatus status, Long actorId) {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
         employee.changeStatus(status);
@@ -173,6 +172,6 @@ public class EmployeeService {
             auditLogService.log(actorId, actorName, ACTION_RESIGN, CATEGORY_HR, employee.getId(), null, null);
         }
 
-        return EmployeeResponse.from(employee);
+        return EmployeeDto.Response.from(employee);
     }
 }

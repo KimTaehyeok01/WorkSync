@@ -2,9 +2,7 @@ package com.worksync.domain.auth.service;
 
 import com.worksync.domain.attendance.service.AttendanceService;
 import com.worksync.domain.audit.service.AuditLogService;
-import com.worksync.domain.auth.dto.LoginRequest;
-import com.worksync.domain.auth.dto.LoginResponse;
-import com.worksync.domain.auth.dto.ReissueRequest;
+import com.worksync.domain.auth.dto.AuthDto;
 import com.worksync.domain.employee.entity.Employee;
 import com.worksync.domain.employee.entity.EmployeeStatus;
 import com.worksync.domain.employee.repository.EmployeeRepository;
@@ -12,6 +10,7 @@ import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
 import com.worksync.global.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -41,7 +41,7 @@ public class AuthService {
     private static final int LOCK_MINUTES = 30;
 
     @Transactional(noRollbackFor = CustomException.class)
-    public LoginResponse login(LoginRequest request, String clientIp, String userAgent) {
+    public AuthDto.LoginResponse login(AuthDto.LoginRequest request, String clientIp, String userAgent) {
         Employee employee = employeeRepository.findByEmpNo(request.getEmpNo())
                 .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CREDENTIALS));
 
@@ -81,7 +81,7 @@ public class AuthService {
                 employee.getId(), employee.getEmail(), employee.getRole().name());
         String refreshToken = jwtTokenProvider.generateRefreshToken(employee.getId());
 
-        return LoginResponse.builder()
+        return AuthDto.LoginResponse.builder()
                 .employeeId(employee.getId())
                 .empNo(employee.getEmpNo())
                 .name(employee.getName())
@@ -96,7 +96,7 @@ public class AuthService {
                 .build();
     }
 
-    public Map<String, String> reissue(ReissueRequest request) {
+    public Map<String, String> reissue(AuthDto.ReissueRequest request) {
         String refreshToken = request.getRefreshToken();
 
         if (!jwtTokenProvider.validateToken(refreshToken)) {
@@ -119,7 +119,7 @@ public class AuthService {
 
     // 로그아웃
     @Transactional
-    public void logout(ReissueRequest request, String clientIp, String userAgent) {
+    public void logout(AuthDto.ReissueRequest request, String clientIp, String userAgent) {
         if (!jwtTokenProvider.validateToken(request.getRefreshToken())) {
             throw new CustomException(ErrorCode.INVALID_TOKEN);
         }

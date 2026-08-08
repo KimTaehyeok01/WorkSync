@@ -1,10 +1,10 @@
 package com.worksync.domain.audit.service;
 
-import com.worksync.domain.audit.dto.AuditLogResponse;
-import com.worksync.domain.audit.dto.AuditLogSummaryResponse;
+import com.worksync.domain.audit.dto.AuditLogDto;
 import com.worksync.domain.audit.entity.AuditLog;
 import com.worksync.domain.audit.repository.AuditLogRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -27,20 +28,20 @@ public class AuditLogService {
     // 페이지네이션 목록 10개 묶음
     // 감사 로그 목록 조회 (카테고리 / 기간 / 키워드 필터)
     // 기간: today | week | month | null(전체)
-    public Page<AuditLogResponse> getLogs(String category, String period, String keyword, Pageable pageable) {
+    public Page<AuditLogDto.Response> getLogs(String category, String period, String keyword, Pageable pageable) {
         String targetType = (category == null || category.isBlank()) ? null : category;
         String kw = (keyword == null || keyword.isBlank()) ? null : keyword;
         LocalDateTime from = resolveFrom(period);
 
         return auditLogRepository.search(targetType, from, kw, pageable)
-                .map(AuditLogResponse::from);
+                .map(AuditLogDto.Response::from);
     }
 
     // 상단 통계 위젯
-    public AuditLogSummaryResponse getSummary() {
+    public AuditLogDto.Summary getSummary() {
         LocalDateTime todayStart = LocalDate.now().atStartOfDay();
 
-        return AuditLogSummaryResponse.builder()
+        return AuditLogDto.Summary.builder()
                 .totalCount(auditLogRepository.count())
                 .todayCount(auditLogRepository.countByCreatedAtGreaterThanEqual(todayStart))
                 .loginFailCount(auditLogRepository.countByAction(ACTION_LOGIN_FAIL))

@@ -1,6 +1,7 @@
 package com.worksync.domain.chat.service;
 
-import com.worksync.domain.chat.dto.*;
+import com.worksync.domain.chat.dto.ChatRoomDto;
+import com.worksync.domain.chat.dto.MessageDto;
 import com.worksync.domain.chat.entity.*;
 import com.worksync.domain.chat.repository.ChatMemberRepository;
 import com.worksync.domain.chat.repository.ChatRoomRepository;
@@ -14,6 +15,7 @@ import com.worksync.global.ai.GroqService;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -29,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -44,7 +47,7 @@ public class ChatService {
 
     // 채팅방 생성
     @Transactional
-    public ChatRoomResponse createRoom(Long myId, ChatRoomCreateRequest request) {
+    public ChatRoomDto.Response createRoom(Long myId, ChatRoomDto.CreateRequest request) {
 
         Employee creator = employeeRepository.findById(myId)
                 .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
@@ -56,7 +59,7 @@ public class ChatService {
             }
             Long targetId = request.getMemberIds().get(0);
             return chatRoomRepository.findDirectRoom(RoomType.DIRECT, myId, targetId)
-                    .map(ChatRoomResponse::from)
+                    .map(ChatRoomDto.Response::from)
                     .orElseGet(() -> buildAndSaveRoom(creator, request));
         }
 
@@ -69,7 +72,7 @@ public class ChatService {
         return buildAndSaveRoom(creator, request);
     }
 
-    private ChatRoomResponse buildAndSaveRoom(Employee creator, ChatRoomCreateRequest request) {
+    private ChatRoomDto.Response buildAndSaveRoom(Employee creator, ChatRoomDto.CreateRequest request) {
 
         ChatRoom room = ChatRoom.builder()
                 .roomType(request.getRoomType())
@@ -108,11 +111,11 @@ public class ChatService {
         messageRepository.save(systemMessage);
         room.updateLastMessageAt(LocalDateTime.now());
 
-        return ChatRoomResponse.from(room);
+        return ChatRoomDto.Response.from(room);
     }
 
     // 내 채팅방 목록
-    public List<ChatRoomListResponse> getMyRooms(Long myId, String keyword) {
+    public List<ChatRoomDto.ListResponse> getMyRooms(Long myId, String keyword) {
 
         return chatRoomRepository.findMyRooms(myId).stream()
                 .filter(room -> matchesKeyword(room, myId, keyword))
@@ -128,7 +131,7 @@ public class ChatService {
                 .anyMatch(m -> m.getEmployee().getName().contains(keyword));
     }
 
-    private ChatRoomListResponse buildListResponse(ChatRoom room, Long myId) {
+    private ChatRoomDto.ListResponse buildListResponse(ChatRoom room, Long myId) {
 
         // 이름 / 썸네일 결정
         String name;
@@ -170,7 +173,7 @@ public class ChatService {
             }
         }
 
-        return ChatRoomListResponse.builder()
+        return ChatRoomDto.ListResponse.builder()
                 .id(room.getId())
                 .roomType(room.getRoomType())
                 .name(name)
@@ -183,7 +186,7 @@ public class ChatService {
     }
 
     // 메시지 목록 (커서 기반 스크롤)
-    public List<MessageResponse> getMessages(Long roomId, Long myId, Long lastMessageId, int size) {
+    public List<MessageDto.Response> getMessages(Long roomId, Long myId, Long lastMessageId, int size) {
 
         if (!chatMemberRepository.existsByRoomIdAndEmployeeId(roomId, myId)) {
             throw new CustomException(ErrorCode.NOT_CHAT_MEMBER);
@@ -195,13 +198,13 @@ public class ChatService {
                 : messageRepository.findByRoomIdAndIdLessThanOrderByIdDesc(roomId, lastMessageId, pageable);
 
         return messages.stream()
-                .map(MessageResponse::from)
+                .map(MessageDto.Response::from)
                 .collect(Collectors.toList());
     }
 
     // 메시지 전송
     @Transactional
-    public MessageResponse sendMessage(Long roomId, Long myId, MessageSendRequest request) {
+    public MessageDto.Response sendMessage(Long roomId, Long myId, MessageDto.SendRequest request) {
 
         ChatRoom room = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new CustomException(ErrorCode.CHAT_ROOM_NOT_FOUND));
@@ -252,12 +255,12 @@ public class ChatService {
                             "/queue/chat/unread",
                             Map.of("roomId", roomId, "unreadCount", unreadCount)
                     );
-                    System.out.println("unread 전송: " + m.getEmployee().getId() + " roomId: " + roomId + " unreadCount: " + unreadCount);
+                    log.debug("unread 전송: {} roomId: {} unreadCount: {}", m.getEmployee().getId(), roomId, unreadCount);
                 });
 
         // 채팅방 구독자에게 실시간 메시지 전송 (WebSocket)
-        MessageResponse response = MessageResponse.from(message);
-        System.out.println("메시지 전송 roomId: " + roomId);
+        MessageDto.Response response = MessageDto.Response.from(message);
+        log.debug("메시지 전송 roomId: {}", roomId);
         messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
 
 
@@ -313,14 +316,14 @@ public class ChatService {
     }
 
     // 구성원 목록
-    public List<ChatMemberResponse> getRoomMembers(Long roomId, Long myId) {
+    public List<ChatRoomDto.MemberResponse> getRoomMembers(Long roomId, Long myId) {
 
         if (!chatMemberRepository.existsByRoomIdAndEmployeeId(roomId, myId)) {
             throw new CustomException(ErrorCode.NOT_CHAT_MEMBER);
         }
 
         return chatMemberRepository.findByRoomId(roomId).stream()
-                .map(ChatMemberResponse::from)
+                .map(ChatRoomDto.MemberResponse::from)
                 .collect(Collectors.toList());
     }
 
@@ -352,7 +355,7 @@ public class ChatService {
     }
 
     // 공유 파일 목록
-    public List<MessageResponse> getRoomFiles(Long roomId, Long myId) {
+    public List<MessageDto.Response> getRoomFiles(Long roomId, Long myId) {
 
         if (!chatMemberRepository.existsByRoomIdAndEmployeeId(roomId, myId)) {
             throw new CustomException(ErrorCode.NOT_CHAT_MEMBER);
@@ -362,7 +365,7 @@ public class ChatService {
                 .findByRoomIdAndMsgTypeIn(
                         roomId, List.of(MessageType.FILE, MessageType.IMAGE))
                 .stream()
-                .map(MessageResponse::from)
+                .map(MessageDto.Response::from)
                 .collect(Collectors.toList());
     }
 }

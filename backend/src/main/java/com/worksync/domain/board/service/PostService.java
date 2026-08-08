@@ -1,9 +1,7 @@
 package com.worksync.domain.board.service;
 
 
-import com.worksync.domain.board.dto.PostCreateRequest;
-import com.worksync.domain.board.dto.PostResponse;
-import com.worksync.domain.board.dto.PostUpdateRequest;
+import com.worksync.domain.board.dto.PostDto;
 import com.worksync.domain.board.entity.Board;
 import com.worksync.domain.board.entity.BoardType;
 import com.worksync.domain.board.entity.Post;
@@ -16,12 +14,14 @@ import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
 import com.worksync.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 
@@ -34,7 +34,7 @@ public class PostService {
     //게시글 목록 조회(페이징+제목검색)
     //departmentId: ADMIN이 부서게시판에서 특정 부서만 골라볼 때 사용 (null이면 전체 부서)
     @Transactional(readOnly = true)
-    public Page<PostResponse> getPosts(Long boardId, String keyword, Long departmentId,
+    public Page<PostDto.Response> getPosts(Long boardId, String keyword, Long departmentId,
                                        Pageable pageable, CustomUserDetails user) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new CustomException(ErrorCode.BOARD_NOT_FOUND));
@@ -77,24 +77,24 @@ public class PostService {
             }
         }
 
-        return posts.map(PostResponse::from);
+        return posts.map(PostDto.Response::from);
     }
 
     //게시글 상세 조회
     @Transactional(readOnly = true)
-    public PostResponse getPost(Long boardId,Long postId){
+    public PostDto.Response getPost(Long boardId,Long postId){
         Post post=postRepository.findById(postId)
                 .orElseThrow(()-> new CustomException(ErrorCode.POST_NOT_FOUND));
 
         if (!post.getBoard().getId().equals(boardId)){
             throw new CustomException(ErrorCode.BOARD_NOT_FOUND);
         }
-        return PostResponse.from(post);
+        return PostDto.Response.from(post);
     }
 
     //게시글 작성
     @Transactional
-    public Long createPost(Long boardId, PostCreateRequest req,CustomUserDetails user){
+    public Long createPost(Long boardId, PostDto.CreateRequest req,CustomUserDetails user){
         Board board=boardRepository.findById(boardId)
                 .orElseThrow(()->new CustomException(ErrorCode.BOARD_NOT_FOUND));
         //공지글 어드민만 가능하게 권한 제어
@@ -117,7 +117,7 @@ public class PostService {
 
         // (webSocket) 공지 게시글 작성 시 전체 사용자에게 새 게시글 실시간 push
         if (board.getBoardType() == BoardType.NOTICE) {
-            messagingTemplate.convertAndSend("/topic/board/notice", PostResponse.from(saved));
+            messagingTemplate.convertAndSend("/topic/board/notice", PostDto.Response.from(saved));
         }
 
         return saved.getId();
@@ -125,7 +125,7 @@ public class PostService {
 
     //게시글 수정(본인만 가능)
     @Transactional
-    public PostResponse updatePost(Long boardId, Long postId, PostUpdateRequest req,CustomUserDetails user) {
+    public PostDto.Response updatePost(Long boardId, Long postId, PostDto.UpdateRequest req,CustomUserDetails user) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
 
@@ -137,7 +137,7 @@ public class PostService {
             throw new CustomException(ErrorCode.BOARD_NOT_FOUND);
         }
         post.update(req.getTitle(), req.getContent());
-        return PostResponse.from(post);
+        return PostDto.Response.from(post);
     }
 
     //게시글 삭제(본인만 가능)

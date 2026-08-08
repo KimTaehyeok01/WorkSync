@@ -1,24 +1,26 @@
 package com.worksync.domain.board.service;
 
-import com.worksync.domain.board.dto.BoardResponse;
+import com.worksync.domain.board.dto.BoardDto;
 import com.worksync.domain.board.entity.Board;
 import com.worksync.domain.board.entity.BoardType;
 import com.worksync.domain.board.repository.BoardRepository;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class BoardService {
     private final BoardRepository boardRepository;
 
-    public List<BoardResponse> getBoards (BoardType boardType,Long departmentId){
+    public List<BoardDto.Response> getBoards (BoardType boardType,Long departmentId){
         List<Board>boards;
         //boardType과 departmentId 둘다 있으면 둘다 필터링
         if(boardType !=null && departmentId !=null){
@@ -35,16 +37,16 @@ public class BoardService {
         }
 
     return boards.stream()
-            .map(BoardResponse::from)
+            .map(BoardDto.Response::from)
             .toList();
     }
 
     //게시판 단건 조회
     @Transactional(readOnly = true)
-    public BoardResponse getBoard(Long boardId){
+    public BoardDto.Response getBoard(Long boardId){
         Board board=boardRepository.findById(boardId)
                 .orElseThrow(()->new CustomException(ErrorCode.BOARD_NOT_FOUND));
-        return BoardResponse.from(board);
+        return BoardDto.Response.from(board);
     }
 }
 

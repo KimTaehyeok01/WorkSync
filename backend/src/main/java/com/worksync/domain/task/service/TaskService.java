@@ -5,21 +5,20 @@ import com.worksync.domain.department.entity.Department;
 import com.worksync.domain.department.repository.DepartmentRepository;
 import com.worksync.domain.employee.entity.Employee;
 import com.worksync.domain.employee.repository.EmployeeRepository;
-import com.worksync.domain.file.dto.FileUploadResponse;
+import com.worksync.domain.file.dto.FileDto;
 import com.worksync.domain.file.entity.RefType;
 import com.worksync.domain.file.repository.FileAttachmentRepository;
 import com.worksync.domain.audit.service.AuditLogService;
 import com.worksync.domain.notification.entity.NotificationType;
 import com.worksync.domain.notification.service.NotificationService;
-import com.worksync.domain.task.dto.TaskCreateRequest;
-import com.worksync.domain.task.dto.TaskResponse;
-import com.worksync.domain.task.dto.TaskUpdateRequest;
+import com.worksync.domain.task.dto.TaskDto;
 import com.worksync.domain.task.entity.Task;
 import com.worksync.domain.task.entity.TaskStatus;
 import com.worksync.domain.task.repository.TaskRepository;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -29,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -53,7 +53,7 @@ public class TaskService {
 
     //업무 생성
     @Transactional
-    public TaskResponse create(Long creatorId, TaskCreateRequest request) {
+    public TaskDto.Response create(Long creatorId, TaskDto.CreateRequest request) {
         Employee creator = employeeRepository.findById(creatorId)
                 .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
 
@@ -102,56 +102,56 @@ public class TaskService {
         auditLogService.log(creator.getId(), creator.getName(),
                 ACTION_CREATE, CATEGORY_TASK, saved.getId(), null, null);
 
-        return TaskResponse.from(saved);
+        return TaskDto.Response.from(saved);
     }
 
     //단건 조회(첨부파일 포함)
-    public  TaskResponse getById(Long taskId){
+    public  TaskDto.Response getById(Long taskId){
         Task task=taskRepository.findById(taskId)
                 .orElseThrow(()->new CustomException(ErrorCode.TASK_NOT_FOUND));
 
-        List<FileUploadResponse> attachments=fileAttachmentRepository
+        List<FileDto.UploadResponse> attachments=fileAttachmentRepository
                 .findByRefTypeAndRefId(refTypeName,taskId)
                 .stream()
-                .map(FileUploadResponse::from)
+                .map(FileDto.UploadResponse::from)
                 .toList();
 
-        return TaskResponse.from(task,attachments);
+        return TaskDto.Response.from(task,attachments);
 
     }
 
     //전체목록(상태 필터+키워드+페이징)
-    public Page<TaskResponse>getAll(TaskStatus status, String keyword, Pageable pageable){
+    public Page<TaskDto.Response>getAll(TaskStatus status, String keyword, Pageable pageable){
             return taskRepository.findAllWithFilter(status,keyword,pageable)
-                    .map(TaskResponse::from);
+                    .map(TaskDto.Response::from);
     }
 
     //담당자별 목록(상태 필터+페이징)
-    public Page<TaskResponse>getByAssignee(Long assigneeId,TaskStatus status,Pageable pageable){
+    public Page<TaskDto.Response>getByAssignee(Long assigneeId,TaskStatus status,Pageable pageable){
         if(status !=null){
             return taskRepository.findByAssigneeWithFilter(assigneeId,status,pageable)
-                    .map(TaskResponse::from);
+                    .map(TaskDto.Response::from);
         }
         return taskRepository.findByAssigneeWithFilter(assigneeId,null,pageable)
-                .map(TaskResponse::from);
+                .map(TaskDto.Response::from);
     }
 
     //내가 만든 업무(페이징)
-    public Page<TaskResponse>getByCreator(Long creatorId,Pageable pageable){
+    public Page<TaskDto.Response>getByCreator(Long creatorId,Pageable pageable){
         return taskRepository.findByCreatorId(creatorId,pageable)
-                .map(TaskResponse::from);
+                .map(TaskDto.Response::from);
     }
 
     //부서별 목록
-    public Page<TaskResponse>getByDepartment(Long departmentId,TaskStatus status,Pageable pageable){
+    public Page<TaskDto.Response>getByDepartment(Long departmentId,TaskStatus status,Pageable pageable){
         return taskRepository.findByDepartmentWithFilter(departmentId,status,pageable)
-                .map(TaskResponse::from);
+                .map(TaskDto.Response::from);
     }
 
 
     //업무 수정
     @Transactional
-    public TaskResponse update(Long taskId, Long requesterId, TaskUpdateRequest request){
+    public TaskDto.Response update(Long taskId, Long requesterId, TaskDto.UpdateRequest request){
         Task task=taskRepository.findById(taskId)
                 .orElseThrow(()->new CustomException(ErrorCode.TASK_NOT_FOUND));
 
@@ -183,10 +183,10 @@ public class TaskService {
                 request.getDueDate()
         );
 
-        List<FileUploadResponse> attachments=fileAttachmentRepository
+        List<FileDto.UploadResponse> attachments=fileAttachmentRepository
                 .findByRefTypeAndRefId(refTypeName,taskId)
                 .stream()
-                .map(FileUploadResponse::from)
+                .map(FileDto.UploadResponse::from)
                 .toList();
 
         // 감사 로그 — 업무 수정
@@ -208,7 +208,7 @@ public class TaskService {
             );
         }
 
-        return TaskResponse.from(task,attachments);
+        return TaskDto.Response.from(task,attachments);
     }
 
     //업무 삭제

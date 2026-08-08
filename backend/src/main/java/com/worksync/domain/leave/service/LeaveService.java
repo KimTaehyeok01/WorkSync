@@ -10,9 +10,7 @@ import com.worksync.domain.approval.repository.ApprovalDocRepository;
 import com.worksync.domain.approval.repository.ApprovalFormRepository;
 import com.worksync.domain.employee.entity.Employee;
 import com.worksync.domain.employee.repository.EmployeeRepository;
-import com.worksync.domain.leave.dto.LeaveBalanceResponse;
-import com.worksync.domain.leave.dto.LeaveCreateRequest;
-import com.worksync.domain.leave.dto.LeaveResponse;
+import com.worksync.domain.leave.dto.LeaveDto;
 import com.worksync.domain.leave.entity.AnnualLeaveBalance;
 import com.worksync.domain.leave.entity.LeaveRequest;
 import com.worksync.domain.leave.entity.LeaveStatus;
@@ -23,6 +21,7 @@ import com.worksync.domain.notification.service.NotificationService;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +30,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -44,7 +44,7 @@ public class LeaveService {
 
     //휴가신청
     @Transactional
-    public LeaveResponse request(Long employeeId, LeaveCreateRequest req) {
+    public LeaveDto.Response request(Long employeeId, LeaveDto.CreateRequest req) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
 
@@ -126,12 +126,12 @@ public class LeaveService {
                 "LEAVE",
                 saved.getId()
         );
-        return LeaveResponse.from(saved);
+        return LeaveDto.Response.from(saved);
     }
 
     //연차 잔여 조회
     @Transactional
-    public LeaveBalanceResponse getBalance(Long employeeId){
+    public LeaveDto.BalanceResponse getBalance(Long employeeId){
         short currentYear = (short) LocalDate.now().getYear();
 
         Employee employee = employeeRepository.findById(employeeId)
@@ -146,7 +146,7 @@ public class LeaveService {
                                 .totalDays(BigDecimal.valueOf(15))
                                 .build()));
 
-        return LeaveBalanceResponse.from(balance);
+        return LeaveDto.BalanceResponse.from(balance);
     }
 
     // 휴가 결재가 최종 승인되면 연차를 차감한다 (ApprovalApprovedEvent 구독)

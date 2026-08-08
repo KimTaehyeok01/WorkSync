@@ -2,8 +2,7 @@ package com.worksync.domain.file.service;
 
 import com.worksync.domain.employee.entity.Employee;
 import com.worksync.domain.employee.repository.EmployeeRepository;
-import com.worksync.domain.file.dto.FileSaveRequest;
-import com.worksync.domain.file.dto.FileUploadResponse;
+import com.worksync.domain.file.dto.FileDto;
 import com.worksync.domain.file.entity.FileAttachment;
 import com.worksync.domain.file.entity.RefType;
 import com.worksync.domain.file.repository.FileAttachmentRepository;
@@ -48,7 +47,7 @@ public class FileService {
 
     // refId를 제외한 초기 파일 업로드
     @Transactional
-    public FileUploadResponse upload(MultipartFile file) {
+    public FileDto.UploadResponse upload(MultipartFile file) {
         // Storage 경로는 UUID만 사용 (한글/특수문자 방지)
         String ext = "";
         String originalFilename = file.getOriginalFilename();
@@ -83,7 +82,7 @@ public class FileService {
         // 공개 URL 생성
         String publicUrl = supabaseUrl + "/storage/v1/object/public/" + BUCKET + "/" + objectPath;
 
-        return FileUploadResponse.builder()
+        return FileDto.UploadResponse.builder()
                 .filePath(publicUrl)
                 .originalName(file.getOriginalFilename())
                 .fileSize(file.getSize())
@@ -93,7 +92,7 @@ public class FileService {
 
     // 최종 저장시 refId 추가
     @Transactional
-    public FileUploadResponse updateRefId(Long uploaderId, FileSaveRequest request) {
+    public FileDto.UploadResponse updateRefId(Long uploaderId, FileDto.SaveRequest request) {
         // 업로드 사원 조회
         Employee uploader = employeeRepository.findById(uploaderId)
                 .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
@@ -119,28 +118,28 @@ public class FileService {
         if ("CHAT".equals(request.getRefType())) {
             messagingTemplate.convertAndSend(
                     "/topic/chat/" + request.getRefId() + "/files",
-                    FileUploadResponse.from(saved)
+                    FileDto.UploadResponse.from(saved)
             );
         }
 
-        return FileUploadResponse.from(saved);
+        return FileDto.UploadResponse.from(saved);
     }
 
     // 파일 단건 조회
-    public FileUploadResponse findFileId(Long id) {
+    public FileDto.UploadResponse findFileId(Long id) {
         FileAttachment file = fileAttachmentRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
-        return FileUploadResponse.from(file);
+        return FileDto.UploadResponse.from(file);
     }
 
     // 첨부 위치별 파일 목록 조회
-    public List<FileSaveRequest> findByRef(String refType, Long refId) {
+    public List<FileDto.SaveRequest> findByRef(String refType, Long refId) {
         // String refType -> RefType refType 타입 변환
         RefType refTypeName = RefType.fromTypeName(refType);
 
         return fileAttachmentRepository.findByRefTypeAndRefId(refTypeName, refId)
                 .stream()
-                .map(FileSaveRequest::from)
+                .map(FileDto.SaveRequest::from)
                 .collect(Collectors.toList());
     }
 

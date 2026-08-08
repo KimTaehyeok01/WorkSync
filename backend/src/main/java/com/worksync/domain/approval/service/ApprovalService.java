@@ -1,6 +1,7 @@
 package com.worksync.domain.approval.service;
 
-import com.worksync.domain.approval.dto.*;
+import com.worksync.domain.approval.dto.ApprovalDto;
+import com.worksync.domain.approval.dto.ApprovalFormDto;
 import com.worksync.domain.approval.entity.*;
 import com.worksync.domain.approval.event.ApprovalApprovedEvent;
 import com.worksync.domain.approval.event.ApprovalRejectedEvent;
@@ -21,6 +22,7 @@ import com.worksync.domain.notification.service.NotificationService;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -57,24 +60,24 @@ public class ApprovalService {
     /* 결재 양식 */
 
     // 양식 목록 조회
-    public List<ApprovalFormResponse> getForms() {
+    public List<ApprovalFormDto.Response> getForms() {
         return approvalFormRepository.findAll().stream()
-                .map(ApprovalFormResponse::from)
+                .map(ApprovalFormDto.Response::from)
                 .collect(Collectors.toList());
     }
 
     // 양식 단건 조회
-    public ApprovalFormResponse getForm(Long id) {
+    public ApprovalFormDto.Response getForm(Long id) {
         ApprovalForm form = approvalFormRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.APPROVAL_FORM_NOT_FOUND));
-        return ApprovalFormResponse.from(form);
+        return ApprovalFormDto.Response.from(form);
     }
 
     /* 결재 문서 */
 
     // 결재 문서 제출
     @Transactional
-    public ApprovalDetailResponse submit(Long drafterId, ApprovalCreateRequest request) {
+    public ApprovalDto.DetailResponse submit(Long drafterId, ApprovalDto.CreateRequest request) {
         Employee drafter = employeeRepository
                 .findById(drafterId)
                 .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
@@ -110,7 +113,7 @@ public class ApprovalService {
 // ─────────────────────────────────────────────
         if ("LEAVE".equals(form.getFormType())) {
             Map<String, String> items = request.getItems();
-            System.out.println("items:" + items);
+            log.debug("items: {}", items);
 
             // null 체크
             String leaveTypeStr = items.get("leaveType");
@@ -139,7 +142,7 @@ public class ApprovalService {
                     ? BigDecimal.valueOf(0.5)
                     : BigDecimal.valueOf(ChronoUnit.DAYS.between(startDate, endDate) + 1);
 
-            System.out.println("daysCount: " + daysCount);
+            log.debug("daysCount: {}", daysCount);
 
             // 잔여 연차 검증
             short leaveYear = (short) startDate.getYear();
@@ -174,7 +177,7 @@ public class ApprovalService {
 
 
         // 결재선 생성 — doc 컬렉션에 직접 추가
-        for (ApprovalCreateRequest.ApprovalLineRequest lineReq : request.getApprovalLines()) {
+        for (ApprovalDto.CreateRequest.ApprovalLineRequest lineReq : request.getApprovalLines()) {
             Employee approver = employeeRepository.findById(lineReq.getApproverId())
                     .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
 
@@ -225,11 +228,11 @@ public class ApprovalService {
                         doc.getId()
                 ));
 
-        return ApprovalDetailResponse.from(doc);
+        return ApprovalDto.DetailResponse.from(doc);
     }
 
     // 결재함 - 내가 결재선에 REVIEW/APPROVE로 포함된 문서 전체 (상태 필터링 가능)
-    public  List<ApprovalListResponse> getApprovalBoxDocs(Long approverId, ApprovalDocStatus status){
+    public  List<ApprovalDto.ListResponse> getApprovalBoxDocs(Long approverId, ApprovalDocStatus status){
         return approvalLineRepository
                 .findByApproverId(approverId)
                 .stream()
@@ -237,32 +240,32 @@ public class ApprovalService {
                 .filter(line -> line.getStepType() == StepType.REVIEW
                 || line.getStepType() == StepType.APPROVE)
                 .filter(line -> status == null || line.getDoc().getStatus() == status)
-                .map(line -> ApprovalListResponse.from(line.getDoc()))
+                .map(line -> ApprovalDto.ListResponse.from(line.getDoc()))
                 .distinct() // 중복제거
                 .collect(Collectors.toList());
     }
     // 참조함 - 내가 REFERENCE로 지정된 문서
-    public List<ApprovalListResponse> getReferenceDocs(Long approverId) {
+    public List<ApprovalDto.ListResponse> getReferenceDocs(Long approverId) {
         return approvalLineRepository
                 .findByApproverId(approverId)// 내가 결재자로 지정된 결재선들을 가져온 다음
                 .stream()
                 .filter(line -> line.getStepType() == StepType.REFERENCE)
-                .map(line -> ApprovalListResponse.from(line.getDoc())) // 그 결재선이 속한 문서를 꺼냄
+                .map(line -> ApprovalDto.ListResponse.from(line.getDoc())) // 그 결재선이 속한 문서를 꺼냄
                 .distinct()
                 .collect(Collectors.toList());
     }
 
     // 내가 상신한 문서 목록
-    public List<ApprovalListResponse> getMyDocs(Long drafterId, ApprovalDocStatus status) {
+    public List<ApprovalDto.ListResponse> getMyDocs(Long drafterId, ApprovalDocStatus status) {
         List<ApprovalDoc> docs = (status != null)
                 ? approvalDocRepository.findByDrafterIdAndStatus(drafterId, status)
                 : approvalDocRepository.findByDrafterId(drafterId);
 
-        return docs.stream().map(ApprovalListResponse::from).collect(Collectors.toList());
+        return docs.stream().map(ApprovalDto.ListResponse::from).collect(Collectors.toList());
     }
 
     // 내가 결재해야 할 문서 목록 (내 차례인 것만)
-    public List<ApprovalListResponse> getPendingDocs(Long approverId) {
+    public List<ApprovalDto.ListResponse> getPendingDocs(Long approverId) {
         return approvalLineRepository
                 .findByApproverIdAndStatus(approverId, ApprovalLineStatus.WAITING)
                 .stream()
@@ -282,20 +285,20 @@ public class ApprovalService {
                             .orElse(Integer.MAX_VALUE);
                     return line.getStepOrder() == minOrder;
                 })
-                .map(line -> ApprovalListResponse.from(line.getDoc()))
+                .map(line -> ApprovalDto.ListResponse.from(line.getDoc()))
                 .collect(Collectors.toList());
     }
 
     // 결재 문서 상세 조회
-    public ApprovalDetailResponse getDoc(Long id) {
+    public ApprovalDto.DetailResponse getDoc(Long id) {
         ApprovalDoc doc = approvalDocRepository.findWithDetailsById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.APPROVAL_DOC_NOT_FOUND));
-        return ApprovalDetailResponse.from(doc);
+        return ApprovalDto.DetailResponse.from(doc);
     }
 
     // 결재 문서 수정 (기안자 본인 + IN_PROGRESS 상태만 가능)
     @Transactional
-    public ApprovalDetailResponse updateDoc(Long id, Long drafterId, ApprovalUpdateRequest request) {
+    public ApprovalDto.DetailResponse updateDoc(Long id, Long drafterId, ApprovalDto.UpdateRequest request) {
         ApprovalDoc doc = approvalDocRepository.findWithDetailsById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.APPROVAL_DOC_NOT_FOUND));
 
@@ -327,7 +330,7 @@ public class ApprovalService {
             doc.replaceItems(newItems);
         }
 
-        return ApprovalDetailResponse.from(doc);
+        return ApprovalDto.DetailResponse.from(doc);
     }
 
     // 결재 문서 취소/삭제 (기안자 본인 + IN_PROGRESS + 아직 아무도 승인 안 한 경우만 가능)
@@ -371,7 +374,7 @@ public class ApprovalService {
 
     // 결재 처리 (승인 or 반려)
     @Transactional
-    public ApprovalDetailResponse process(Long docId, Long approverId, ApprovalProcessRequest request,
+    public ApprovalDto.DetailResponse process(Long docId, Long approverId, ApprovalDto.ProcessRequest request,
                                           String clientIp, String userAgent) {
         ApprovalDoc doc = approvalDocRepository.findWithDetailsById(docId)
                 .orElseThrow(() -> new CustomException(ErrorCode.APPROVAL_DOC_NOT_FOUND));
@@ -479,6 +482,6 @@ public class ApprovalService {
             }
         }
 
-        return ApprovalDetailResponse.from(doc);
+        return ApprovalDto.DetailResponse.from(doc);
     }
 }

@@ -1,17 +1,15 @@
 package com.worksync.domain.attendance.service;
 
-import com.worksync.domain.attendance.dto.AttendanceResponse;
-import com.worksync.domain.attendance.dto.DepartmentAttendanceResponse;
+import com.worksync.domain.attendance.dto.AttendanceDto;
 import com.worksync.domain.attendance.entity.Attendance;
 import com.worksync.domain.attendance.entity.AttendanceStatus;
 import com.worksync.domain.attendance.repository.AttendanceRepository;
-import com.worksync.domain.department.entity.Department;
 import com.worksync.domain.employee.entity.Employee;
 import com.worksync.domain.employee.repository.EmployeeRepository;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
-import com.worksync.global.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -33,7 +32,7 @@ public class AttendanceService {
 
   @Transactional
   // 출근체크
-  public AttendanceResponse checkIn(Long employeeId, String clientIp){
+  public AttendanceDto.Response checkIn(Long employeeId, String clientIp){
 
     // 사원조회 없으면 404
     Employee employee = employeeRepository.findById(employeeId)
@@ -60,7 +59,7 @@ public class AttendanceService {
             .build();
 
     //DB 저장후 dto로 변환해서 반환
-    AttendanceResponse response = AttendanceResponse.from(attendanceRepository.save(attendance));
+    AttendanceDto.Response response = AttendanceDto.Response.from(attendanceRepository.save(attendance));
 
     // (webSocket) 출근 시 같은 부서원에게 팀 근태 현황 실시간 갱신
     if (employee.getDepartment() != null) {
@@ -76,7 +75,7 @@ public class AttendanceService {
   // 퇴근 체크
   // 오늘 출근 기록 없으면 예외 던지고 이미 퇴근해도 예외 던지고
   @Transactional
-  public AttendanceResponse checkOut(Long employeeId){
+  public AttendanceDto.Response checkOut(Long employeeId){
 
     LocalDate today = LocalDate.now();
     LocalDateTime now = LocalDateTime.now();
@@ -102,7 +101,7 @@ public class AttendanceService {
       );
     }
 
-    return AttendanceResponse.from(attendance);
+    return AttendanceDto.Response.from(attendance);
   }
 
   // 로그인 연동 출근 — 오늘 기록 없으면 출근 생성
@@ -161,26 +160,26 @@ public class AttendanceService {
   }
 
   // 내 근태 조회
-  public List<AttendanceResponse> getMyAttendance(Long employeeId, int year, int month){
+  public List<AttendanceDto.Response> getMyAttendance(Long employeeId, int year, int month){
     LocalDate start = LocalDate.of(year, month, 1); // 해당월 첫째날 조회
     LocalDate end = start.withDayOfMonth(start.lengthOfMonth()); // 해당월 마지막날, lengthOfMonth() 해당월의 총 일수 반환
 
     return attendanceRepository.findByEmployeeIdAndWorkDateBetween(employeeId, start, end)
             .stream()
-            .map(AttendanceResponse::from)
+            .map(AttendanceDto.Response::from)
             .toList();
   }
 
   // ADMIN 전체 근태 조회
-  public List<AttendanceResponse> getAttendanceByDate(LocalDate date) {
+  public List<AttendanceDto.Response> getAttendanceByDate(LocalDate date) {
     return attendanceRepository.findByWorkDate(date)
             .stream()
-            .map(AttendanceResponse::from)
+            .map(AttendanceDto.Response::from)
             .toList();
   }
 
   // 내 부서 오늘 팀 현황 — 부서원 전체 + 직원별 출근/지각/결근 (대시보드)
-  public List<DepartmentAttendanceResponse> getMyDepartmentStatus(Long employeeId, LocalDate date) {
+  public List<AttendanceDto.DepartmentResponse> getMyDepartmentStatus(Long employeeId, LocalDate date) {
     Employee me = employeeRepository.findById(employeeId)
             .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
 
@@ -201,14 +200,14 @@ public class AttendanceService {
 
     // 부서원별로 출근 기록 매칭 — 기록 없으면 결근(ABSENT)으로 표시
     return members.stream()
-            .map(e -> DepartmentAttendanceResponse.of(e, attendanceByEmployee.get(e.getId())))
+            .map(e -> AttendanceDto.DepartmentResponse.of(e, attendanceByEmployee.get(e.getId())))
             .toList();
   }
 
   // 단건 조회
-  public AttendanceResponse findById(Long id) {
+  public AttendanceDto.Response findById(Long id) {
     Attendance attendance = attendanceRepository.findById(id)
             .orElseThrow(() -> new CustomException(ErrorCode.ATTENDANCE_NOT_FOUND));
-    return AttendanceResponse.from(attendance);
+    return AttendanceDto.Response.from(attendance);
   }
 }
