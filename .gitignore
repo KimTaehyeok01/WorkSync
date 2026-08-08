@@ -19,5 +19,6 @@ logs/
 # Claude Code
 CLAUDE.md
 .claude/artifacts/
+.claude/settings.json
 .claude/settings.local.json
 .claude/settings.suggested.json
