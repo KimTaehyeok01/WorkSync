@@ -142,6 +142,19 @@
   font-size: 11px;
   margin: 0;
 }
+.stepTime {
+  color: var(--ws-text-400);
+  text-align: center;
+  font-size: 10.5px;
+  margin: 6px 0 0;
+}
+.stepComment {
+  color: var(--ws-text-700);
+  text-align: center;
+  font-size: 11.5px;
+  margin: 4px 0 0;
+  word-break: break-word;
+}
 .stepArrow {
   color: var(--ws-text-300);
   margin: 0 8px;
