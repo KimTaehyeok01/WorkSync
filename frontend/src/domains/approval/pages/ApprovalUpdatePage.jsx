@@ -142,10 +142,13 @@ export default function ApprovalUpdate() {
       if (result?.status === 200) {
         setSubmitted(true);
         setTimeout(() => navigate("/approval"), 1600);
+      } else {
+        alert(result?.message ?? "수정에 실패했습니다.");
       }
       setIsLoading(false);
     } catch (error) {
-      console.error("게시글 등록 실패", err);
+      alert("수정에 실패했습니다.");
+      console.error("결재 수정 실패", error);
     } finally {
       setIsLoading(false);
       // 파일 초기화

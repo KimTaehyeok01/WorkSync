@@ -2,7 +2,9 @@ package com.worksync.domain.approval.repository;
 
 import com.worksync.domain.approval.entity.ApprovalDoc;
 import com.worksync.domain.approval.entity.ApprovalDocStatus;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -27,4 +29,9 @@ public interface ApprovalDocRepository extends JpaRepository<ApprovalDoc, Long> 
             "LEFT JOIN FETCH al.approver " +
             "WHERE d.id = :id")
     Optional<ApprovalDoc> findWithDetailsById(@Param("id") Long id);
+
+    // 상태 전이 레이스 방지용 비관적 락 (id만 조회, 상세는 findWithDetailsById로 2차 조회)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT d FROM ApprovalDoc d WHERE d.id = :id")
+    Optional<ApprovalDoc> lockById(@Param("id") Long id);
 }

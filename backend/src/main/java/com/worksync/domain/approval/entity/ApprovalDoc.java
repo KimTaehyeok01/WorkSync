@@ -76,6 +76,16 @@ public class ApprovalDoc {
         this.completedAt = LocalDateTime.now();
     }
 
+    // 회수 (기안자, 아무도 승인 안 한 상태에서만)
+    public void withdraw() {
+        this.status = ApprovalDocStatus.WITHDRAWN;
+    }
+
+    // 재상신 (회수된 문서를 다시 진행 상태로)
+    public void resubmit() {
+        this.status = ApprovalDocStatus.IN_PROGRESS;
+    }
+
     // 제목 수정
     public void updateTitle(String title) {
         this.title = title;

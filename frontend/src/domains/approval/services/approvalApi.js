@@ -180,13 +180,54 @@ export function updateApproval(accessToken, id, body) {
     .then((json) => {
       return json;
     })
-    .catch((error) => console.log("에러발생 : " + error));
+    .catch((error) => {
+      console.log("에러발생 : " + error);
+      throw error; // handleSubmit의 try-catch 전달용
+    });
 }
 
 // 전자결재 삭제
 export function deleteApproval(accessToken, id) {
   return fetch(`${BASE_URL}/approvals/${id}`, {
     method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+    .then((response) => {
+      if (!response.ok) throw new Error(response.status);
+      return response;
+    })
+    .catch((error) => {
+      console.log("에러 발생 : " + error);
+      throw error; // onClick의 try-catch 전달용
+    });
+}
+
+// 전자결재 회수
+export function withdrawApproval(accessToken, id) {
+  return fetch(`${BASE_URL}/approvals/${id}/withdraw`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+    .then((response) => {
+      if (!response.ok) throw new Error(response.status);
+      return response;
+    })
+    .catch((error) => {
+      console.log("에러 발생 : " + error);
+      throw error; // onClick의 try-catch 전달용
+    });
+}
+
+// 전자결재 재상신
+export function resubmitApproval(accessToken, id) {
+  return fetch(`${BASE_URL}/approvals/${id}/resubmit`, {
+    method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
