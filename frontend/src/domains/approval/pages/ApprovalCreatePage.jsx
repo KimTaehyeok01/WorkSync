@@ -42,7 +42,7 @@ export default function ApprovalNew() {
   const [department, setDepartment] = useState("");
   const [content, setContent] = useState("");
   const [showTemplate, setShowTemplate] = useState(false);
-  const [templates, setTemplates] = useState(false);
+  const [templates, setTemplates] = useState([]);
   const [formValues, setFormValues] = useState({});
   const [employees, setEmployees] = useState([]);
   const [myInfo, setMyInfo] = useState(null);
@@ -60,9 +60,6 @@ export default function ApprovalNew() {
     formType: "EXPENSE",
     formName: "지출결의서",
   });
-  const [attachments, setAttachments] = useState([
-    { id: "f1", name: "Q3_예산_초안.xlsx", size: "1.2 MB", type: "xlsx" },
-  ]);
   const isValid =
     title.trim().length > 0 && docType !== "" && approvers.length > 0;
 
@@ -186,14 +183,14 @@ export default function ApprovalNew() {
       if (approvalId) {
         setSubmitted(true);
         setTimeout(() => navigate("/approval"), 1600);
+        // 파일 초기화 (성공 시에만)
+        clearFiles();
       }
     } catch (error) {
       console.error("게시글 등록 실패", error);
       alert(error.message ?? "결재 상신에 실패했습니다.");
     } finally {
       setIsLoading(false);
-      // 파일 초기화
-      clearFiles();
     }
   };
 
@@ -290,7 +287,7 @@ export default function ApprovalNew() {
           />
           <WSCard
             title="첨부 파일"
-            subtitle={`${attachments.length}개 파일 첨부됨`}
+            subtitle={`${files.length}개 파일 첨부됨`}
           >
             <WSFileUploadZone
               onFilesAdded={addFiles}

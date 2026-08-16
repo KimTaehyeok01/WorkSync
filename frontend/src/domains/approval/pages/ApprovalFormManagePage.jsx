@@ -174,7 +174,7 @@ export default function ApprovalFormManagePage() {
   };
 
   if (isLoadingRole) {
-    return null;
+    return <div>로딩 중...</div>;
   }
 
   if (myInfo?.role !== "ADMIN") {
