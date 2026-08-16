@@ -392,6 +392,36 @@ function BusinessTripDetail({ items }) {
   );
 }
 
+// 관리자가 등록한 커스텀 양식(CUSTOM) 상세
+// approval.formSchema(JSON 문자열)의 fields 배열을 기반으로 항목을 렌더링한다.
+function GenericDetail({ approval }) {
+  let fields = [];
+  try {
+    fields = JSON.parse(approval?.formSchema || "{}").fields ?? [];
+  } catch {
+    fields = [];
+  }
+
+  return (
+    <div className={s.detailTableWrap}>
+      <table className={s.detailTable}>
+        <tbody>
+          <tr>
+            <th>제목</th>
+            <td>{approval.title ?? "-"}</td>
+          </tr>
+          {fields.map((field) => (
+            <tr key={field.key}>
+              <th>{field.label}</th>
+              <td>{approval.items?.[field.key] ?? "-"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function ApprovalDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -646,6 +676,9 @@ export default function ApprovalDetail() {
         )}
         {approval.formId === 4 && (
           <BusinessTripDetail items={approval.items}></BusinessTripDetail>
+        )}
+        {![1, 2, 3, 4].includes(approval.formId) && (
+          <GenericDetail approval={approval} />
         )}
       </div>
 

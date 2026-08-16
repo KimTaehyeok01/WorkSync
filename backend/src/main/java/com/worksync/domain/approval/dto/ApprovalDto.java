@@ -101,6 +101,9 @@ public class ApprovalDto {
         @Schema(description = "양식 항목 (key-value)")
         private Map<String, String> items;
 
+        @Schema(description = "결재 양식 스키마 (JSON)")
+        private String formSchema;
+
         public static DetailResponse from(ApprovalDoc doc) {
             return DetailResponse.builder()
                     .id(doc.getId())
@@ -119,6 +122,7 @@ public class ApprovalDto {
                     .items(doc.getApprovalDocItems().stream()
                             .collect(Collectors.toMap(ApprovalDocItem::getItemKey, item ->
                                     item.getItemValue() != null ? item.getItemValue() : "")))
+                    .formSchema(doc.getForm().getFormSchema())
                     .build();
         }
 

@@ -188,7 +188,8 @@ export default function ApprovalNew() {
         setTimeout(() => navigate("/approval"), 1600);
       }
     } catch (error) {
-      console.error("게시글 등록 실패", err);
+      console.error("게시글 등록 실패", error);
+      alert(error.message ?? "결재 상신에 실패했습니다.");
     } finally {
       setIsLoading(false);
       // 파일 초기화

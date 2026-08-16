@@ -89,6 +89,11 @@
   gap: 12px;
 }
 
+.newBtnGroup {
+  display: flex;
+  gap: 8px;
+}
+
 .newBtn {
   display: flex;
   align-items: center;
@@ -103,6 +108,22 @@
 }
 .newBtn:hover {
   opacity: 0.92;
+}
+
+.manageBtn {
+  display: flex;
+  align-items: center;
+  padding: 8px 20px;
+  border: 1px solid var(--ws-border);
+  border-radius: 8px;
+  color: var(--ws-text-700);
+  font-size: 13px;
+  font-weight: 600;
+  background: #fff;
+  transition: background 0.15s;
+}
+.manageBtn:hover {
+  background: #f9fafb;
 }
 
 .grid {

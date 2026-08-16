@@ -53,10 +53,19 @@ export default function Approval() {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [docs, setDocs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [myRole, setMyRole] = useState("");
   const boxType = searchParams.get("box") ?? "inbox"; // 기본값
   const status = searchParams.get("status") ?? "all";
   const navigate = useNavigate();
   const { accessToken } = useAuthContext();
+
+  // 내 role 확인 (양식 관리 진입 버튼은 ADMIN에게만 노출)
+  useEffect(() => {
+    if (!accessToken) return;
+    getMyInfo(accessToken).then((data) => {
+      if (data?.role) setMyRole(data.role);
+    });
+  }, [accessToken]);
 
   // 탭/상태 전환 시 매번 api 재호출로 인한 로딩 지연 문제 해결
   // 동일한 탭/상태 재방문 시 기존 데이터 즉시 반환
@@ -189,13 +198,23 @@ export default function Approval() {
               />
             </div>
           </div>
-          <button
-            onClick={() => navigate("/approval/new")}
-            className={s.newBtn}
-          >
-            <Plus size={16} />
-            <span>전체 문서 등록</span>
-          </button>
+          <div className={s.newBtnGroup}>
+            {myRole === "ADMIN" && (
+              <button
+                onClick={() => navigate("/approval/forms/manage")}
+                className={s.manageBtn}
+              >
+                <span>양식 관리</span>
+              </button>
+            )}
+            <button
+              onClick={() => navigate("/approval/new")}
+              className={s.newBtn}
+            >
+              <Plus size={16} />
+              <span>전체 문서 등록</span>
+            </button>
+          </div>
         </div>
       </div>
 
