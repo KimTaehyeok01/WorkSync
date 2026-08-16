@@ -495,7 +495,7 @@ export default function ApprovalDetail() {
   }, [accessToken]);
 
   if (isLoading) {
-    return null;
+    return <div className={s.root}>로딩 중...</div>;
   }
 
   // 결재자 확인
@@ -577,9 +577,6 @@ export default function ApprovalDetail() {
               <div>
                 <p className={s.requesterName}>{approval.drafterName}</p>
                 <div style={{ display: "flex" }}>
-                  <p className={s.requesterDate} style={{ marginRight: "5px" }}>
-                    {me?.jobGrade} ·
-                  </p>
                   <p className={s.requesterDate}>
                     {new Date(approval.createdAt).toLocaleDateString("ko-KR")}
                   </p>

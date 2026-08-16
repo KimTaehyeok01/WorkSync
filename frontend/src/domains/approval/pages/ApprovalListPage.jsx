@@ -135,7 +135,7 @@ export default function Approval() {
     STATUS_OPTIONS.find((o) => o.key === status)?.label || "전체";
 
   if (isLoading) {
-    return null;
+    return <div>로딩 중...</div>;
   }
 
   return (
@@ -274,25 +274,19 @@ export default function Approval() {
                       </button>
                       {openDropdown === doc.id && (
                         <div className={s.cardMoreMenu}>
-                          <button
-                            className={s.ddItem}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenDropdown(null);
-                              if (
-                                doc.status !== "IN_PROGRESS" &&
-                                doc.status !== "WITHDRAWN"
-                              ) {
-                                alert(
-                                  "대기 중이거나 회수된 문서만 수정할 수 있습니다.",
-                                );
-                                return;
-                              }
-                              navigate(`/approval/${doc.id}/edit`);
-                            }}
-                          >
-                            수정
-                          </button>
+                          {(doc.status === "IN_PROGRESS" ||
+                            doc.status === "WITHDRAWN") && (
+                            <button
+                              className={s.ddItem}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenDropdown(null);
+                                navigate(`/approval/${doc.id}/edit`);
+                              }}
+                            >
+                              수정
+                            </button>
+                          )}
                           {doc.status === "IN_PROGRESS" && (
                             <button
                               className={s.ddItem}
@@ -337,34 +331,28 @@ export default function Approval() {
                               재상신
                             </button>
                           )}
-                          <button
-                            className={`${s.ddItem} ${s.ddItemDanger}`}
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              setOpenDropdown(null);
-                              if (confirm("게시글을 삭제하시겠습니까?")) {
-                                if (
-                                  doc.status !== "IN_PROGRESS" &&
-                                  doc.status !== "WITHDRAWN"
-                                ) {
-                                  alert(
-                                    "대기 중이거나 회수된 문서만 삭제할 수 있습니다.",
-                                  );
-                                  return;
+                          {(doc.status === "IN_PROGRESS" ||
+                            doc.status === "WITHDRAWN") && (
+                            <button
+                              className={`${s.ddItem} ${s.ddItemDanger}`}
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                setOpenDropdown(null);
+                                if (confirm("게시글을 삭제하시겠습니까?")) {
+                                  try {
+                                    await deleteApproval(accessToken, doc.id);
+                                    setDocs((prev) =>
+                                      prev.filter((d) => d.id !== doc.id),
+                                    );
+                                  } catch (err) {
+                                    alert("삭제 실패했습니다.");
+                                  }
                                 }
-                                try {
-                                  await deleteApproval(accessToken, doc.id);
-                                  setDocs((prev) =>
-                                    prev.filter((d) => d.id !== doc.id),
-                                  );
-                                } catch (err) {
-                                  alert("삭제 실패했습니다.");
-                                }
-                              }
-                            }}
-                          >
-                            삭제
-                          </button>
+                              }}
+                            >
+                              삭제
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
