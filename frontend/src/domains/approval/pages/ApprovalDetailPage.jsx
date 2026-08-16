@@ -1,8 +1,13 @@
 import { useParams, useNavigate } from "react-router-dom";
 import useAuthContext from "../../../store/AuthContext";
 import { APPROVAL_DOCS, TEAM_MEMBERS } from "../../../constants/mockData";
-import { WSAvatar } from "../../../components/common/CommonWidgets";
-import { WSFileList } from "../../../components/common/FormComponents";
+import {
+  WSAvatar,
+  WSModal,
+  WSModalActions,
+  WSButton,
+} from "../../../components/common/CommonWidgets";
+import { WSFileList, WSTextarea } from "../../../components/common/FormComponents";
 import { useState, useEffect, Fragment } from "react";
 import {
   CheckCircle,
@@ -401,6 +406,8 @@ export default function ApprovalDetail() {
   const [approval, setApproval] = useState(null);
   const [me, setMe] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [confirmAction, setConfirmAction] = useState(null); // "APPROVED" | "REJECTED" | null
+  const [commentInput, setCommentInput] = useState("");
   const fallbackStatusConfig = {
     label: "알 수 없음",
     bg: "#E5E7EB",
@@ -478,26 +485,19 @@ export default function ApprovalDetail() {
     !isReference &&
     previousLinesApproved;
 
-  const handleApprove = async () => {
-    const result = await processApproval(accessToken, id, "APPROVED");
+  const handleConfirmProcess = async () => {
+    const result = await processApproval(
+      accessToken,
+      id,
+      confirmAction,
+      commentInput,
+    );
     if (result?.status === 200) {
-      alert("결재 승인이 완료되었습니다.");
-      navigate("/approval");
-    } else {
-      alert("처리 중 오류가 발생했습니다.");
-    }
-    getApprovalById(accessToken, id).then((data) => {
-      if (!data) return;
-      setApproval(data);
-      setStatus(data.status);
-      setApprovalLines(data.approvalLines ?? []);
-    });
-  };
-
-  const handleReject = async () => {
-    const result = await processApproval(accessToken, id, "REJECTED");
-    if (result?.status === 200) {
-      alert("결재 반려가 완료되었습니다.");
+      alert(
+        confirmAction === "REJECTED"
+          ? "결재 반려가 완료되었습니다."
+          : "결재 승인이 완료되었습니다.",
+      );
       navigate("/approval");
     } else {
       alert("처리 중 오류가 발생했습니다.");
@@ -620,6 +620,19 @@ export default function ApprovalDetail() {
                           ? "참조자"
                           : "-"}
                   </p>
+                  {step.processedAt && (
+                    <p className={s.stepTime}>
+                      {new Date(step.processedAt).toLocaleString("ko-KR", {
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  )}
+                  {step.comment && (
+                    <p className={s.stepComment}>{step.comment}</p>
+                  )}
                 </div>
               </Fragment>
             ))}
@@ -658,14 +671,53 @@ export default function ApprovalDetail() {
 
       {canProcess && (
         <div className={s.actions}>
-          <button className={s.btnReject} onClick={handleReject}>
+          <button
+            className={s.btnReject}
+            onClick={() => setConfirmAction("REJECTED")}
+          >
             결재 반려
           </button>
-          <button className={s.btnApprove} onClick={handleApprove}>
+          <button
+            className={s.btnApprove}
+            onClick={() => setConfirmAction("APPROVED")}
+          >
             결재 승인
           </button>
         </div>
       )}
+
+      <WSModal
+        isOpen={!!confirmAction}
+        onClose={() => {
+          setConfirmAction(null);
+          setCommentInput("");
+        }}
+        title={confirmAction === "REJECTED" ? "결재 반려" : "결재 승인"}
+        subtitle="결재 의견을 남길 수 있습니다 (선택)"
+        size="sm"
+      >
+        <WSTextarea
+          placeholder="결재 의견을 입력하세요"
+          value={commentInput}
+          onChange={(e) => setCommentInput(e.target.value)}
+          rows={4}
+        />
+        <WSModalActions>
+          <WSButton
+            label="취소"
+            variant="secondary"
+            onClick={() => {
+              setConfirmAction(null);
+              setCommentInput("");
+            }}
+          />
+          <WSButton
+            label={confirmAction === "REJECTED" ? "반려" : "승인"}
+            variant={confirmAction === "REJECTED" ? "danger" : "primary"}
+            onClick={handleConfirmProcess}
+          />
+        </WSModalActions>
+      </WSModal>
     </div>
   );
 }
