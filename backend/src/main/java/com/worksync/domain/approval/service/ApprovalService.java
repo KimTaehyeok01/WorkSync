@@ -115,6 +115,10 @@ public class ApprovalService {
             Map<String, String> items = request.getItems();
             log.debug("items: {}", items);
 
+            if (items == null || items.isEmpty()) {
+                throw new CustomException(ErrorCode.INVALID_LEAVE_TYPE);
+            }
+
             // null 체크
             String leaveTypeStr = items.get("leaveType");
             if (leaveTypeStr == null || leaveTypeStr.isBlank()) {

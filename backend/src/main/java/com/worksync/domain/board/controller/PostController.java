@@ -62,7 +62,7 @@ public class PostController {
     public ResponseEntity<ApiResponse<PostDto.Response>> updatePost(
             @PathVariable Long boardId,
             @PathVariable Long postId,
-            @RequestBody PostDto.UpdateRequest req,
+            @RequestBody @Valid PostDto.UpdateRequest req,
             @AuthenticationPrincipal CustomUserDetails user) {
         return ResponseEntity.ok(ApiResponse.ok(postService.updatePost(boardId, postId, req, user)));
     }

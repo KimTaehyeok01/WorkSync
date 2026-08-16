@@ -227,6 +227,31 @@ class ApprovalServiceTest {
                 .isEqualTo(ErrorCode.INVALID_LEAVE_TYPE);
     }
 
+    @DisplayName("LEAVE 양식 제출 시 items가 null이면 INVALID_LEAVE_TYPE 예외가 발생한다")
+    @Test
+    void submit_leaveType_nullItems_throwsInvalidLeaveType() {
+        // given
+        Long drafterId = 1L;
+        Employee drafter = buildEmployee(1L, "김철수");
+        ApprovalForm form = ApprovalForm.builder()
+                .id(1L).formName("휴가 신청서").formType("LEAVE").formSchema("{}").build();
+
+        ApprovalDto.CreateRequest request = createRequest(1L, "연차 신청",
+                List.of(
+                        lineRequest(1L, 1, StepType.DRAFT),
+                        lineRequest(2L, 2, StepType.APPROVE)
+                ), null);
+
+        given(employeeRepository.findById(1L)).willReturn(Optional.of(drafter));
+        given(approvalFormRepository.findById(1L)).willReturn(Optional.of(form));
+
+        // when & then
+        assertThatThrownBy(() -> approvalService.submit(drafterId, request))
+                .isInstanceOf(CustomException.class)
+                .extracting(e -> ((CustomException) e).getErrorCode())
+                .isEqualTo(ErrorCode.INVALID_LEAVE_TYPE);
+    }
+
     @DisplayName("잔여 연차가 부족하면 예외가 발생한다")
     @Test
     void submit_leaveType_insufficientBalance_throwsInsufficientLeaveBalance() {

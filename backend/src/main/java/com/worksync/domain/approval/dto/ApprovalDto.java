@@ -8,6 +8,7 @@ import com.worksync.domain.approval.entity.ApprovalLine;
 import com.worksync.domain.approval.entity.ApprovalLineStatus;
 import com.worksync.domain.approval.entity.StepType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -35,6 +36,7 @@ public class ApprovalDto {
         private String title;
 
         @NotEmpty
+        @Valid
         @Schema(description = "결재선 목록")
         private List<ApprovalLineRequest> approvalLines;
 
