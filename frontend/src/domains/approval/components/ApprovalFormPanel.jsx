@@ -1197,6 +1197,147 @@ function BusinessTripForm({
   );
 }
 
+// 관리자가 등록한 커스텀 양식(CUSTOM) 컴포넌트
+// selectedForm.formSchema(JSON 문자열)의 fields 배열을 기반으로 필드를 동적 렌더링한다.
+function GenericForm({
+  formValues,
+  setFormValues,
+  myInfo,
+  title,
+  setTitle,
+  validateRef,
+  selectedForm,
+}) {
+  // 폼 스키마 파싱 (빈 값/파싱 실패 시 빈 필드 목록으로 폴백)
+  let fields = [];
+  try {
+    fields = JSON.parse(selectedForm?.formSchema || "{}").fields ?? [];
+  } catch {
+    fields = [];
+  }
+
+  const update = (key, value) =>
+    setFormValues((prev) => ({ ...prev, [key]: value }));
+
+  useEffect(() => {
+    if (myInfo) {
+      setFormValues((prev) => ({
+        ...prev,
+        departmentName: myInfo.departmentName,
+        name: myInfo.name,
+      }));
+    }
+  }, [myInfo]);
+
+  // 유효성 검사
+  const validate = () => {
+    if (!title.trim()) {
+      alert("제목을 입력하세요.");
+      return false;
+    }
+    for (const field of fields) {
+      if (field.required && !String(formValues[field.key] ?? "").trim()) {
+        alert(`${field.label}을(를) 입력하세요.`);
+        return false;
+      }
+    }
+    return true;
+  };
+
+  useEffect(() => {
+    validateRef.current = validate;
+  }, [title, formValues, fields]);
+
+  return (
+    <>
+      {/* 기본 정보 */}
+      <WSCard title="기본 정보" subtitle="결재 문서의 기본 정보를 입력하세요">
+        <div className={s.formGrid}>
+          <div className={s.row2}>
+            <div>
+              <label className={s.label}>
+                소속<span className={s.required}>*</span>
+              </label>
+              <input
+                type="text"
+                value={myInfo?.departmentName ?? ""}
+                className={s.input}
+                disabled
+              />
+            </div>
+            <div>
+              <label className={s.label}>
+                작성자<span className={s.required}>*</span>
+              </label>
+              <input
+                type="text"
+                value={myInfo?.name ?? ""}
+                className={s.input}
+                disabled
+              />
+            </div>
+          </div>
+          <div>
+            <label className={s.label}>
+              제목 <span className={s.required}>*</span>
+            </label>
+            <input
+              type="text"
+              placeholder="결재 문서 제목을 입력하세요"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className={s.input}
+            />
+          </div>
+
+          {/* 양식 스키마 기반 필드 */}
+          {fields.map((field) => (
+            <div key={field.key}>
+              <label className={s.label}>
+                {field.label}
+                {field.required && <span className={s.required}>*</span>}
+              </label>
+              {field.type === "TEXTAREA" ? (
+                <textarea
+                  value={formValues[field.key] ?? ""}
+                  onChange={(e) => update(field.key, e.target.value)}
+                  className={s.textarea}
+                />
+              ) : field.type === "SELECT" ? (
+                <select
+                  value={formValues[field.key] ?? ""}
+                  onChange={(e) => update(field.key, e.target.value)}
+                  className={s.select}
+                >
+                  <option value="">선택</option>
+                  {(field.options ?? []).map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type={
+                    field.type === "DATE"
+                      ? "date"
+                      : field.type === "NUMBER"
+                        ? "number"
+                        : "text"
+                  }
+                  value={formValues[field.key] ?? ""}
+                  onChange={(e) => update(field.key, e.target.value)}
+                  className={s.input}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      </WSCard>
+    </>
+  );
+}
+
 // 메인 패널
 export default function ApprovalFormPanel({
   selectedForm,
@@ -1263,6 +1404,20 @@ export default function ApprovalFormPanel({
           validateRef={validateRef}
         />
       )}
+      {!["EXPENSE", "LEAVE", "PURCHASE", "BUSINESS_TRIP"].includes(
+        formType,
+      ) &&
+        myInfo && (
+          <GenericForm
+            formValues={formValues}
+            setFormValues={setFormValues}
+            myInfo={myInfo}
+            title={title}
+            setTitle={setTitle}
+            validateRef={validateRef}
+            selectedForm={selectedForm}
+          />
+        )}
     </div>
   );
 }

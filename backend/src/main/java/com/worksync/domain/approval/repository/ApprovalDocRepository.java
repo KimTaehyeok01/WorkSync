@@ -34,4 +34,7 @@ public interface ApprovalDocRepository extends JpaRepository<ApprovalDoc, Long> 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT d FROM ApprovalDoc d WHERE d.id = :id")
     Optional<ApprovalDoc> lockById(@Param("id") Long id);
+
+    // 특정 양식을 사용 중인 결재 문서가 있는지 확인 (양식 삭제 가능 여부 판단용)
+    boolean existsByForm_Id(Long formId);
 }

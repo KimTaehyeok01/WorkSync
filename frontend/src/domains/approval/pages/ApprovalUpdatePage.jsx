@@ -79,6 +79,7 @@ export default function ApprovalUpdate() {
         id: data.formId,
         formName: data.formName,
         formType: FORM_TYPE_MAP[data.formId],
+        formSchema: data.formSchema,
       });
 
       setFormValues(data.items ?? {});
@@ -147,8 +148,8 @@ export default function ApprovalUpdate() {
       }
       setIsLoading(false);
     } catch (error) {
-      alert("수정에 실패했습니다.");
       console.error("결재 수정 실패", error);
+      alert(error.message ?? "결재 수정에 실패했습니다.");
     } finally {
       setIsLoading(false);
       // 파일 초기화

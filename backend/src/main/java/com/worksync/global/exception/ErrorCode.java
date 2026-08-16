@@ -35,6 +35,11 @@ public enum ErrorCode {
     SELF_APPROVAL_NOT_ALLOWED(400, "본인을 결재자로 지정할 수 없습니다."),
     APPROVAL_NOT_WITHDRAWABLE(400, "회수할 수 없는 상태의 문서입니다."),
     APPROVAL_NOT_RESUBMITTABLE(400, "재상신할 수 없는 상태의 문서입니다."),
+    FORM_IN_USE(409, "이미 사용 중인 양식은 삭제할 수 없습니다."),
+    DUPLICATE_FIELD_KEY(400, "필드 키가 중복되었습니다."),
+    REQUIRED_FIELD_MISSING(400, "필수 항목이 누락되었습니다."),
+    INVALID_FIELD_TYPE(400, "지원하지 않는 필드 타입입니다."),
+    INVALID_SELECT_OPTIONS(400, "선택 항목은 옵션이 최소 1개 필요합니다."),
 
     // 업무
     TASK_NOT_FOUND(404, "존재하지 않는 업무입니다."),
