@@ -83,7 +83,7 @@ public class ApprovalDto {
         @Schema(description = "기안자 이름", example = "홍길동")
         private String drafterName;
 
-        @Schema(description = "결재 상태 (IN_PROGRESS, APPROVED, REJECTED)", example = "IN_PROGRESS")
+        @Schema(description = "결재 상태 (IN_PROGRESS, APPROVED, REJECTED, WITHDRAWN)", example = "IN_PROGRESS")
         private ApprovalDocStatus status;
 
         @Schema(description = "상신 일시")
@@ -180,7 +180,7 @@ public class ApprovalDto {
         @Schema(description = "기안자 이름", example = "홍길동")
         private String drafterName;
 
-        @Schema(description = "결재 상태 (IN_PROGRESS, APPROVED, REJECTED)", example = "IN_PROGRESS")
+        @Schema(description = "결재 상태 (IN_PROGRESS, APPROVED, REJECTED, WITHDRAWN)", example = "IN_PROGRESS")
         private ApprovalDocStatus status;
 
         @Schema(description = "상신 일시")

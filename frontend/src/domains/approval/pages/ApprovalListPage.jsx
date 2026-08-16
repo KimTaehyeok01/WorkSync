@@ -18,6 +18,8 @@ import {
   getPendingApproval,
   getReferenceApprovals,
   getApprovalInbox,
+  withdrawApproval,
+  resubmitApproval,
 } from "../services/approvalApi";
 import {
   WSAvatar,
@@ -29,6 +31,7 @@ const STATUS_CONFIG = {
   IN_PROGRESS: { label: "대기", bg: "#FEF3C7", text: "#92400E" },
   APPROVED: { label: "승인", bg: "#D1FAE5", text: "#065F46" },
   REJECTED: { label: "반려", bg: "#FEE2E2", text: "#991B1B" },
+  WITHDRAWN: { label: "회수됨", bg: "#E5E7EB", text: "#374151" },
 };
 
 const BOX_OPTIONS = [
@@ -42,6 +45,7 @@ const STATUS_OPTIONS = [
   { key: "IN_PROGRESS", label: "대기" },
   { key: "REJECTED", label: "반려" },
   { key: "APPROVED", label: "승인" },
+  { key: "WITHDRAWN", label: "회수됨" },
 ];
 
 export default function Approval() {
@@ -85,6 +89,20 @@ export default function Approval() {
       })
       .finally(() => setIsLoading(false));
   }, [accessToken, boxType, status]);
+
+  // 회수/재상신 후 목록 재조회 (캐시 무시하고 최신 상태 반영)
+  const refetchDocs = () => {
+    const cacheKey = `${boxType}-${status}`;
+    let api;
+    if (boxType === "inbox") api = getApprovalInbox(accessToken, status);
+    else if (boxType === "my") api = getMyApprovals(accessToken, status);
+    else api = getReferenceApprovals(accessToken, status);
+
+    api.then((data) => {
+      setDocs(data ?? []);
+      setCache((prev) => ({ ...prev, [cacheKey]: data ?? [] }));
+    });
+  };
 
   const filtered = (docs ?? []).filter((doc) => {
     const matchSearch =
@@ -242,8 +260,13 @@ export default function Approval() {
                             onClick={(e) => {
                               e.stopPropagation();
                               setOpenDropdown(null);
-                              if (doc.status !== "IN_PROGRESS") {
-                                alert("대기 중인 문서만 수정할 수 있습니다.");
+                              if (
+                                doc.status !== "IN_PROGRESS" &&
+                                doc.status !== "WITHDRAWN"
+                              ) {
+                                alert(
+                                  "대기 중이거나 회수된 문서만 수정할 수 있습니다.",
+                                );
                                 return;
                               }
                               navigate(`/approval/${doc.id}/edit`);
@@ -251,14 +274,63 @@ export default function Approval() {
                           >
                             수정
                           </button>
+                          {doc.status === "IN_PROGRESS" && (
+                            <button
+                              className={s.ddItem}
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                setOpenDropdown(null);
+                                if (confirm("결재를 회수하시겠습니까?")) {
+                                  try {
+                                    await withdrawApproval(
+                                      accessToken,
+                                      doc.id,
+                                    );
+                                    refetchDocs();
+                                  } catch (err) {
+                                    alert("회수에 실패했습니다.");
+                                  }
+                                }
+                              }}
+                            >
+                              회수
+                            </button>
+                          )}
+                          {doc.status === "WITHDRAWN" && (
+                            <button
+                              className={s.ddItem}
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                setOpenDropdown(null);
+                                if (confirm("결재를 재상신하시겠습니까?")) {
+                                  try {
+                                    await resubmitApproval(
+                                      accessToken,
+                                      doc.id,
+                                    );
+                                    refetchDocs();
+                                  } catch (err) {
+                                    alert("재상신에 실패했습니다.");
+                                  }
+                                }
+                              }}
+                            >
+                              재상신
+                            </button>
+                          )}
                           <button
                             className={`${s.ddItem} ${s.ddItemDanger}`}
                             onClick={async (e) => {
                               e.stopPropagation();
                               setOpenDropdown(null);
                               if (confirm("게시글을 삭제하시겠습니까?")) {
-                                if (doc.status !== "IN_PROGRESS") {
-                                  alert("대기 중인 문서만 삭제할 수 있습니다.");
+                                if (
+                                  doc.status !== "IN_PROGRESS" &&
+                                  doc.status !== "WITHDRAWN"
+                                ) {
+                                  alert(
+                                    "대기 중이거나 회수된 문서만 삭제할 수 있습니다.",
+                                  );
                                   return;
                                 }
                                 try {

@@ -67,4 +67,13 @@ public class LeaveRequest {
     public void reject() {
         this.status = LeaveStatus.REJECTED;
     }
+
+    // 결재 문서 회수 후 재상신 시 연차 신청 상세 갱신 (LEAVE 동기화용)
+    public void updateDetails(LeaveType leaveType, LocalDate startDate, LocalDate endDate, BigDecimal daysCount, String reason) {
+        this.leaveType = leaveType;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.daysCount = daysCount;
+        this.reason = reason;
+    }
 }

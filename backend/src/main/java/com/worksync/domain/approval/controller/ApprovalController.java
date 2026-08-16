@@ -123,6 +123,26 @@ public class ApprovalController {
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
+    // 결재 문서 회수 (기안자 본인 + IN_PROGRESS + 아직 아무도 승인 안 한 경우만)
+    @Operation(summary = "결재 문서 회수 (기안자 본인 + IN_PROGRESS 상태만)")
+    @PostMapping("/{id}/withdraw")
+    public ResponseEntity<ApiResponse<ApprovalDto.DetailResponse>> withdraw(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                approvalService.withdraw(id, userDetails.getId())));
+    }
+
+    // 결재 문서 재상신 (기안자 본인 + WITHDRAWN 상태만)
+    @Operation(summary = "결재 문서 재상신 (기안자 본인 + WITHDRAWN 상태만)")
+    @PostMapping("/{id}/resubmit")
+    public ResponseEntity<ApiResponse<ApprovalDto.DetailResponse>> resubmit(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                approvalService.resubmit(id, userDetails.getId())));
+    }
+
     // 결재 처리 (승인 or 반려)
     @Operation(summary = "결재 처리 (승인 또는 반려)")
     @PostMapping("/{id}/process")

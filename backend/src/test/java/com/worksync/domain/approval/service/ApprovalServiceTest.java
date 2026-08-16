@@ -3,6 +3,7 @@ package com.worksync.domain.approval.service;
 
 import com.worksync.domain.approval.dto.ApprovalDto;
 import com.worksync.domain.approval.entity.ApprovalDoc;
+import com.worksync.domain.approval.entity.ApprovalDocItem;
 import com.worksync.domain.approval.entity.ApprovalDocStatus;
 import com.worksync.domain.approval.entity.ApprovalForm;
 import com.worksync.domain.approval.entity.ApprovalLine;
@@ -18,6 +19,7 @@ import com.worksync.domain.employee.entity.Employee;
 import com.worksync.domain.employee.repository.EmployeeRepository;
 import com.worksync.domain.leave.entity.AnnualLeaveBalance;
 import com.worksync.domain.leave.entity.LeaveRequest;
+import com.worksync.domain.leave.entity.LeaveType;
 import com.worksync.domain.leave.repository.AnnualLeaveBalanceRepository;
 import com.worksync.domain.leave.repository.LeaveRequestRepository;
 import com.worksync.domain.notification.entity.NotificationType;
@@ -34,6 +36,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -354,6 +357,7 @@ class ApprovalServiceTest {
                 .status(ApprovalDocStatus.APPROVED)
                 .build();
 
+        given(approvalDocRepository.lockById(1L)).willReturn(Optional.of(doc));
         given(approvalDocRepository.findWithDetailsById(1L)).willReturn(Optional.of(doc));
 
         ApprovalDto.ProcessRequest request = new ApprovalDto.ProcessRequest();
@@ -375,6 +379,7 @@ class ApprovalServiceTest {
                 .status(ApprovalDocStatus.IN_PROGRESS)
                 .build();
 
+        given(approvalDocRepository.lockById(1L)).willReturn(Optional.of(doc));
         given(approvalDocRepository.findWithDetailsById(1L)).willReturn(Optional.of(doc));
 
         ApprovalDto.ProcessRequest request = new ApprovalDto.ProcessRequest();
@@ -408,6 +413,7 @@ class ApprovalServiceTest {
         doc.getApprovalLines().add(line1);
         doc.getApprovalLines().add(line2);
 
+        given(approvalDocRepository.lockById(1L)).willReturn(Optional.of(doc));
         given(approvalDocRepository.findWithDetailsById(1L)).willReturn(Optional.of(doc));
 
         ApprovalDto.ProcessRequest request = new ApprovalDto.ProcessRequest();
@@ -440,6 +446,7 @@ class ApprovalServiceTest {
                 .status(ApprovalLineStatus.WAITING).build();
         doc.getApprovalLines().add(line);
 
+        given(approvalDocRepository.lockById(1L)).willReturn(Optional.of(doc));
         given(approvalDocRepository.findWithDetailsById(1L)).willReturn(Optional.of(doc));
 
         ApprovalDto.ProcessRequest request = new ApprovalDto.ProcessRequest();
@@ -479,6 +486,7 @@ class ApprovalServiceTest {
                 .status(ApprovalLineStatus.WAITING).build();
         doc.getApprovalLines().add(line);
 
+        given(approvalDocRepository.lockById(1L)).willReturn(Optional.of(doc));
         given(approvalDocRepository.findWithDetailsById(1L)).willReturn(Optional.of(doc));
 
         ApprovalDto.ProcessRequest request = new ApprovalDto.ProcessRequest();
@@ -518,6 +526,7 @@ class ApprovalServiceTest {
         doc.getApprovalLines().add(line1);
         doc.getApprovalLines().add(line2);
 
+        given(approvalDocRepository.lockById(1L)).willReturn(Optional.of(doc));
         given(approvalDocRepository.findWithDetailsById(1L)).willReturn(Optional.of(doc));
 
         ApprovalDto.ProcessRequest request = new ApprovalDto.ProcessRequest();
@@ -531,5 +540,505 @@ class ApprovalServiceTest {
         verify(notificationService, times(1))
                 .send(eq(3L), eq(NotificationType.APPROVAL), anyString(), eq("APPROVAL"), eq(1L));
         verify(eventPublisher, never()).publishEvent(any());
+    }
+
+    @DisplayName("기안자가 아무도 승인하지 않은 문서를 회수하면 WITHDRAWN 상태가 된다")
+    @Test
+    void withdraw_success() {
+        // given
+        Employee drafter = buildEmployee(1L, "기안자");
+        Employee approver = buildEmployee(2L, "결재자");
+        ApprovalForm form = ApprovalForm.builder()
+                .id(1L).formName("출장 신청서").formType("BUSINESS_TRIP").formSchema("{}").build();
+
+        ApprovalDoc doc = ApprovalDoc.builder()
+                .id(1L).drafter(drafter).form(form)
+                .title("출장 신청서")
+                .status(ApprovalDocStatus.IN_PROGRESS)
+                .build();
+
+        ApprovalLine line = ApprovalLine.builder()
+                .id(1L).doc(doc).approver(approver).stepOrder(1).stepType(StepType.APPROVE)
+                .status(ApprovalLineStatus.WAITING).build();
+        doc.getApprovalLines().add(line);
+
+        given(approvalDocRepository.lockById(1L)).willReturn(Optional.of(doc));
+        given(approvalDocRepository.findWithDetailsById(1L)).willReturn(Optional.of(doc));
+
+        // when
+        ApprovalDto.DetailResponse result = approvalService.withdraw(1L, 1L);
+
+        // then
+        assertThat(result.getStatus()).isEqualTo(ApprovalDocStatus.WITHDRAWN);
+        assertThat(doc.getStatus()).isEqualTo(ApprovalDocStatus.WITHDRAWN);
+        verify(approvalDocRepository).lockById(1L);
+    }
+
+    @DisplayName("기안자 본인이 아니면 회수할 수 없다")
+    @Test
+    void withdraw_notOwner_throwsNotYourApproval() {
+        // given
+        Employee drafter = buildEmployee(1L, "기안자");
+        ApprovalForm form = ApprovalForm.builder()
+                .id(1L).formName("출장 신청서").formType("BUSINESS_TRIP").formSchema("{}").build();
+
+        ApprovalDoc doc = ApprovalDoc.builder()
+                .id(1L).drafter(drafter).form(form)
+                .title("출장 신청서")
+                .status(ApprovalDocStatus.IN_PROGRESS)
+                .build();
+
+        given(approvalDocRepository.lockById(1L)).willReturn(Optional.of(doc));
+        given(approvalDocRepository.findWithDetailsById(1L)).willReturn(Optional.of(doc));
+
+        // when & then
+        assertThatThrownBy(() -> approvalService.withdraw(1L, 99L))
+                .isInstanceOf(CustomException.class)
+                .extracting(e -> ((CustomException) e).getErrorCode())
+                .isEqualTo(ErrorCode.NOT_YOUR_APPROVAL);
+    }
+
+    @DisplayName("IN_PROGRESS 상태가 아닌 문서는 회수할 수 없다")
+    @Test
+    void withdraw_notInProgress_throwsNotWithdrawable() {
+        // given
+        Employee drafter = buildEmployee(1L, "기안자");
+        ApprovalForm form = ApprovalForm.builder()
+                .id(1L).formName("출장 신청서").formType("BUSINESS_TRIP").formSchema("{}").build();
+
+        ApprovalDoc doc = ApprovalDoc.builder()
+                .id(1L).drafter(drafter).form(form)
+                .title("출장 신청서")
+                .status(ApprovalDocStatus.APPROVED)
+                .build();
+
+        given(approvalDocRepository.lockById(1L)).willReturn(Optional.of(doc));
+        given(approvalDocRepository.findWithDetailsById(1L)).willReturn(Optional.of(doc));
+
+        // when & then
+        assertThatThrownBy(() -> approvalService.withdraw(1L, 1L))
+                .isInstanceOf(CustomException.class)
+                .extracting(e -> ((CustomException) e).getErrorCode())
+                .isEqualTo(ErrorCode.APPROVAL_NOT_WITHDRAWABLE);
+    }
+
+    @DisplayName("이미 한 명이라도 승인한 문서는 회수할 수 없다")
+    @Test
+    void withdraw_alreadyApproved_throwsApprovalEditForbidden() {
+        // given
+        Employee drafter = buildEmployee(1L, "기안자");
+        Employee approver = buildEmployee(2L, "결재자");
+        ApprovalForm form = ApprovalForm.builder()
+                .id(1L).formName("출장 신청서").formType("BUSINESS_TRIP").formSchema("{}").build();
+
+        ApprovalDoc doc = ApprovalDoc.builder()
+                .id(1L).drafter(drafter).form(form)
+                .title("출장 신청서")
+                .status(ApprovalDocStatus.IN_PROGRESS)
+                .build();
+
+        ApprovalLine line = ApprovalLine.builder()
+                .id(1L).doc(doc).approver(approver).stepOrder(1).stepType(StepType.APPROVE)
+                .status(ApprovalLineStatus.APPROVED).build();
+        doc.getApprovalLines().add(line);
+
+        given(approvalDocRepository.lockById(1L)).willReturn(Optional.of(doc));
+        given(approvalDocRepository.findWithDetailsById(1L)).willReturn(Optional.of(doc));
+
+        // when & then
+        assertThatThrownBy(() -> approvalService.withdraw(1L, 1L))
+                .isInstanceOf(CustomException.class)
+                .extracting(e -> ((CustomException) e).getErrorCode())
+                .isEqualTo(ErrorCode.APPROVAL_EDIT_FORBIDDEN);
+    }
+
+    @DisplayName("기안자가 회수된 문서를 재상신하면 IN_PROGRESS로 복귀하고 첫 결재자에게 알림이 발송된다")
+    @Test
+    void resubmit_success() {
+        // given
+        Employee drafter = buildEmployee(1L, "기안자");
+        Employee approver = buildEmployee(2L, "결재자");
+        ApprovalForm form = ApprovalForm.builder()
+                .id(1L).formName("출장 신청서").formType("BUSINESS_TRIP").formSchema("{}").build();
+
+        ApprovalDoc doc = ApprovalDoc.builder()
+                .id(1L).drafter(drafter).form(form)
+                .title("출장 신청서")
+                .status(ApprovalDocStatus.WITHDRAWN)
+                .build();
+
+        ApprovalLine line = ApprovalLine.builder()
+                .id(1L).doc(doc).approver(approver).stepOrder(1).stepType(StepType.APPROVE)
+                .status(ApprovalLineStatus.WAITING).build();
+        doc.getApprovalLines().add(line);
+
+        given(approvalDocRepository.lockById(1L)).willReturn(Optional.of(doc));
+        given(approvalDocRepository.findWithDetailsById(1L)).willReturn(Optional.of(doc));
+
+        // when
+        ApprovalDto.DetailResponse result = approvalService.resubmit(1L, 1L);
+
+        // then
+        assertThat(result.getStatus()).isEqualTo(ApprovalDocStatus.IN_PROGRESS);
+        verify(notificationService).send(eq(2L), eq(NotificationType.APPROVAL), anyString(), eq("APPROVAL"), eq(1L));
+        verify(approvalDocRepository).lockById(1L);
+    }
+
+    @DisplayName("기안자 본인이 아니면 재상신할 수 없다")
+    @Test
+    void resubmit_notOwner_throwsNotYourApproval() {
+        // given
+        Employee drafter = buildEmployee(1L, "기안자");
+        ApprovalForm form = ApprovalForm.builder()
+                .id(1L).formName("출장 신청서").formType("BUSINESS_TRIP").formSchema("{}").build();
+
+        ApprovalDoc doc = ApprovalDoc.builder()
+                .id(1L).drafter(drafter).form(form)
+                .title("출장 신청서")
+                .status(ApprovalDocStatus.WITHDRAWN)
+                .build();
+
+        given(approvalDocRepository.lockById(1L)).willReturn(Optional.of(doc));
+        given(approvalDocRepository.findWithDetailsById(1L)).willReturn(Optional.of(doc));
+
+        // when & then
+        assertThatThrownBy(() -> approvalService.resubmit(1L, 99L))
+                .isInstanceOf(CustomException.class)
+                .extracting(e -> ((CustomException) e).getErrorCode())
+                .isEqualTo(ErrorCode.NOT_YOUR_APPROVAL);
+    }
+
+    @DisplayName("WITHDRAWN 상태가 아닌 문서는 재상신할 수 없다")
+    @Test
+    void resubmit_notWithdrawn_throwsNotResubmittable() {
+        // given
+        Employee drafter = buildEmployee(1L, "기안자");
+        ApprovalForm form = ApprovalForm.builder()
+                .id(1L).formName("출장 신청서").formType("BUSINESS_TRIP").formSchema("{}").build();
+
+        ApprovalDoc doc = ApprovalDoc.builder()
+                .id(1L).drafter(drafter).form(form)
+                .title("출장 신청서")
+                .status(ApprovalDocStatus.IN_PROGRESS)
+                .build();
+
+        given(approvalDocRepository.lockById(1L)).willReturn(Optional.of(doc));
+        given(approvalDocRepository.findWithDetailsById(1L)).willReturn(Optional.of(doc));
+
+        // when & then
+        assertThatThrownBy(() -> approvalService.resubmit(1L, 1L))
+                .isInstanceOf(CustomException.class)
+                .extracting(e -> ((CustomException) e).getErrorCode())
+                .isEqualTo(ErrorCode.APPROVAL_NOT_RESUBMITTABLE);
+    }
+
+    @DisplayName("WITHDRAWN 상태의 문서도 수정할 수 있다 (회귀)")
+    @Test
+    void updateDoc_withdrawnStatus_success() {
+        // given
+        Employee drafter = buildEmployee(1L, "기안자");
+        ApprovalForm form = ApprovalForm.builder()
+                .id(1L).formName("출장 신청서").formType("BUSINESS_TRIP").formSchema("{}").build();
+
+        ApprovalDoc doc = ApprovalDoc.builder()
+                .id(1L).drafter(drafter).form(form)
+                .title("출장 신청서")
+                .status(ApprovalDocStatus.WITHDRAWN)
+                .build();
+
+        given(approvalDocRepository.lockById(1L)).willReturn(Optional.of(doc));
+        given(approvalDocRepository.findWithDetailsById(1L)).willReturn(Optional.of(doc));
+
+        ApprovalDto.UpdateRequest request = new ApprovalDto.UpdateRequest();
+        request.setTitle("출장 신청서 (수정)");
+
+        // when
+        ApprovalDto.DetailResponse result = approvalService.updateDoc(1L, 1L, request);
+
+        // then
+        assertThat(result.getTitle()).isEqualTo("출장 신청서 (수정)");
+        verify(approvalDocRepository).lockById(1L);
+    }
+
+    @DisplayName("LEAVE 문서를 같은 연도 안에서 날짜만 변경하면 잔여일수가 재동기화된다")
+    @Test
+    void updateDoc_leaveType_sameYear_syncsBalance() {
+        // given
+        Employee drafter = buildEmployee(1L, "기안자");
+        ApprovalForm form = ApprovalForm.builder()
+                .id(1L).formName("휴가 신청서").formType("LEAVE").formSchema("{}").build();
+
+        ApprovalDoc doc = ApprovalDoc.builder()
+                .id(1L).drafter(drafter).form(form)
+                .title("연차 신청")
+                .status(ApprovalDocStatus.IN_PROGRESS)
+                .build();
+        doc.getApprovalDocItems().add(ApprovalDocItem.builder()
+                .doc(doc).itemKey("leaveType").itemValue("ANNUAL").build());
+        doc.getApprovalDocItems().add(ApprovalDocItem.builder()
+                .doc(doc).itemKey("startDate").itemValue("2026-08-10").build());
+        doc.getApprovalDocItems().add(ApprovalDocItem.builder()
+                .doc(doc).itemKey("endDate").itemValue("2026-08-11").build());
+        doc.getApprovalDocItems().add(ApprovalDocItem.builder()
+                .doc(doc).itemKey("reason").itemValue("개인 사유").build());
+
+        LeaveRequest leaveRequest = LeaveRequest.builder()
+                .id(1L).employee(drafter).approvalDoc(doc)
+                .leaveType(LeaveType.ANNUAL)
+                .startDate(LocalDate.of(2026, 8, 10))
+                .endDate(LocalDate.of(2026, 8, 11))
+                .daysCount(BigDecimal.valueOf(2))
+                .reason("개인 사유")
+                .build();
+
+        AnnualLeaveBalance balance = AnnualLeaveBalance.builder()
+                .id(1L).employee(drafter).year((short) 2026)
+                .totalDays(BigDecimal.valueOf(15)).pendingDays(BigDecimal.valueOf(2)).build();
+
+        given(approvalDocRepository.lockById(1L)).willReturn(Optional.of(doc));
+        given(approvalDocRepository.findWithDetailsById(1L)).willReturn(Optional.of(doc));
+        given(leaveRequestRepository.findByApprovalDocId(1L)).willReturn(Optional.of(leaveRequest));
+        given(annualLeaveBalanceRepository.findByEmployeeIdAndYear(1L, (short) 2026))
+                .willReturn(Optional.of(balance));
+
+        Map<String, String> newItems = new HashMap<>();
+        newItems.put("leaveType", "ANNUAL");
+        newItems.put("startDate", "2026-08-12");
+        newItems.put("endDate", "2026-08-13");
+        newItems.put("reason", "사유 변경");
+
+        ApprovalDto.UpdateRequest request = new ApprovalDto.UpdateRequest();
+        request.setTitle("연차 신청 (수정)");
+        request.setItems(newItems);
+
+        // when
+        ApprovalDto.DetailResponse result = approvalService.updateDoc(1L, 1L, request);
+
+        // then
+        assertThat(balance.getPendingDays()).isEqualByComparingTo(BigDecimal.valueOf(2));
+        assertThat(leaveRequest.getStartDate()).isEqualTo(LocalDate.of(2026, 8, 12));
+        assertThat(leaveRequest.getEndDate()).isEqualTo(LocalDate.of(2026, 8, 13));
+        assertThat(leaveRequest.getReason()).isEqualTo("사유 변경");
+        assertThat(result.getItems().get("startDate")).isEqualTo("2026-08-12");
+        verify(leaveRequestRepository).save(leaveRequest);
+        verify(annualLeaveBalanceRepository, times(2)).save(balance);
+    }
+
+    @DisplayName("LEAVE 문서 수정으로 연도가 바뀌면 옛 연도와 새 연도 잔여일수가 각각 갱신된다")
+    @Test
+    void updateDoc_leaveType_yearBoundary_movesBalanceToNewYear() {
+        // given
+        Employee drafter = buildEmployee(1L, "기안자");
+        ApprovalForm form = ApprovalForm.builder()
+                .id(1L).formName("휴가 신청서").formType("LEAVE").formSchema("{}").build();
+
+        ApprovalDoc doc = ApprovalDoc.builder()
+                .id(1L).drafter(drafter).form(form)
+                .title("연차 신청")
+                .status(ApprovalDocStatus.IN_PROGRESS)
+                .build();
+        doc.getApprovalDocItems().add(ApprovalDocItem.builder()
+                .doc(doc).itemKey("leaveType").itemValue("ANNUAL").build());
+        doc.getApprovalDocItems().add(ApprovalDocItem.builder()
+                .doc(doc).itemKey("startDate").itemValue("2026-12-30").build());
+        doc.getApprovalDocItems().add(ApprovalDocItem.builder()
+                .doc(doc).itemKey("endDate").itemValue("2026-12-31").build());
+
+        LeaveRequest leaveRequest = LeaveRequest.builder()
+                .id(1L).employee(drafter).approvalDoc(doc)
+                .leaveType(LeaveType.ANNUAL)
+                .startDate(LocalDate.of(2026, 12, 30))
+                .endDate(LocalDate.of(2026, 12, 31))
+                .daysCount(BigDecimal.valueOf(2))
+                .build();
+
+        AnnualLeaveBalance oldYearBalance = AnnualLeaveBalance.builder()
+                .id(1L).employee(drafter).year((short) 2026)
+                .totalDays(BigDecimal.valueOf(15)).pendingDays(BigDecimal.valueOf(2)).build();
+        AnnualLeaveBalance newYearBalance = AnnualLeaveBalance.builder()
+                .id(2L).employee(drafter).year((short) 2027)
+                .totalDays(BigDecimal.valueOf(15)).pendingDays(BigDecimal.ZERO).build();
+
+        given(approvalDocRepository.lockById(1L)).willReturn(Optional.of(doc));
+        given(approvalDocRepository.findWithDetailsById(1L)).willReturn(Optional.of(doc));
+        given(leaveRequestRepository.findByApprovalDocId(1L)).willReturn(Optional.of(leaveRequest));
+        given(annualLeaveBalanceRepository.findByEmployeeIdAndYear(1L, (short) 2026))
+                .willReturn(Optional.of(oldYearBalance));
+        given(annualLeaveBalanceRepository.findByEmployeeIdAndYear(1L, (short) 2027))
+                .willReturn(Optional.of(newYearBalance));
+
+        Map<String, String> newItems = new HashMap<>();
+        newItems.put("leaveType", "ANNUAL");
+        newItems.put("startDate", "2027-01-01");
+        newItems.put("endDate", "2027-01-02");
+
+        ApprovalDto.UpdateRequest request = new ApprovalDto.UpdateRequest();
+        request.setTitle("연차 신청 (수정)");
+        request.setItems(newItems);
+
+        // when
+        approvalService.updateDoc(1L, 1L, request);
+
+        // then
+        assertThat(oldYearBalance.getPendingDays()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(newYearBalance.getPendingDays()).isEqualByComparingTo(BigDecimal.valueOf(2));
+        verify(annualLeaveBalanceRepository).findByEmployeeIdAndYear(1L, (short) 2026);
+        verify(annualLeaveBalanceRepository).findByEmployeeIdAndYear(1L, (short) 2027);
+        verify(annualLeaveBalanceRepository).save(oldYearBalance);
+        verify(annualLeaveBalanceRepository).save(newYearBalance);
+    }
+
+    @DisplayName("변경된 날짜 기준 잔여일수가 부족하면 예외가 발생한다")
+    @Test
+    void updateDoc_leaveType_insufficientNewBalance_throwsInsufficientLeaveBalance() {
+        // given
+        Employee drafter = buildEmployee(1L, "기안자");
+        ApprovalForm form = ApprovalForm.builder()
+                .id(1L).formName("휴가 신청서").formType("LEAVE").formSchema("{}").build();
+
+        ApprovalDoc doc = ApprovalDoc.builder()
+                .id(1L).drafter(drafter).form(form)
+                .title("연차 신청")
+                .status(ApprovalDocStatus.IN_PROGRESS)
+                .build();
+        doc.getApprovalDocItems().add(ApprovalDocItem.builder()
+                .doc(doc).itemKey("leaveType").itemValue("ANNUAL").build());
+        doc.getApprovalDocItems().add(ApprovalDocItem.builder()
+                .doc(doc).itemKey("startDate").itemValue("2026-08-10").build());
+        doc.getApprovalDocItems().add(ApprovalDocItem.builder()
+                .doc(doc).itemKey("endDate").itemValue("2026-08-11").build());
+
+        LeaveRequest leaveRequest = LeaveRequest.builder()
+                .id(1L).employee(drafter).approvalDoc(doc)
+                .leaveType(LeaveType.ANNUAL)
+                .startDate(LocalDate.of(2026, 8, 10))
+                .endDate(LocalDate.of(2026, 8, 11))
+                .daysCount(BigDecimal.valueOf(2))
+                .build();
+
+        // 옛 대기일수(2일) 복구 후 남는 잔여일수는 3일 -> 새로 요청하는 4일보다 부족
+        AnnualLeaveBalance balance = AnnualLeaveBalance.builder()
+                .id(1L).employee(drafter).year((short) 2026)
+                .totalDays(BigDecimal.valueOf(3)).pendingDays(BigDecimal.valueOf(2)).build();
+
+        given(approvalDocRepository.lockById(1L)).willReturn(Optional.of(doc));
+        given(approvalDocRepository.findWithDetailsById(1L)).willReturn(Optional.of(doc));
+        given(leaveRequestRepository.findByApprovalDocId(1L)).willReturn(Optional.of(leaveRequest));
+        given(annualLeaveBalanceRepository.findByEmployeeIdAndYear(1L, (short) 2026))
+                .willReturn(Optional.of(balance));
+
+        Map<String, String> newItems = new HashMap<>();
+        newItems.put("leaveType", "ANNUAL");
+        newItems.put("startDate", "2026-08-15");
+        newItems.put("endDate", "2026-08-18");
+
+        ApprovalDto.UpdateRequest request = new ApprovalDto.UpdateRequest();
+        request.setTitle("연차 신청 (수정)");
+        request.setItems(newItems);
+
+        // when & then
+        assertThatThrownBy(() -> approvalService.updateDoc(1L, 1L, request))
+                .isInstanceOf(CustomException.class)
+                .extracting(e -> ((CustomException) e).getErrorCode())
+                .isEqualTo(ErrorCode.INSUFFICIENT_LEAVE_BALANCE);
+    }
+
+    @DisplayName("연결된 휴가 신청을 찾을 수 없으면 예외가 발생한다")
+    @Test
+    void updateDoc_leaveType_missingLeaveRequest_throwsLeaveRequestNotFound() {
+        // given
+        Employee drafter = buildEmployee(1L, "기안자");
+        ApprovalForm form = ApprovalForm.builder()
+                .id(1L).formName("휴가 신청서").formType("LEAVE").formSchema("{}").build();
+
+        ApprovalDoc doc = ApprovalDoc.builder()
+                .id(1L).drafter(drafter).form(form)
+                .title("연차 신청")
+                .status(ApprovalDocStatus.IN_PROGRESS)
+                .build();
+
+        given(approvalDocRepository.lockById(1L)).willReturn(Optional.of(doc));
+        given(approvalDocRepository.findWithDetailsById(1L)).willReturn(Optional.of(doc));
+        given(leaveRequestRepository.findByApprovalDocId(1L)).willReturn(Optional.empty());
+
+        Map<String, String> newItems = new HashMap<>();
+        newItems.put("leaveType", "ANNUAL");
+        newItems.put("startDate", "2026-08-15");
+        newItems.put("endDate", "2026-08-16");
+
+        ApprovalDto.UpdateRequest request = new ApprovalDto.UpdateRequest();
+        request.setTitle("연차 신청 (수정)");
+        request.setItems(newItems);
+
+        // when & then
+        assertThatThrownBy(() -> approvalService.updateDoc(1L, 1L, request))
+                .isInstanceOf(CustomException.class)
+                .extracting(e -> ((CustomException) e).getErrorCode())
+                .isEqualTo(ErrorCode.LEAVE_REQUEST_NOT_FOUND);
+    }
+
+    @DisplayName("WITHDRAWN 상태의 문서도 삭제할 수 있다 (회귀)")
+    @Test
+    void deleteDoc_withdrawnStatus_success() {
+        // given
+        Employee drafter = buildEmployee(1L, "기안자");
+        ApprovalForm form = ApprovalForm.builder()
+                .id(1L).formName("출장 신청서").formType("BUSINESS_TRIP").formSchema("{}").build();
+
+        ApprovalDoc doc = ApprovalDoc.builder()
+                .id(1L).drafter(drafter).form(form)
+                .title("출장 신청서")
+                .status(ApprovalDocStatus.WITHDRAWN)
+                .build();
+
+        given(approvalDocRepository.lockById(1L)).willReturn(Optional.of(doc));
+        given(approvalDocRepository.findWithDetailsById(1L)).willReturn(Optional.of(doc));
+
+        // when
+        approvalService.deleteDoc(1L, 1L);
+
+        // then
+        verify(approvalDocRepository).delete(doc);
+        verify(approvalDocRepository).lockById(1L);
+    }
+
+    @DisplayName("회수된 LEAVE 문서를 삭제하면 대기 중이던 연차 잔여일수가 복구된다")
+    @Test
+    void deleteDoc_leaveType_withdrawnStatus_restoresPendingDays() {
+        // given
+        Employee drafter = buildEmployee(1L, "기안자");
+        ApprovalForm form = ApprovalForm.builder()
+                .id(1L).formName("휴가 신청서").formType("LEAVE").formSchema("{}").build();
+
+        ApprovalDoc doc = ApprovalDoc.builder()
+                .id(1L).drafter(drafter).form(form)
+                .title("연차 신청")
+                .status(ApprovalDocStatus.WITHDRAWN)
+                .build();
+
+        LeaveRequest leaveRequest = LeaveRequest.builder()
+                .id(1L).employee(drafter).approvalDoc(doc)
+                .leaveType(LeaveType.ANNUAL)
+                .startDate(LocalDate.of(2026, 8, 10))
+                .endDate(LocalDate.of(2026, 8, 11))
+                .daysCount(BigDecimal.valueOf(2))
+                .build();
+
+        AnnualLeaveBalance balance = AnnualLeaveBalance.builder()
+                .id(1L).employee(drafter).year((short) 2026)
+                .totalDays(BigDecimal.valueOf(15)).pendingDays(BigDecimal.valueOf(2)).build();
+
+        given(approvalDocRepository.lockById(1L)).willReturn(Optional.of(doc));
+        given(approvalDocRepository.findWithDetailsById(1L)).willReturn(Optional.of(doc));
+        given(leaveRequestRepository.findByApprovalDocId(1L)).willReturn(Optional.of(leaveRequest));
+        given(annualLeaveBalanceRepository.findByEmployeeIdAndYear(1L, (short) 2026))
+                .willReturn(Optional.of(balance));
+
+        // when
+        approvalService.deleteDoc(1L, 1L);
+
+        // then
+        assertThat(balance.getPendingDays()).isEqualByComparingTo(BigDecimal.ZERO);
+        verify(leaveRequestRepository).delete(leaveRequest);
     }
 }

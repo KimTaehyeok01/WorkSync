@@ -33,6 +33,8 @@ public enum ErrorCode {
     INVALID_APPROVAL_STATUS(400, "승인 또는 반려 상태만 처리할 수 있습니다."),
     INVALID_DRAFT_LINE(400, "기안자 본인만 DRAFT 결재선에 등록할 수 있습니다."),
     SELF_APPROVAL_NOT_ALLOWED(400, "본인을 결재자로 지정할 수 없습니다."),
+    APPROVAL_NOT_WITHDRAWABLE(400, "회수할 수 없는 상태의 문서입니다."),
+    APPROVAL_NOT_RESUBMITTABLE(400, "재상신할 수 없는 상태의 문서입니다."),
 
     // 업무
     TASK_NOT_FOUND(404, "존재하지 않는 업무입니다."),
