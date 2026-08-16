@@ -134,6 +134,36 @@ class ApprovalServiceTest {
         verify(notificationService).send(eq(2L), eq(NotificationType.APPROVAL), anyString(), eq("APPROVAL"), any());
     }
 
+    @DisplayName("참조인으로 지정된 결재선이 있으면 참조인에게 알림이 발송된다")
+    @Test
+    void submit_withReferenceLine_notifiesReferrer() {
+        // given
+        Long drafterId = 1L;
+        Employee drafter = buildEmployee(1L, "김철수");
+        Employee approver = buildEmployee(2L, "박부장");
+        Employee referrer = buildEmployee(3L, "이대리");
+        ApprovalForm form = ApprovalForm.builder()
+                .id(1L).formName("출장 신청서").formType("BUSINESS_TRIP").formSchema("{}").build();
+
+        ApprovalDto.CreateRequest request = createRequest(1L, "출장 신청서",
+                List.of(
+                        lineRequest(1L, 1, StepType.DRAFT),
+                        lineRequest(2L, 2, StepType.APPROVE),
+                        lineRequest(3L, 2, StepType.REFERENCE)
+                ), null);
+
+        given(employeeRepository.findById(1L)).willReturn(Optional.of(drafter));
+        given(employeeRepository.findById(2L)).willReturn(Optional.of(approver));
+        given(employeeRepository.findById(3L)).willReturn(Optional.of(referrer));
+        given(approvalFormRepository.findById(1L)).willReturn(Optional.of(form));
+
+        // when
+        approvalService.submit(drafterId, request);
+
+        // then
+        verify(notificationService).send(eq(3L), eq(NotificationType.APPROVAL), anyString(), eq("APPROVAL"), any());
+    }
+
     @DisplayName("결재선에 REVIEW/APPROVE가 없으면 예외가 발생한다")
     @Test
     void submit_noReviewOrApproveLine_throwsInvalidApprovalLine() {

@@ -232,6 +232,17 @@ public class ApprovalService {
                         doc.getId()
                 ));
 
+        // 참조로 지정된 사람에게 알림
+        doc.getApprovalLines().stream()
+                .filter(l -> l.getStepType() == StepType.REFERENCE)
+                .forEach(l -> notificationService.send(
+                        l.getApprover().getId(),
+                        NotificationType.APPROVAL,
+                        "'" + doc.getTitle() + "' 결재 문서에 참조로 지정되었습니다.",
+                        "APPROVAL",
+                        doc.getId()
+                ));
+
         return ApprovalDto.DetailResponse.from(doc);
     }
 
