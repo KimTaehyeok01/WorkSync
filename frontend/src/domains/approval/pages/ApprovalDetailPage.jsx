@@ -693,12 +693,15 @@ export default function ApprovalDetail() {
         )}
       </div>
 
-      <div className={s.section}>
-        <WSFileList
-          files={files.map(({ file }) => file)}
-          onDownload={handleDownload}
-        />
-      </div>
+      {files.length > 0 && (
+        <div className={s.section}>
+          <h2 className={s.sectionTitle}>첨부파일</h2>
+          <WSFileList
+            files={files.map(({ file }) => file)}
+            onDownload={handleDownload}
+          />
+        </div>
+      )}
 
       {canProcess && (
         <div className={s.actions}>
