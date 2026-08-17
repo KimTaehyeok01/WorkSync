@@ -458,14 +458,3 @@ export default function ApprovalNew() {
     </div>
   );
 }
-
-function SummaryRow({ label, value, empty }) {
-  return (
-    <div className={s.summaryRow}>
-      <span className={s.summaryLabel}>{label}</span>
-      <span className={`${s.summaryValue} ${empty ? s.summaryValueEmpty : ""}`}>
-        {value}
-      </span>
-    </div>
-  );
-}

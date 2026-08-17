@@ -204,9 +204,6 @@ export default function ApprovalUpdate() {
             validateRef={validateRef}
             isEditMode={true}
           />
-        </div>
-
-        <div className={`${s.col} ${s.colSide}`}>
           <WSCard
             title="첨부 파일"
             subtitle={`${files.length}개 파일 첨부됨`}
@@ -226,6 +223,9 @@ export default function ApprovalUpdate() {
               onRemove={removeFiles}
             />
           </WSCard>
+        </div>
+
+        <div className={`${s.col} ${s.colSide}`}>
           <div className={s.actionsCol}>
             <button
               onClick={handleSubmit}

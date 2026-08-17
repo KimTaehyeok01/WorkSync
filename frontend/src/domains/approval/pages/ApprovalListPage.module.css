@@ -1,9 +1,9 @@
 .filterBar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--ws-space-md);
   width: 100%;
-  margin-bottom: 24px;
+  margin-bottom: var(--ws-space-2xl);
 }
 .dd {
   position: relative;
@@ -11,10 +11,10 @@
 .ddBtn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
+  gap: var(--ws-space-sm);
+  padding: var(--ws-space-sm) var(--ws-space-lg);
   border: 1px solid var(--ws-border);
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   background: #fff;
   font-size: 13px;
   font-weight: 500;
@@ -28,10 +28,10 @@
   position: absolute;
   top: 100%;
   left: 0;
-  margin-top: 4px;
+  margin-top: var(--ws-space-xs);
   background: #fff;
   border: 1px solid var(--ws-border);
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
   z-index: 10;
   min-width: 120px;
@@ -39,7 +39,7 @@
 .ddItem {
   width: 100%;
   text-align: left;
-  padding: 8px 16px;
+  padding: var(--ws-space-sm) var(--ws-space-lg);
   font-size: 13px;
   transition: background 0.15s;
   color: var(--ws-text-700);
@@ -69,7 +69,7 @@
   width: 100%;
   padding: 10px 16px 9px 40px;
   border: 1px solid var(--ws-border);
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   font-size: 13px;
   outline: none;
   transition: border-color 0.15s;
@@ -86,22 +86,22 @@
 .leftGroup {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--ws-space-md);
 }
 
 .newBtnGroup {
   display: flex;
-  gap: 8px;
+  gap: var(--ws-space-sm);
 }
 
 .newBtn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 20px;
+  gap: var(--ws-space-sm);
+  padding: var(--ws-space-sm) var(--ws-space-xl);
   background: var(--ws-primary);
   color: #fff;
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   font-size: 13px;
   font-weight: 600;
   transition: opacity 0.15s;
@@ -113,9 +113,9 @@
 .manageBtn {
   display: flex;
   align-items: center;
-  padding: 8px 20px;
+  padding: var(--ws-space-sm) var(--ws-space-xl);
   border: 1px solid var(--ws-border);
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   color: var(--ws-text-700);
   font-size: 13px;
   font-weight: 600;
@@ -129,16 +129,16 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: var(--ws-space-lg);
+  margin-bottom: var(--ws-space-2xl);
 }
 
 .card {
   position: relative;
   background: #fff;
   border: 1px solid var(--ws-border);
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: var(--ws-radius-md);
+  padding: var(--ws-space-lg);
   cursor: pointer;
   transition: box-shadow 0.15s;
 }
@@ -152,7 +152,7 @@
   right: 16px;
 }
 .cardMoreBtn {
-  padding: 4px;
+  padding: var(--ws-space-xs);
   color: var(--ws-text-400);
   transition: color 0.15s;
 }
@@ -163,10 +163,10 @@
   position: absolute;
   top: 100%;
   right: 0;
-  margin-top: 4px;
+  margin-top: var(--ws-space-xs);
   background: #fff;
   border: 1px solid var(--ws-border);
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
   z-index: 10;
   min-width: 100px;
@@ -179,7 +179,7 @@
   color: var(--status-color);
   font-size: 11px;
   font-weight: 700;
-  margin-bottom: 12px;
+  margin-bottom: var(--ws-space-md);
 }
 .cardTitle {
   color: var(--ws-text-900);
@@ -194,8 +194,8 @@
 .requesterRow {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: var(--ws-space-sm);
+  margin-bottom: var(--ws-space-lg);
 }
 .requesterName {
   min-height: 20px;
@@ -216,7 +216,7 @@
 .divider {
   border: none;
   border-top: 1px solid #f0f0f0;
-  margin: 15px 0;
+  margin: var(--ws-space-lg) 0;
 }
 .spinner {
   display: flex;
@@ -239,7 +239,7 @@
   }
   .filterBar {
     flex-wrap: wrap;
-    gap: 8px;
+    gap: var(--ws-space-sm);
   }
   .search {
     width: 100%;
@@ -248,7 +248,7 @@
   .searchSpace {
     flex-direction: column;
     align-items: stretch;
-    gap: 8px;
+    gap: var(--ws-space-sm);
   }
   .leftGroup {
     flex-wrap: wrap;

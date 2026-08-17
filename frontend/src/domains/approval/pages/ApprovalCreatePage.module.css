@@ -2,12 +2,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: var(--ws-space-2xl);
 }
 .headerLeft {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--ws-space-md);
 }
 .backBtn {
   display: flex;
@@ -15,7 +15,7 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   border: 1px solid var(--ws-border);
   color: var(--ws-text-500);
   transition:
@@ -49,8 +49,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: var(--ws-space-sm) var(--ws-space-md);
+  border-radius: var(--ws-radius-md);
   border: 1px solid var(--ws-border);
   color: var(--ws-text-600);
   font-size: 13px;
@@ -63,7 +63,7 @@
 .tplMenu {
   position: absolute;
   right: 0;
-  margin-top: 4px;
+  margin-top: var(--ws-space-xs);
   background: #fff;
   border: 1px solid var(--ws-border-light);
   border-radius: 12px;
@@ -73,7 +73,7 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 .tplMenuHeader {
-  padding: 8px 12px;
+  padding: var(--ws-space-sm) var(--ws-space-md);
   border-bottom: 1px solid var(--ws-border-light);
 }
 .tplMenuLabel {
@@ -85,7 +85,7 @@
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--ws-space-md);
   padding: 10px 12px;
   text-align: left;
   transition: background 0.15s;
@@ -109,12 +109,12 @@
 .savedAlert {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  border-radius: 8px;
+  gap: var(--ws-space-sm);
+  padding: var(--ws-space-md) var(--ws-space-lg);
+  border-radius: var(--ws-radius-md);
   background: #f0fdf4;
   border: 1px solid #bbf7d0;
-  margin-bottom: 16px;
+  margin-bottom: var(--ws-space-lg);
   color: #065f46;
   font-size: 13px;
   font-weight: 500;
@@ -122,13 +122,13 @@
 
 .layout {
   display: flex;
-  gap: 20px;
+  gap: var(--ws-space-xl);
   align-items: flex-start;
 }
 .col {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--ws-space-xl);
 }
 .colMain {
   flex: 1 1 0;
@@ -142,12 +142,12 @@
 .formGrid {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--ws-space-lg);
 }
 .label {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--ws-space-xs);
   margin-bottom: 6px;
   color: var(--ws-text-600);
   font-size: 12.5px;
@@ -159,7 +159,7 @@
 .input {
   width: 100%;
   border: 1px solid var(--ws-border);
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   padding: 10px 16px;
   color: var(--ws-text-800);
   font-size: 14px;
@@ -176,7 +176,7 @@
 .row2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: var(--ws-space-lg);
 }
 
 .selectWrap {
@@ -186,7 +186,7 @@
   width: 100%;
   appearance: none;
   border: 1px solid var(--ws-border);
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   padding: 10px 16px;
   color: var(--ws-text-800);
   font-size: 13.5px;
@@ -208,12 +208,12 @@
 
 .priorityList {
   display: flex;
-  gap: 8px;
+  gap: var(--ws-space-sm);
   flex-wrap: wrap;
 }
 .priorityBtn {
   padding: 6px 12px;
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   border: 2px solid var(--ws-border);
   background: #fff;
   font-size: 12px;
@@ -230,7 +230,7 @@
 .dateInput {
   width: 100%;
   border: 1px solid var(--ws-border);
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   padding: 10px 16px;
   color: var(--ws-text-800);
   font-size: 13.5px;
@@ -244,9 +244,9 @@
 .toolbar {
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin-bottom: 12px;
-  padding-bottom: 12px;
+  gap: var(--ws-space-xs);
+  margin-bottom: var(--ws-space-md);
+  padding-bottom: var(--ws-space-md);
   border-bottom: 1px solid var(--ws-border-light);
   flex-wrap: wrap;
 }
@@ -265,14 +265,14 @@
   width: 1px;
   height: 16px;
   background: var(--ws-border);
-  margin: 0 4px;
+  margin: 0 var(--ws-space-xs);
 }
 
 .textarea {
   width: 100%;
   border: 1px solid var(--ws-border);
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: var(--ws-radius-md);
+  padding: var(--ws-space-lg);
   color: var(--ws-text-700);
   font-size: 13.5px;
   line-height: 1.7;
@@ -302,7 +302,7 @@
   align-items: center;
   justify-content: center;
   padding: 32px;
-  margin-bottom: 16px;
+  margin-bottom: var(--ws-space-lg);
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -320,7 +320,7 @@
   color: var(--ws-text-600);
   font-size: 13.5px;
   font-weight: 600;
-  margin: 8px 0 4px;
+  margin: var(--ws-space-sm) 0 var(--ws-space-xs);
 }
 .dropzoneHint {
   color: var(--ws-text-400);
@@ -334,21 +334,21 @@
 .fileList {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--ws-space-sm);
 }
 .fileRow {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border-radius: 8px;
+  gap: var(--ws-space-md);
+  padding: var(--ws-space-md) var(--ws-space-lg);
+  border-radius: var(--ws-radius-md);
   border: 1px solid var(--ws-border-light);
   background: #fafafa;
 }
 .fileIcon {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -384,9 +384,9 @@
 .addBtn {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--ws-space-xs);
   padding: 6px 12px;
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   background: var(--ws-primary);
   color: #fff;
   font-size: 12px;
@@ -400,11 +400,11 @@
 .applicantRow {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--ws-space-md);
   padding: 10px 12px;
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   background: #ebf4ff;
-  margin-bottom: 12px;
+  margin-bottom: var(--ws-space-md);
 }
 .applicantBody {
   flex: 1;
@@ -444,14 +444,14 @@
 .approverList {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--ws-space-xs);
 }
 .approverRow {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--ws-space-md);
   padding: 10px 12px;
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   border: 1px solid var(--ws-border-light);
   background: #fff;
 }
@@ -503,14 +503,14 @@
 }
 
 .pickerBox {
-  margin-top: 12px;
+  margin-top: var(--ws-space-md);
   border: 1px solid var(--ws-border-light);
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 .pickerHeader {
-  padding: 8px 12px;
+  padding: var(--ws-space-sm) var(--ws-space-md);
   background: #f9fafb;
   border-bottom: 1px solid var(--ws-border-light);
 }
@@ -523,7 +523,7 @@
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--ws-space-md);
   padding: 10px 12px;
   transition: background 0.15s;
 }
@@ -554,69 +554,15 @@
 .warn {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--ws-space-sm);
   padding: 10px 12px;
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   background: #fef3c7;
-  margin-top: 8px;
+  margin-top: var(--ws-space-sm);
   color: #92400e;
   font-size: 12px;
 }
 .warnText {
-  margin: 0;
-}
-
-.summaryGrid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.summaryRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.summaryLabel {
-  color: var(--ws-text-400);
-  flex-shrink: 0;
-  font-size: 12px;
-}
-.summaryValue {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--ws-text-700);
-  text-align: right;
-  max-width: 160px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.summaryValueEmpty {
-  color: #d1d5db;
-}
-.summaryDivider {
-  padding-top: 12px;
-  margin-top: 4px;
-  border-top: 1px solid var(--ws-border-light);
-}
-.summaryNote {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: #f0f9ff;
-}
-.summaryNoteIcon {
-  color: #0ea5e9;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-.summaryNoteText {
-  font-size: 11.5px;
-  color: #0369a1;
-  line-height: 1.6;
   margin: 0;
 }
 
@@ -632,15 +578,15 @@
 .actionsCol {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--ws-space-sm);
 }
 .submitBtn {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px;
+  gap: var(--ws-space-sm);
+  padding: var(--ws-space-md);
   border-radius: 10px;
   color: #fff;
   font-size: 14px;
@@ -664,8 +610,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px;
+  gap: var(--ws-space-sm);
+  padding: var(--ws-space-md);
   border-radius: 10px;
   border: 1px solid var(--ws-border);
   color: var(--ws-text-600);
@@ -678,7 +624,7 @@
 }
 .cancelBtn {
   width: 100%;
-  padding: 8px;
+  padding: var(--ws-space-sm);
   color: var(--ws-text-400);
   font-size: 13px;
   transition: color 0.15s;
@@ -699,7 +645,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: var(--ws-space-lg);
   padding: 48px;
   background: #fff;
   border-radius: 16px;
@@ -726,21 +672,16 @@
   color: var(--ws-text-400);
   font-size: 13px;
   text-align: center;
-  margin: 4px 0 0;
+  margin: var(--ws-space-xs) 0 0;
 }
 .successBadge {
-  padding: 8px 20px;
-  border-radius: 8px;
+  padding: var(--ws-space-sm) var(--ws-space-xl);
+  border-radius: var(--ws-radius-md);
   color: #fff;
   background: var(--ws-primary);
   font-size: 13px;
   font-weight: 600;
 }
-.labelMargin {
-  margin-bottom: 17px;
-}
-
-
 @media (max-width: 1023px) {
   .layout {
     flex-direction: column;
