@@ -5,11 +5,9 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
-import io.swagger.v3.oas.models.tags.Tag;
+import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.List;
 
 @Configuration
 public class SwaggerConfig {
@@ -29,22 +27,78 @@ public class SwaggerConfig {
                                 .name(jwtScheme)
                                 .type(SecurityScheme.Type.HTTP)
                                 .scheme("bearer")
-                                .bearerFormat("JWT")))
-                .tags(List.of(
-                        new Tag().name("Auth").description("인증 API"),
-                        new Tag().name("Employee").description("직원 관리 API"),
-                        new Tag().name("Department").description("부서 관리 API"),
-                        new Tag().name("Attendance").description("근태 관리 API"),
-                        new Tag().name("Leave").description("휴가 API"),
-                        new Tag().name("Approval").description("전자결재 API"),
-                        new Tag().name("Board").description("게시판 API"),
-                        new Tag().name("Post").description("게시글 API"),
-                        new Tag().name("Task").description("업무 관리 API"),
-                        new Tag().name("Chat").description("채팅 API"),
-                        new Tag().name("Notification").description("알림 API"),
-                        new Tag().name("Dashboard").description("대시보드 요약 API"),
-                        new Tag().name("File").description("파일 업로드 API"),
-                        new Tag().name("AuditLog").description("감사 로그 API (ADMIN 전용)")
-                ));
+                                .bearerFormat("JWT")));
+    }
+
+    @Bean
+    public GroupedOpenApi authApi() {
+        return GroupedOpenApi.builder()
+                .group("01. 인증")
+                .pathsToMatch("/api/auth/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi hrApi() {
+        return GroupedOpenApi.builder()
+                .group("02. 직원·부서·근태·휴가")
+                .pathsToMatch("/api/employees/**", "/api/departments/**", "/api/attendance/**", "/api/leave/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi workApi() {
+        return GroupedOpenApi.builder()
+                .group("03. 업무관리·전자결재")
+                .pathsToMatch("/api/tasks/**", "/api/approvals/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi boardApi() {
+        return GroupedOpenApi.builder()
+                .group("04. 게시판")
+                .pathsToMatch("/api/boards/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi chatApi() {
+        return GroupedOpenApi.builder()
+                .group("05. 채팅·알림")
+                .pathsToMatch("/api/chat/**", "/api/notifications/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi dashboardApi() {
+        return GroupedOpenApi.builder()
+                .group("06. 대시보드")
+                .pathsToMatch("/api/dashboard/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi fileApi() {
+        return GroupedOpenApi.builder()
+                .group("07. 파일")
+                .pathsToMatch("/api/files/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi auditApi() {
+        return GroupedOpenApi.builder()
+                .group("08. 감사로그")
+                .pathsToMatch("/api/audit-logs/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi allApi() {
+        return GroupedOpenApi.builder()
+                .group("전체")
+                .pathsToMatch("/api/**")
+                .build();
     }
 }
