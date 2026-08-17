@@ -5,15 +5,16 @@
 .section {
   background: #fff;
   border: 1px solid var(--ws-border);
-  border-radius: 8px;
-  padding: 24px;
-  margin-bottom: 20px;
+  border-radius: var(--ws-radius-md);
+  padding: var(--ws-space-2xl);
+  margin-bottom: var(--ws-space-xl);
 }
 
 .headerRow {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  gap: var(--ws-space-md);
 }
 .headerLeft {
   flex: 1;
@@ -26,19 +27,19 @@
   color: var(--status-color);
   font-size: 11px;
   font-weight: 700;
-  margin-bottom: 12px;
+  margin-bottom: var(--ws-space-md);
 }
 .title {
   color: var(--ws-text-900);
   font-size: 20px;
   font-weight: 700;
   line-height: 1.3;
-  margin: 0 0 12px;
+  margin: 0 0 var(--ws-space-md);
 }
 .requesterRow {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--ws-space-sm);
 }
 .requesterName {
   color: var(--ws-text-800);
@@ -51,40 +52,50 @@
   font-size: 12px;
   margin: 0;
 }
-.closeBtn {
-  padding: 4px;
-  color: var(--ws-text-400);
-  transition: color 0.15s;
+.backBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--ws-radius-md);
+  border: 1px solid var(--ws-border);
+  color: var(--ws-text-500);
+  flex-shrink: 0;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
-.closeBtn:hover {
-  color: var(--ws-text-600);
+.backBtn:hover {
+  background: #f9fafb;
+  color: var(--ws-text-700);
 }
 
 .sectionTitle {
   color: var(--ws-text-900);
   font-size: 15px;
   font-weight: 700;
-  margin: 0 0 4px;
+  margin: 0 0 var(--ws-space-xs);
 }
 .sectionSubTitle {
   color: var(--ws-text-800);
   font-size: 13px;
   font-weight: 700;
-  margin: 5px 0 5px 0px;
+  margin: var(--ws-space-xs) 0;
 }
 .sectionSub {
   color: var(--ws-text-400);
   font-size: 11.5px;
-  margin: 0 0 16px;
+  margin: 0 0 var(--ws-space-lg);
 }
 .sectionDivider {
   border-top: 1px solid var(--ws-border);
-  padding-top: 20px;
-  margin-top: 4px;
+  padding-top: var(--ws-space-xl);
+  margin-top: var(--ws-space-xs);
   font-size: 13px;
   font-weight: 700;
   color: var(--ws-text-800);
-  margin-bottom: 8px;
+  margin-bottom: var(--ws-space-sm);
 }
 
 .stepsRow {
@@ -100,8 +111,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 16px 24px;
-  border-radius: 8px;
+  padding: var(--ws-space-lg) var(--ws-space-2xl);
+  border-radius: var(--ws-radius-md);
   border: 1px solid;
   min-width: 140px;
   flex: 1;
@@ -122,7 +133,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 12px;
+  margin-bottom: var(--ws-space-md);
 }
 .stepStatusLabel {
   color: var(--step-color);
@@ -152,28 +163,28 @@
   color: var(--ws-text-700);
   text-align: center;
   font-size: 11.5px;
-  margin: 4px 0 0;
+  margin: var(--ws-space-xs) 0 0;
   word-break: break-word;
 }
 .stepArrow {
   color: var(--ws-text-300);
-  margin: 0 8px;
+  margin: 0 var(--ws-space-sm);
   flex-shrink: 0;
 }
 
 .infoGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: var(--ws-space-lg);
 }
 .previewStack {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--ws-space-lg);
 }
 .infoLabel {
   color: var(--ws-text-500);
-  margin: 0 0 4px;
+  margin: 0 0 var(--ws-space-xs);
   font-size: 12px;
 }
 .infoValue {
@@ -190,9 +201,9 @@
 
 .tableWrap {
   border: 1px solid var(--ws-border);
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   overflow: hidden;
-  margin-top: 24px;
+  margin-top: var(--ws-space-2xl);
 }
 .tbl {
   width: 100%;
@@ -200,7 +211,7 @@
 }
 .tbl th {
   text-align: left;
-  padding: 12px 16px;
+  padding: var(--ws-space-md) var(--ws-space-lg);
   color: var(--ws-text-700);
   border-bottom: 1px solid var(--ws-border);
   background: #f9fafb;
@@ -208,7 +219,7 @@
   font-weight: 600;
 }
 .tbl td {
-  padding: 12px 16px;
+  padding: var(--ws-space-md) var(--ws-space-lg);
   color: var(--ws-text-800);
   font-size: 12.5px;
 }
@@ -220,20 +231,20 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px;
+  padding: var(--ws-space-lg);
   background: #f9fafb;
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   border: 1px solid var(--ws-border);
 }
 .attachLeft {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--ws-space-md);
 }
 .attachIcon {
   width: 40px;
   height: 40px;
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   background: #10b981;
   display: flex;
   align-items: center;
@@ -263,13 +274,13 @@
 
 .actions {
   display: flex;
-  gap: 12px;
+  gap: var(--ws-space-md);
 }
 .btnReject {
   flex: 1;
-  padding: 12px;
+  padding: var(--ws-space-md);
   border: 2px solid var(--ws-text-300);
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   color: var(--ws-text-700);
   font-size: 14px;
   font-weight: 700;
@@ -280,10 +291,10 @@
 }
 .btnApprove {
   flex: 1;
-  padding: 12px;
+  padding: var(--ws-space-md);
   background: var(--ws-primary);
   color: #fff;
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   font-size: 14px;
   font-weight: 700;
   transition: opacity 0.15s;
@@ -308,7 +319,7 @@
 
 .detailTableWrap {
   border: 1px solid #f0f0f0;
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   overflow: hidden;
 }
 
@@ -316,13 +327,13 @@
   width: 100%;
   border-collapse: collapse;
   border: 1px solid #f0f0f0;
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   overflow: hidden;
 }
 
 .detailTable th {
   background: #f9fafb;
-  padding: 15px 20px;
+  padding: var(--ws-space-lg) var(--ws-space-xl);
   font-size: 12px;
   font-weight: 600;
   color: var(--ws-text-500);
@@ -332,7 +343,7 @@
 }
 
 .detailTable td {
-  padding: 15px 20px;
+  padding: var(--ws-space-lg) var(--ws-space-xl);
   font-size: 13px;
   color: var(--ws-text-800);
   border: 1px solid #f0f0f0;

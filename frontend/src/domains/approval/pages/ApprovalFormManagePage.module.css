@@ -5,9 +5,9 @@
 .table {
   background: #fff;
   border: 1px solid var(--ws-border);
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   overflow: hidden;
-  margin-top: 16px;
+  margin-top: var(--ws-space-lg);
 }
 
 .typeBadge {
@@ -35,13 +35,13 @@
 }
 
 .formNameField {
-  margin-bottom: 16px;
+  margin-bottom: var(--ws-space-lg);
 }
 
 .fieldsSection {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--ws-space-md);
 }
 
 .fieldsHeader {
@@ -59,10 +59,10 @@
 .addFieldBtn {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--ws-space-xs);
   padding: 6px 12px;
   border: 1px dashed var(--ws-border);
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   color: var(--ws-text-500);
   font-size: 12.5px;
   font-weight: 500;
@@ -78,22 +78,22 @@
 .fieldsEmpty {
   color: var(--ws-text-400);
   font-size: 12.5px;
-  padding: 12px 0;
+  padding: var(--ws-space-md) 0;
 }
 
 .fieldRow {
   border: 1px solid var(--ws-border);
-  border-radius: 8px;
+  border-radius: var(--ws-radius-md);
   padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--ws-space-sm);
 }
 
 .fieldRowMain {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--ws-space-sm);
   flex-wrap: wrap;
 }
 
@@ -117,7 +117,7 @@
   height: 34px;
   border: 1px solid var(--ws-border);
   border-radius: 6px;
-  padding: 0 8px;
+  padding: 0 var(--ws-space-sm);
   font-size: 13px;
   color: var(--ws-text-800);
   background: #fff;
@@ -127,7 +127,7 @@
 .fieldCheckboxLabel {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--ws-space-xs);
   font-size: 12.5px;
   color: var(--ws-text-600);
   white-space: nowrap;

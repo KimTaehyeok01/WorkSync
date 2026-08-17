@@ -669,7 +669,7 @@ function PurchaseForm({
   return (
     <>
       {/* 기본 정보 */}
-      <WSCard title="기본 정보" submit="결재 문서의 기본 정보를 입력하세요">
+      <WSCard title="기본 정보" subtitle="결재 문서의 기본 정보를 입력하세요">
         <div className={s.formGrid}>
           <div className={s.row2}>
             <div>

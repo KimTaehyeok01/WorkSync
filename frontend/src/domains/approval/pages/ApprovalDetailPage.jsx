@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import useAuthContext from "../../../store/AuthContext";
-import { APPROVAL_DOCS, TEAM_MEMBERS } from "../../../constants/mockData";
+import { APPROVAL_DOCS } from "../../../constants/mockData";
 import {
   WSAvatar,
   WSModal,
@@ -14,7 +14,7 @@ import {
   XCircle,
   ChevronRight,
   Download,
-  X,
+  ArrowLeft,
   Clock,
 } from "lucide-react";
 import {
@@ -25,19 +25,8 @@ import {
 } from "../services/approvalApi";
 import useFileUpload from "../../../hooks/useFileUpload";
 import { getFile, saveFile, deleteFile } from "../../file/services/fileApi";
+import { STATUS_CONFIG } from "../constants/statusConfig";
 import s from "./ApprovalDetailPage.module.css";
-
-const STATUS_CONFIG = {
-  IN_PROGRESS: { label: "대기", bg: "#FEF3C7", text: "#92400E" },
-  APPROVED: { label: "승인", bg: "#D1FAE5", text: "#065F46" },
-  REJECTED: { label: "반려", bg: "#FEE2E2", text: "#991B1B" },
-  WITHDRAWN: { label: "회수됨", bg: "#E5E7EB", text: "#374151" },
-};
-const APPROVAL_STEPS = [
-  { role: "기안자", member: TEAM_MEMBERS[1], status: "approved" },
-  { role: "검토자", member: TEAM_MEMBERS[3], status: "rejected" },
-  { role: "최종 승인자", member: TEAM_MEMBERS[0], status: "pending" },
-];
 
 function stepClass(status) {
   if (status === "APPROVED") return s.stepApproved;
@@ -108,16 +97,8 @@ function LeaveDetail({ items, approval }) {
         <table className={s.detailTable}>
           <tbody>
             <tr>
-              <th>제목</th>
-              <td>{approval.title ?? "-"}</td>
-            </tr>
-            <tr>
               <th>소속</th>
               <td>{items.departmentName ?? "-"}</td>
-            </tr>
-            <tr>
-              <th>작성자</th>
-              <td>{items.name ?? "-"}</td>
             </tr>
           </tbody>
         </table>
@@ -159,7 +140,7 @@ function LeaveDetail({ items, approval }) {
 }
 
 // 구매요청서
-function PurchaseDetail({ items, approval }) {
+function PurchaseDetail({ items }) {
   const rows = parseJSON(items.items);
 
   return (
@@ -168,15 +149,8 @@ function PurchaseDetail({ items, approval }) {
         <table className={s.detailTable}>
           <tbody>
             <tr>
-              {" "}
-              <th>제목</th>
-              <td colSpan={3}>{approval.title ?? "-"}</td>
-            </tr>
-            <tr>
               <th>소속</th>
               <td>{items.departmentName ?? "-"}</td>
-              <th>작성자</th>
-              <td>{items.name ?? "-"}</td>
             </tr>
             <tr>
               <th>구매 용도</th>
@@ -221,7 +195,7 @@ function PurchaseDetail({ items, approval }) {
 }
 
 // 지출결의서
-function ExpenseDetail({ items, approval }) {
+function ExpenseDetail({ items }) {
   const rows = parseJSON(items.items);
 
   return (
@@ -230,14 +204,8 @@ function ExpenseDetail({ items, approval }) {
         <table className={s.detailTable}>
           <tbody>
             <tr>
-              <th>제목</th>
-              <td>{approval.title ?? "-"}</td>
-            </tr>
-            <tr>
               <th>소속</th>
               <td>{items.departmentName ?? "-"}</td>
-              <th>작성자</th>
-              <td>{items.name ?? "-"}</td>
             </tr>
             <tr>
               <th>지출 사유</th>
@@ -302,8 +270,6 @@ function BusinessTripDetail({ items }) {
           <table className={s.detailTable}>
             <tbody>
               <tr>
-                <th>시행자</th>
-                <td>{items.name ?? "-"}</td>
                 <th>소속</th>
                 <td>{items.departmentName ?? "-"}</td>
               </tr>
@@ -412,10 +378,6 @@ function GenericDetail({ approval }) {
     <div className={s.detailTableWrap}>
       <table className={s.detailTable}>
         <tbody>
-          <tr>
-            <th>제목</th>
-            <td>{approval.title ?? "-"}</td>
-          </tr>
           {fields.map((field) => (
             <tr key={field.key}>
               <th>{field.label}</th>
@@ -561,6 +523,9 @@ export default function ApprovalDetail() {
     <div className={s.root}>
       <div className={s.section}>
         <div className={s.headerRow}>
+          <button onClick={() => navigate(-1)} className={s.backBtn}>
+            <ArrowLeft size={16} />
+          </button>
           <div className={s.headerLeft}>
             <div
               className={s.statusBadge}
@@ -584,9 +549,6 @@ export default function ApprovalDetail() {
               </div>
             </div>
           </div>
-          <button onClick={() => navigate(-1)} className={s.closeBtn}>
-            <X size={20} />
-          </button>
         </div>
       </div>
 
@@ -674,16 +636,10 @@ export default function ApprovalDetail() {
           <LeaveDetail items={approval.items} approval={approval}></LeaveDetail>
         )}
         {approval.formId === 2 && (
-          <ExpenseDetail
-            items={approval.items}
-            approval={approval}
-          ></ExpenseDetail>
+          <ExpenseDetail items={approval.items}></ExpenseDetail>
         )}
         {approval.formId === 3 && (
-          <PurchaseDetail
-            items={approval.items}
-            approval={approval}
-          ></PurchaseDetail>
+          <PurchaseDetail items={approval.items}></PurchaseDetail>
         )}
         {approval.formId === 4 && (
           <BusinessTripDetail items={approval.items}></BusinessTripDetail>
