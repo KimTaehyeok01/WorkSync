@@ -18,18 +18,15 @@ import {
   getPendingApproval,
   getReferenceApprovals,
   getApprovalInbox,
+  withdrawApproval,
+  resubmitApproval,
 } from "../services/approvalApi";
 import {
   WSAvatar,
   WSPagination,
   WSEmptyState,
 } from "../../../components/common/CommonWidgets";
-
-const STATUS_CONFIG = {
-  IN_PROGRESS: { label: "대기", bg: "#FEF3C7", text: "#92400E" },
-  APPROVED: { label: "승인", bg: "#D1FAE5", text: "#065F46" },
-  REJECTED: { label: "반려", bg: "#FEE2E2", text: "#991B1B" },
-};
+import { STATUS_CONFIG } from "../constants/statusConfig";
 
 const BOX_OPTIONS = [
   { key: "inbox", label: "결재함" },
@@ -42,6 +39,7 @@ const STATUS_OPTIONS = [
   { key: "IN_PROGRESS", label: "대기" },
   { key: "REJECTED", label: "반려" },
   { key: "APPROVED", label: "승인" },
+  { key: "WITHDRAWN", label: "회수됨" },
 ];
 
 export default function Approval() {
@@ -53,10 +51,19 @@ export default function Approval() {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [docs, setDocs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [myRole, setMyRole] = useState("");
   const boxType = searchParams.get("box") ?? "inbox"; // 기본값
   const status = searchParams.get("status") ?? "all";
   const navigate = useNavigate();
   const { accessToken } = useAuthContext();
+
+  // 내 role 확인 (양식 관리 진입 버튼은 ADMIN에게만 노출)
+  useEffect(() => {
+    if (!accessToken) return;
+    getMyInfo(accessToken).then((data) => {
+      if (data?.role) setMyRole(data.role);
+    });
+  }, [accessToken]);
 
   // 탭/상태 전환 시 매번 api 재호출로 인한 로딩 지연 문제 해결
   // 동일한 탭/상태 재방문 시 기존 데이터 즉시 반환
@@ -86,6 +93,20 @@ export default function Approval() {
       .finally(() => setIsLoading(false));
   }, [accessToken, boxType, status]);
 
+  // 회수/재상신 후 목록 재조회 (캐시 무시하고 최신 상태 반영)
+  const refetchDocs = () => {
+    const cacheKey = `${boxType}-${status}`;
+    let api;
+    if (boxType === "inbox") api = getApprovalInbox(accessToken, status);
+    else if (boxType === "my") api = getMyApprovals(accessToken, status);
+    else api = getReferenceApprovals(accessToken, status);
+
+    api.then((data) => {
+      setDocs(data ?? []);
+      setCache((prev) => ({ ...prev, [cacheKey]: data ?? [] }));
+    });
+  };
+
   const filtered = (docs ?? []).filter((doc) => {
     const matchSearch =
       doc.title
@@ -108,7 +129,7 @@ export default function Approval() {
     STATUS_OPTIONS.find((o) => o.key === status)?.label || "전체";
 
   if (isLoading) {
-    return null;
+    return <div>로딩 중...</div>;
   }
 
   return (
@@ -189,13 +210,23 @@ export default function Approval() {
               />
             </div>
           </div>
-          <button
-            onClick={() => navigate("/approval/new")}
-            className={s.newBtn}
-          >
-            <Plus size={16} />
-            <span>전체 문서 등록</span>
-          </button>
+          <div className={s.newBtnGroup}>
+            {myRole === "ADMIN" && (
+              <button
+                onClick={() => navigate("/approval/forms/manage")}
+                className={s.manageBtn}
+              >
+                <span>양식 관리</span>
+              </button>
+            )}
+            <button
+              onClick={() => navigate("/approval/new")}
+              className={s.newBtn}
+            >
+              <Plus size={16} />
+              <span>전체 문서 등록</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -237,43 +268,85 @@ export default function Approval() {
                       </button>
                       {openDropdown === doc.id && (
                         <div className={s.cardMoreMenu}>
-                          <button
-                            className={s.ddItem}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenDropdown(null);
-                              if (doc.status !== "IN_PROGRESS") {
-                                alert("대기 중인 문서만 수정할 수 있습니다.");
-                                return;
-                              }
-                              navigate(`/approval/${doc.id}/edit`);
-                            }}
-                          >
-                            수정
-                          </button>
-                          <button
-                            className={`${s.ddItem} ${s.ddItemDanger}`}
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              setOpenDropdown(null);
-                              if (confirm("게시글을 삭제하시겠습니까?")) {
-                                if (doc.status !== "IN_PROGRESS") {
-                                  alert("대기 중인 문서만 삭제할 수 있습니다.");
-                                  return;
+                          {(doc.status === "IN_PROGRESS" ||
+                            doc.status === "WITHDRAWN") && (
+                            <button
+                              className={s.ddItem}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenDropdown(null);
+                                navigate(`/approval/${doc.id}/edit`);
+                              }}
+                            >
+                              수정
+                            </button>
+                          )}
+                          {doc.status === "IN_PROGRESS" && (
+                            <button
+                              className={s.ddItem}
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                setOpenDropdown(null);
+                                if (confirm("결재를 회수하시겠습니까?")) {
+                                  try {
+                                    await withdrawApproval(
+                                      accessToken,
+                                      doc.id,
+                                    );
+                                    refetchDocs();
+                                  } catch (err) {
+                                    alert("회수에 실패했습니다.");
+                                  }
                                 }
-                                try {
-                                  await deleteApproval(accessToken, doc.id);
-                                  setDocs((prev) =>
-                                    prev.filter((d) => d.id !== doc.id),
-                                  );
-                                } catch (err) {
-                                  alert("삭제 실패했습니다.");
+                              }}
+                            >
+                              회수
+                            </button>
+                          )}
+                          {doc.status === "WITHDRAWN" && (
+                            <button
+                              className={s.ddItem}
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                setOpenDropdown(null);
+                                if (confirm("결재를 재상신하시겠습니까?")) {
+                                  try {
+                                    await resubmitApproval(
+                                      accessToken,
+                                      doc.id,
+                                    );
+                                    refetchDocs();
+                                  } catch (err) {
+                                    alert("재상신에 실패했습니다.");
+                                  }
                                 }
-                              }
-                            }}
-                          >
-                            삭제
-                          </button>
+                              }}
+                            >
+                              재상신
+                            </button>
+                          )}
+                          {(doc.status === "IN_PROGRESS" ||
+                            doc.status === "WITHDRAWN") && (
+                            <button
+                              className={`${s.ddItem} ${s.ddItemDanger}`}
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                setOpenDropdown(null);
+                                if (confirm("게시글을 삭제하시겠습니까?")) {
+                                  try {
+                                    await deleteApproval(accessToken, doc.id);
+                                    setDocs((prev) =>
+                                      prev.filter((d) => d.id !== doc.id),
+                                    );
+                                  } catch (err) {
+                                    alert("삭제 실패했습니다.");
+                                  }
+                                }
+                              }}
+                            >
+                              삭제
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>

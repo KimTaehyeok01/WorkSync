@@ -151,42 +151,80 @@ export async function processApproval(accessToken, id, status, comment = "") {
 
 // 전자결재 등록
 export async function createApproval(accessToken, body) {
-  return await fetch(`${BASE_URL}/approvals`, {
+  const response = await fetch(`${BASE_URL}/approvals`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify(body),
-  })
-    .then((response) => response.json())
-    .then((json) => {
-      return json;
-    })
-    .catch((error) => console.log("에러 발생 : " + error));
+  });
+  const json = await response.json();
+  if (!response.ok) {
+    throw new Error(json.message || "결재 상신에 실패했습니다.");
+  }
+  return json;
 }
 
 // 전자결재 수정
-export function updateApproval(accessToken, id, body) {
-  return fetch(`${BASE_URL}/approvals/${id}`, {
+export async function updateApproval(accessToken, id, body) {
+  const response = await fetch(`${BASE_URL}/approvals/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify(body),
-  })
-    .then((res) => res.json())
-    .then((json) => {
-      return json;
-    })
-    .catch((error) => console.log("에러발생 : " + error));
+  });
+  const json = await response.json();
+  if (!response.ok) {
+    throw new Error(json.message || "결재 수정에 실패했습니다.");
+  }
+  return json;
 }
 
 // 전자결재 삭제
 export function deleteApproval(accessToken, id) {
   return fetch(`${BASE_URL}/approvals/${id}`, {
     method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+    .then((response) => {
+      if (!response.ok) throw new Error(response.status);
+      return response;
+    })
+    .catch((error) => {
+      console.log("에러 발생 : " + error);
+      throw error; // onClick의 try-catch 전달용
+    });
+}
+
+// 전자결재 회수
+export function withdrawApproval(accessToken, id) {
+  return fetch(`${BASE_URL}/approvals/${id}/withdraw`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+    .then((response) => {
+      if (!response.ok) throw new Error(response.status);
+      return response;
+    })
+    .catch((error) => {
+      console.log("에러 발생 : " + error);
+      throw error; // onClick의 try-catch 전달용
+    });
+}
+
+// 전자결재 재상신
+export function resubmitApproval(accessToken, id) {
+  return fetch(`${BASE_URL}/approvals/${id}/resubmit`, {
+    method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
@@ -218,6 +256,39 @@ export function getPendingApproval(accessToken) {
     .catch((error) => {
       console.log("에러 발생 : ", error);
     });
+}
+
+// 결재 양식 등록 (관리자 전용)
+export async function createForm(accessToken, body) {
+  const response = await fetch(`${BASE_URL}/approvals/forms`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(body),
+  });
+  const json = await response.json();
+  if (!response.ok) {
+    throw new Error(json.message || "양식 등록에 실패했습니다.");
+  }
+  return json;
+}
+
+// 결재 양식 삭제 (관리자 전용)
+export async function deleteForm(accessToken, id) {
+  const response = await fetch(`${BASE_URL}/approvals/forms/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  const json = await response.json();
+  if (!response.ok) {
+    throw new Error(json.message || "양식 삭제에 실패했습니다.");
+  }
+  return json;
 }
 
 // 잔여일 조회

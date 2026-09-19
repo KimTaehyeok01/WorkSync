@@ -22,9 +22,6 @@ public class AuthDto {
         @NotBlank
         @Schema(description = "비밀번호")
         private String password;
-
-        @Schema(description = "로그인 시 전환할 상태 (ACTIVE, INACTIVE, AWAY)", example = "ACTIVE")
-        private EmployeeStatus status;
     }
 
     @Getter @Builder

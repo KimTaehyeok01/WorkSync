@@ -4,6 +4,10 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { WSCard } from "../../../components/common/CommonWidgets";
 import {
+  WSFileUploadZone,
+  WSFileList,
+} from "../../../components/common/FormComponents";
+import {
   ArrowLeft,
   Paperclip,
   FileText,
@@ -40,7 +44,6 @@ export default function ApprovalUpdate() {
   const [employees, setEmployees] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [attachments, setAttachments] = useState([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef(null);
   const validateRef = useRef(null);
@@ -48,6 +51,7 @@ export default function ApprovalUpdate() {
   // 파일 선언
   const {
     files,
+    setFiles,
     isDragging,
     setIsDragging,
     uploadedFile,
@@ -79,6 +83,7 @@ export default function ApprovalUpdate() {
         id: data.formId,
         formName: data.formName,
         formType: FORM_TYPE_MAP[data.formId],
+        formSchema: data.formSchema,
       });
 
       setFormValues(data.items ?? {});
@@ -142,14 +147,17 @@ export default function ApprovalUpdate() {
       if (result?.status === 200) {
         setSubmitted(true);
         setTimeout(() => navigate("/approval"), 1600);
+        // 파일 초기화 (성공 시에만)
+        clearFiles();
+      } else {
+        alert(result?.message ?? "수정에 실패했습니다.");
       }
       setIsLoading(false);
     } catch (error) {
-      console.error("게시글 등록 실패", err);
+      console.error("결재 수정 실패", error);
+      alert(error.message ?? "결재 수정에 실패했습니다.");
     } finally {
       setIsLoading(false);
-      // 파일 초기화
-      clearFiles();
     }
   };
 
@@ -196,12 +204,9 @@ export default function ApprovalUpdate() {
             validateRef={validateRef}
             isEditMode={true}
           />
-        </div>
-
-        <div className={`${s.col} ${s.colSide}`}>
           <WSCard
             title="첨부 파일"
-            subtitle={`${attachments.length}개 파일 첨부됨`}
+            subtitle={`${files.length}개 파일 첨부됨`}
           >
             <WSFileUploadZone
               onFilesAdded={addFiles}
@@ -218,6 +223,9 @@ export default function ApprovalUpdate() {
               onRemove={removeFiles}
             />
           </WSCard>
+        </div>
+
+        <div className={`${s.col} ${s.colSide}`}>
           <div className={s.actionsCol}>
             <button
               onClick={handleSubmit}

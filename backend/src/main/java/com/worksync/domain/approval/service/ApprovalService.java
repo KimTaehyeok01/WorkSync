@@ -21,7 +21,12 @@ import com.worksync.domain.notification.entity.NotificationType;
 import com.worksync.domain.notification.service.NotificationService;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -34,8 +39,10 @@ import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+/** 전자결재 도메인의 비즈니스 로직을 처리한다. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -51,11 +58,15 @@ public class ApprovalService {
     private final AuditLogService auditLogService;
     private final AnnualLeaveBalanceRepository annualLeaveBalanceRepository;
     private final LeaveRequestRepository leaveRequestRepository;
+    private final ObjectMapper objectMapper;
 
     // 감사 로그 카테고리 / 액션명
     private static final String CATEGORY_APPROVAL = "APPROVAL";
     private static final String ACTION_APPROVE = "결재 승인";
     private static final String ACTION_REJECT = "결재 반려";
+
+    // 커스텀 폼에서 지원하는 필드 타입
+    private static final Set<String> ALLOWED_FIELD_TYPES = Set.of("TEXT", "TEXTAREA", "DATE", "NUMBER", "SELECT");
 
     /* 결재 양식 */
 
@@ -73,6 +84,70 @@ public class ApprovalService {
         return ApprovalFormDto.Response.from(form);
     }
 
+    // 커스텀 양식 생성 (ADMIN 전용) — 신규 양식은 항상 formType="CUSTOM" 고정, 기존 4종 폼과 절대 겹치지 않음
+    @Transactional
+    public ApprovalFormDto.Response createForm(ApprovalFormDto.CreateRequest request) {
+        List<ApprovalFormDto.CreateRequest.FieldDef> fields = request.getFields();
+
+        // 필드 키 중복 검증
+        long distinctKeyCount = fields.stream()
+                .map(ApprovalFormDto.CreateRequest.FieldDef::getKey)
+                .distinct()
+                .count();
+        if (distinctKeyCount != fields.size()) {
+            throw new CustomException(ErrorCode.DUPLICATE_FIELD_KEY);
+        }
+
+        // 필드 타입 검증
+        boolean hasInvalidType = fields.stream()
+                .anyMatch(field -> !ALLOWED_FIELD_TYPES.contains(field.getType()));
+        if (hasInvalidType) {
+            throw new CustomException(ErrorCode.INVALID_FIELD_TYPE);
+        }
+
+        // SELECT 타입은 옵션이 최소 1개 필요 — 옵션 없으면 영구 제출 불가 폼이 생성됨
+        boolean hasSelectWithoutOptions = fields.stream()
+                .anyMatch(field -> "SELECT".equals(field.getType())
+                        && (field.getOptions() == null || field.getOptions().isEmpty()));
+        if (hasSelectWithoutOptions) {
+            throw new CustomException(ErrorCode.INVALID_SELECT_OPTIONS);
+        }
+
+        String formSchemaJson;
+        try {
+            formSchemaJson = objectMapper.writeValueAsString(Map.of("fields", fields));
+        } catch (JsonProcessingException e) {
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+
+        ApprovalForm form = ApprovalForm.builder()
+                .formName(request.getFormName())
+                .formType("CUSTOM")
+                .formSchema(formSchemaJson)
+                .build();
+        approvalFormRepository.save(form);
+
+        return ApprovalFormDto.Response.from(form);
+    }
+
+    // 양식 삭제 (ADMIN 전용) — 이미 사용 중인 양식(결재 문서가 존재)은 삭제 불가
+    @Transactional
+    public void deleteForm(Long id) {
+        ApprovalForm form = approvalFormRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.APPROVAL_FORM_NOT_FOUND));
+
+        // 코드에 하드코딩된 시스템 폼(LEAVE/EXPENSE/PURCHASE/BUSINESS_TRIP)은 사용 이력이 없어도 삭제 불가
+        if (!"CUSTOM".equals(form.getFormType())) {
+            throw new CustomException(ErrorCode.FORM_IN_USE);
+        }
+
+        if (approvalDocRepository.existsByForm_Id(id)) {
+            throw new CustomException(ErrorCode.FORM_IN_USE);
+        }
+
+        approvalFormRepository.delete(form);
+    }
+
     /* 결재 문서 */
 
     // 결재 문서 제출
@@ -84,6 +159,10 @@ public class ApprovalService {
 
         ApprovalForm form = approvalFormRepository.findById(request.getFormId())
                 .orElseThrow(() -> new CustomException(ErrorCode.APPROVAL_FORM_NOT_FOUND));
+
+        // 폼 스키마 기반 필수 항목 검증
+        // 기존 4종 폼(LEAVE/EXPENSE/PURCHASE/BUSINESS_TRIP)은 formSchema가 "{}"라 fields가 없어 자동 no-op
+        validateRequiredFields(form.getFormSchema(), request.getItems());
 
         // 결재 문서 생성
         ApprovalDoc doc = ApprovalDoc.builder()
@@ -119,37 +198,11 @@ public class ApprovalService {
                 throw new CustomException(ErrorCode.INVALID_LEAVE_TYPE);
             }
 
-            // null 체크
-            String leaveTypeStr = items.get("leaveType");
-            if (leaveTypeStr == null || leaveTypeStr.isBlank()) {
-                throw new CustomException(ErrorCode.INVALID_LEAVE_TYPE);
-            }
-
-            // 유효하지 않은 휴가 유형이면 INVALID_LEAVE_TYPE으로 처리 (raw IllegalArgumentException 노출 방지)
-            LeaveType leaveType;
-            try {
-                leaveType = LeaveType.valueOf(leaveTypeStr);
-            } catch (IllegalArgumentException e) {
-                throw new CustomException(ErrorCode.INVALID_LEAVE_TYPE);
-            }
-
-            boolean isHalf = "HALF".equals(leaveTypeStr);
-
-            // 날짜 파싱
-            LocalDate startDate = isHalf
-                    ? LocalDate.parse(items.get("halfDate"))
-                    : LocalDate.parse(items.get("startDate"));
-            LocalDate endDate = isHalf ? startDate : LocalDate.parse(items.get("endDate"));
-
-            // 일수 계산
-            BigDecimal daysCount = isHalf
-                    ? BigDecimal.valueOf(0.5)
-                    : BigDecimal.valueOf(ChronoUnit.DAYS.between(startDate, endDate) + 1);
-
-            log.debug("daysCount: {}", daysCount);
+            LeaveFormData leaveFormData = parseLeaveFormItems(items);
+            log.debug("daysCount: {}", leaveFormData.daysCount());
 
             // 잔여 연차 검증
-            short leaveYear = (short) startDate.getYear();
+            short leaveYear = (short) leaveFormData.startDate().getYear();
             AnnualLeaveBalance balance = annualLeaveBalanceRepository
                     .findByEmployeeIdAndYear(drafterId, leaveYear)
                     .orElseGet(() -> annualLeaveBalanceRepository.save(
@@ -159,7 +212,7 @@ public class ApprovalService {
                                     .totalDays(BigDecimal.valueOf(15))
                                     .build()));
 
-            if (balance.getRemainingDays().compareTo(daysCount) < 0) {
+            if (balance.getRemainingDays().compareTo(leaveFormData.daysCount()) < 0) {
                 throw new CustomException(ErrorCode.INSUFFICIENT_LEAVE_BALANCE);
             }
 
@@ -167,15 +220,15 @@ public class ApprovalService {
             LeaveRequest leaveRequest = LeaveRequest.builder()
                     .employee(drafter)
                     .approvalDoc(doc)
-                    .leaveType(leaveType)
-                    .startDate(startDate)
-                    .endDate(endDate)
-                    .daysCount(daysCount)
-                    .reason(items.get("reason"))
+                    .leaveType(leaveFormData.leaveType())
+                    .startDate(leaveFormData.startDate())
+                    .endDate(leaveFormData.endDate())
+                    .daysCount(leaveFormData.daysCount())
+                    .reason(leaveFormData.reason())
                     .build();
             leaveRequestRepository.save(leaveRequest);
 
-            balance.addPendingDays(daysCount);
+            balance.addPendingDays(leaveFormData.daysCount());
             annualLeaveBalanceRepository.save(balance);
         }
 
@@ -215,19 +268,15 @@ public class ApprovalService {
         }
 
         // 첫 번째 결재 순서의 결재자에게 알림
-        int firstOrder = doc.getApprovalLines().stream()
-                .filter(l -> l.getStepType() == StepType.REVIEW || l.getStepType() == StepType.APPROVE)
-                .mapToInt(ApprovalLine::getStepOrder)
-                .min()
-                .orElse(Integer.MAX_VALUE);
+        notifyFirstStepApprovers(doc);
 
+        // 참조로 지정된 사람에게 알림
         doc.getApprovalLines().stream()
-                .filter(l -> l.getStepOrder() == firstOrder)
-                .filter(l -> l.getStepType() == StepType.REVIEW || l.getStepType() == StepType.APPROVE)
+                .filter(l -> l.getStepType() == StepType.REFERENCE)
                 .forEach(l -> notificationService.send(
                         l.getApprover().getId(),
                         NotificationType.APPROVAL,
-                        "'" + doc.getTitle() + "' 결재 요청이 도착했습니다.",
+                        "'" + doc.getTitle() + "' 결재 문서에 참조로 지정되었습니다.",
                         "APPROVAL",
                         doc.getId()
                 ));
@@ -300,30 +349,40 @@ public class ApprovalService {
         return ApprovalDto.DetailResponse.from(doc);
     }
 
-    // 결재 문서 수정 (기안자 본인 + IN_PROGRESS 상태만 가능)
+    // 결재 문서 수정 (기안자 본인 + IN_PROGRESS/WITHDRAWN 상태만 가능)
     @Transactional
     public ApprovalDto.DetailResponse updateDoc(Long id, Long drafterId, ApprovalDto.UpdateRequest request) {
+        approvalDocRepository.lockById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.APPROVAL_DOC_NOT_FOUND));
         ApprovalDoc doc = approvalDocRepository.findWithDetailsById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.APPROVAL_DOC_NOT_FOUND));
 
-        if (!doc.getDrafter().getId().equals(drafterId)) {
-            throw new CustomException(ErrorCode.NOT_YOUR_APPROVAL);
-        }
-        if (doc.getStatus() != ApprovalDocStatus.IN_PROGRESS) {
+        validateOwner(doc, drafterId);
+        if (doc.getStatus() != ApprovalDocStatus.IN_PROGRESS && doc.getStatus() != ApprovalDocStatus.WITHDRAWN) {
             throw new CustomException(ErrorCode.ALREADY_PROCESSED);
         }
-
-        // 이미 한 명이라도 승인한 경우 수정 불가
-        boolean alreadyStarted = doc.getApprovalLines().stream()
-                .filter(l -> l.getStepType() == StepType.REVIEW || l.getStepType() == StepType.APPROVE)
-                .anyMatch(l -> l.getStatus() == ApprovalLineStatus.APPROVED);
-        if (alreadyStarted) {
-            throw new CustomException(ErrorCode.APPROVAL_EDIT_FORBIDDEN);
-        }
+        validateNoOneApproved(doc);
 
         doc.updateTitle(request.getTitle());
 
         if (request.getItems() != null) {
+            if ("LEAVE".equals(doc.getForm().getFormType())) {
+                LeaveRequest existing = leaveRequestRepository.findByApprovalDocId(doc.getId())
+                        .orElseThrow(() -> new CustomException(ErrorCode.LEAVE_REQUEST_NOT_FOUND));
+
+                Map<String, String> oldItems = doc.getApprovalDocItems().stream()
+                        .collect(Collectors.toMap(ApprovalDocItem::getItemKey, item ->
+                                item.getItemValue() != null ? item.getItemValue() : ""));
+
+                LeaveFormData oldData = parseLeaveFormItems(oldItems);
+                LeaveFormData newData = parseLeaveFormItems(request.getItems());
+
+                syncLeaveBalance(doc.getDrafter(), existing, oldData, newData);
+            }
+
+            // 폼 스키마 기반 필수 항목 재검증 — submit()과 동일 규칙 (수정 시 필수값 누락 방지, LEAVE는 formSchema="{}"라 no-op)
+            validateRequiredFields(doc.getForm().getFormSchema(), request.getItems());
+
             List<ApprovalDocItem> newItems = request.getItems().entrySet().stream()
                     .map(entry -> ApprovalDocItem.builder()
                             .doc(doc)
@@ -337,26 +396,19 @@ public class ApprovalService {
         return ApprovalDto.DetailResponse.from(doc);
     }
 
-    // 결재 문서 취소/삭제 (기안자 본인 + IN_PROGRESS + 아직 아무도 승인 안 한 경우만 가능)
+    // 결재 문서 취소/삭제 (기안자 본인 + IN_PROGRESS/WITHDRAWN + 아직 아무도 승인 안 한 경우만 가능)
     @Transactional
     public void deleteDoc(Long id, Long drafterId) {
+        approvalDocRepository.lockById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.APPROVAL_DOC_NOT_FOUND));
         ApprovalDoc doc = approvalDocRepository.findWithDetailsById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.APPROVAL_DOC_NOT_FOUND));
 
-        if (!doc.getDrafter().getId().equals(drafterId)) {
-            throw new CustomException(ErrorCode.NOT_YOUR_APPROVAL);
-        }
-        if (doc.getStatus() != ApprovalDocStatus.IN_PROGRESS) {
+        validateOwner(doc, drafterId);
+        if (doc.getStatus() != ApprovalDocStatus.IN_PROGRESS && doc.getStatus() != ApprovalDocStatus.WITHDRAWN) {
             throw new CustomException(ErrorCode.ALREADY_PROCESSED);
         }
-
-        // 이미 한 명이라도 승인한 경우 삭제 불가
-        boolean alreadyStarted = doc.getApprovalLines().stream()
-                .filter(l -> l.getStepType() == StepType.REVIEW || l.getStepType() == StepType.APPROVE)
-                .anyMatch(l -> l.getStatus() == ApprovalLineStatus.APPROVED);
-        if (alreadyStarted) {
-            throw new CustomException(ErrorCode.APPROVAL_EDIT_FORBIDDEN);
-        }
+        validateNoOneApproved(doc);
 
         // LEAVE 타입 문서 삭제 시 — 차감 대기 중이던 연차(pendingDays)를 복구하고 LeaveRequest를 정리
         if ("LEAVE".equals(doc.getForm().getFormType())) {
@@ -376,10 +428,50 @@ public class ApprovalService {
         approvalDocRepository.delete(doc);
     }
 
+    // 결재 문서 회수 (기안자 본인 + IN_PROGRESS + 아직 아무도 승인 안 한 경우만 가능)
+    @Transactional
+    public ApprovalDto.DetailResponse withdraw(Long id, Long drafterId) {
+        approvalDocRepository.lockById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.APPROVAL_DOC_NOT_FOUND));
+        ApprovalDoc doc = approvalDocRepository.findWithDetailsById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.APPROVAL_DOC_NOT_FOUND));
+
+        validateOwner(doc, drafterId);
+        if (doc.getStatus() != ApprovalDocStatus.IN_PROGRESS) {
+            throw new CustomException(ErrorCode.APPROVAL_NOT_WITHDRAWABLE);
+        }
+        validateNoOneApproved(doc);
+
+        doc.withdraw();
+
+        return ApprovalDto.DetailResponse.from(doc);
+    }
+
+    // 결재 문서 재상신 (기안자 본인 + WITHDRAWN 상태만 가능)
+    @Transactional
+    public ApprovalDto.DetailResponse resubmit(Long id, Long drafterId) {
+        approvalDocRepository.lockById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.APPROVAL_DOC_NOT_FOUND));
+        ApprovalDoc doc = approvalDocRepository.findWithDetailsById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.APPROVAL_DOC_NOT_FOUND));
+
+        validateOwner(doc, drafterId);
+        if (doc.getStatus() != ApprovalDocStatus.WITHDRAWN) {
+            throw new CustomException(ErrorCode.APPROVAL_NOT_RESUBMITTABLE);
+        }
+
+        doc.resubmit();
+        notifyFirstStepApprovers(doc);
+
+        return ApprovalDto.DetailResponse.from(doc);
+    }
+
     // 결재 처리 (승인 or 반려)
     @Transactional
     public ApprovalDto.DetailResponse process(Long docId, Long approverId, ApprovalDto.ProcessRequest request,
                                           String clientIp, String userAgent) {
+        approvalDocRepository.lockById(docId)
+                .orElseThrow(() -> new CustomException(ErrorCode.APPROVAL_DOC_NOT_FOUND));
         ApprovalDoc doc = approvalDocRepository.findWithDetailsById(docId)
                 .orElseThrow(() -> new CustomException(ErrorCode.APPROVAL_DOC_NOT_FOUND));
 
@@ -487,5 +579,147 @@ public class ApprovalService {
         }
 
         return ApprovalDto.DetailResponse.from(doc);
+    }
+
+    // === Entity helper (외부 노출 금지) ===
+
+    // 기안자 본인 검증
+    private void validateOwner(ApprovalDoc doc, Long drafterId) {
+        if (!doc.getDrafter().getId().equals(drafterId)) {
+            throw new CustomException(ErrorCode.NOT_YOUR_APPROVAL);
+        }
+    }
+
+    // 이미 한 명이라도 승인한 경우 차단 (수정/삭제/회수 공통 가드)
+    private void validateNoOneApproved(ApprovalDoc doc) {
+        boolean alreadyStarted = doc.getApprovalLines().stream()
+                .filter(l -> l.getStepType() == StepType.REVIEW || l.getStepType() == StepType.APPROVE)
+                .anyMatch(l -> l.getStatus() == ApprovalLineStatus.APPROVED);
+        if (alreadyStarted) {
+            throw new CustomException(ErrorCode.APPROVAL_EDIT_FORBIDDEN);
+        }
+    }
+
+    // 첫 번째 결재 순서의 결재자에게 알림 (submit/resubmit 공통)
+    private void notifyFirstStepApprovers(ApprovalDoc doc) {
+        int firstOrder = doc.getApprovalLines().stream()
+                .filter(l -> l.getStepType() == StepType.REVIEW || l.getStepType() == StepType.APPROVE)
+                .mapToInt(ApprovalLine::getStepOrder)
+                .min()
+                .orElse(Integer.MAX_VALUE);
+
+        doc.getApprovalLines().stream()
+                .filter(l -> l.getStepOrder() == firstOrder)
+                .filter(l -> l.getStepType() == StepType.REVIEW || l.getStepType() == StepType.APPROVE)
+                .forEach(l -> notificationService.send(
+                        l.getApprover().getId(),
+                        NotificationType.APPROVAL,
+                        "'" + doc.getTitle() + "' 결재 요청이 도착했습니다.",
+                        "APPROVAL",
+                        doc.getId()
+                ));
+    }
+
+    // LEAVE 폼 항목(key-value) 파싱 (submit/updateDoc 공통 — items는 null이 아니어야 함)
+    private LeaveFormData parseLeaveFormItems(Map<String, String> items) {
+        String leaveTypeStr = items.get("leaveType");
+        if (leaveTypeStr == null || leaveTypeStr.isBlank()) {
+            throw new CustomException(ErrorCode.INVALID_LEAVE_TYPE);
+        }
+
+        // 유효하지 않은 휴가 유형이면 INVALID_LEAVE_TYPE으로 처리 (raw IllegalArgumentException 노출 방지)
+        LeaveType leaveType;
+        try {
+            leaveType = LeaveType.valueOf(leaveTypeStr);
+        } catch (IllegalArgumentException e) {
+            throw new CustomException(ErrorCode.INVALID_LEAVE_TYPE);
+        }
+
+        boolean isHalf = "HALF".equals(leaveTypeStr);
+
+        // 날짜 파싱
+        LocalDate startDate = isHalf
+                ? LocalDate.parse(items.get("halfDate"))
+                : LocalDate.parse(items.get("startDate"));
+        LocalDate endDate = isHalf ? startDate : LocalDate.parse(items.get("endDate"));
+
+        // 일수 계산
+        BigDecimal daysCount = isHalf
+                ? BigDecimal.valueOf(0.5)
+                : BigDecimal.valueOf(ChronoUnit.DAYS.between(startDate, endDate) + 1);
+
+        return new LeaveFormData(leaveType, startDate, endDate, daysCount, items.get("reason"));
+    }
+
+    // LEAVE 문서 수정 시 옛 연도 잔여일 복구 + 새 연도 잔여일 차감 + LeaveRequest 상세 갱신
+    private void syncLeaveBalance(Employee employee, LeaveRequest existing, LeaveFormData oldData, LeaveFormData newData) {
+        short oldYear = (short) oldData.startDate().getYear();
+        AnnualLeaveBalance oldBalance = annualLeaveBalanceRepository
+                .findByEmployeeIdAndYear(employee.getId(), oldYear)
+                .orElseThrow(() -> new CustomException(ErrorCode.LEAVE_BALANCE_NOT_FOUND));
+        oldBalance.subtractPendingDays(oldData.daysCount());
+        annualLeaveBalanceRepository.save(oldBalance);
+
+        short newYear = (short) newData.startDate().getYear();
+        AnnualLeaveBalance newBalance = annualLeaveBalanceRepository
+                .findByEmployeeIdAndYear(employee.getId(), newYear)
+                .orElseGet(() -> annualLeaveBalanceRepository.save(
+                        AnnualLeaveBalance.builder()
+                                .employee(employee)
+                                .year(newYear)
+                                .totalDays(BigDecimal.valueOf(15))
+                                .build()));
+
+        if (newBalance.getRemainingDays().compareTo(newData.daysCount()) < 0) {
+            throw new CustomException(ErrorCode.INSUFFICIENT_LEAVE_BALANCE);
+        }
+
+        newBalance.addPendingDays(newData.daysCount());
+        annualLeaveBalanceRepository.save(newBalance);
+
+        existing.updateDetails(newData.leaveType(), newData.startDate(), newData.endDate(),
+                newData.daysCount(), newData.reason());
+        leaveRequestRepository.save(existing);
+    }
+
+    // LEAVE 폼 파싱 결과 홀더 (parseLeaveFormItems/syncLeaveBalance 전용)
+    private record LeaveFormData(LeaveType leaveType, LocalDate startDate, LocalDate endDate,
+                                  BigDecimal daysCount, String reason) {
+    }
+
+    /* 결재 양식 스키마 검증 helper (외부 노출 금지) */
+
+    // formSchema에 정의된 required=true 필드가 items에 공백 아닌 값으로 존재하는지 검증
+    private void validateRequiredFields(String formSchema, Map<String, String> items) {
+        for (ApprovalFormDto.CreateRequest.FieldDef field : parseFormFields(formSchema)) {
+            if (!field.isRequired()) {
+                continue;
+            }
+            String value = items != null ? items.get(field.getKey()) : null;
+            if (value == null || value.isBlank()) {
+                throw new CustomException(ErrorCode.REQUIRED_FIELD_MISSING);
+            }
+        }
+    }
+
+    // formSchema(JSON)에서 필드 목록을 파싱 — fields가 없으면(예: 기존 4종 폼의 "{}") 빈 목록 반환
+    private List<ApprovalFormDto.CreateRequest.FieldDef> parseFormFields(String formSchema) {
+        if (formSchema == null || formSchema.isBlank()) {
+            return List.of();
+        }
+        try {
+            FormSchemaWrapper schema = objectMapper.readValue(formSchema, FormSchemaWrapper.class);
+            return schema.getFields() != null ? schema.getFields() : List.of();
+        } catch (JsonProcessingException e) {
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // formSchema JSON 역직렬화 전용 내부 캐리어 — 계층을 넘지 않으므로 private static
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    private static class FormSchemaWrapper {
+        private List<ApprovalFormDto.CreateRequest.FieldDef> fields;
     }
 }

@@ -33,6 +33,14 @@
   --ws-sidebar-w: 240px;
   --ws-topbar-h: 64px;
 
+  /* Spacing */
+  --ws-space-xs: 4px;
+  --ws-space-sm: 8px;
+  --ws-space-md: 12px;
+  --ws-space-lg: 16px;
+  --ws-space-xl: 20px;
+  --ws-space-2xl: 24px;
+
   /* Radius */
   --ws-radius-sm: 6px;
   --ws-radius-md: 8px;

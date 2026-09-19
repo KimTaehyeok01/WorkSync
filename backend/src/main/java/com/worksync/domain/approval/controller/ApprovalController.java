@@ -12,7 +12,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,6 +43,25 @@ public class ApprovalController {
     @GetMapping("/forms/{id}")
     public ResponseEntity<ApiResponse<ApprovalFormDto.Response>> getForm(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.ok(approvalService.getForm(id)));
+    }
+
+    // 양식 생성 (ADMIN 전용)
+    @Operation(summary = "결재 양식 생성 (ADMIN 전용)")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/forms")
+    public ResponseEntity<ApiResponse<ApprovalFormDto.Response>> createForm(
+            @RequestBody @Valid ApprovalFormDto.CreateRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.created(approvalService.createForm(request)));
+    }
+
+    // 양식 삭제 (ADMIN 전용)
+    @Operation(summary = "결재 양식 삭제 (ADMIN 전용)")
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/forms/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteForm(@PathVariable Long id) {
+        approvalService.deleteForm(id);
+        return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
     /* 결재 문서 */
@@ -121,6 +142,26 @@ public class ApprovalController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         approvalService.deleteDoc(id, userDetails.getId());
         return ResponseEntity.ok(ApiResponse.ok(null));
+    }
+
+    // 결재 문서 회수 (기안자 본인 + IN_PROGRESS + 아직 아무도 승인 안 한 경우만)
+    @Operation(summary = "결재 문서 회수 (기안자 본인 + IN_PROGRESS 상태만)")
+    @PostMapping("/{id}/withdraw")
+    public ResponseEntity<ApiResponse<ApprovalDto.DetailResponse>> withdraw(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                approvalService.withdraw(id, userDetails.getId())));
+    }
+
+    // 결재 문서 재상신 (기안자 본인 + WITHDRAWN 상태만)
+    @Operation(summary = "결재 문서 재상신 (기안자 본인 + WITHDRAWN 상태만)")
+    @PostMapping("/{id}/resubmit")
+    public ResponseEntity<ApiResponse<ApprovalDto.DetailResponse>> resubmit(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                approvalService.resubmit(id, userDetails.getId())));
     }
 
     // 결재 처리 (승인 or 반려)

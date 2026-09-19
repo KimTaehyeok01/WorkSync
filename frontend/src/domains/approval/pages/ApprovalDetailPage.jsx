@@ -1,15 +1,20 @@
 import { useParams, useNavigate } from "react-router-dom";
 import useAuthContext from "../../../store/AuthContext";
-import { APPROVAL_DOCS, TEAM_MEMBERS } from "../../../constants/mockData";
-import { WSAvatar } from "../../../components/common/CommonWidgets";
-import { WSFileList } from "../../../components/common/FormComponents";
+import { APPROVAL_DOCS } from "../../../constants/mockData";
+import {
+  WSAvatar,
+  WSModal,
+  WSModalActions,
+  WSButton,
+} from "../../../components/common/CommonWidgets";
+import { WSFileList, WSTextarea } from "../../../components/common/FormComponents";
 import { useState, useEffect, Fragment } from "react";
 import {
   CheckCircle,
   XCircle,
   ChevronRight,
   Download,
-  X,
+  ArrowLeft,
   Clock,
 } from "lucide-react";
 import {
@@ -20,18 +25,8 @@ import {
 } from "../services/approvalApi";
 import useFileUpload from "../../../hooks/useFileUpload";
 import { getFile, saveFile, deleteFile } from "../../file/services/fileApi";
+import { STATUS_CONFIG } from "../constants/statusConfig";
 import s from "./ApprovalDetailPage.module.css";
-
-const STATUS_CONFIG = {
-  IN_PROGRESS: { label: "대기", bg: "#FEF3C7", text: "#92400E" },
-  APPROVED: { label: "승인", bg: "#D1FAE5", text: "#065F46" },
-  REJECTED: { label: "반려", bg: "#FEE2E2", text: "#991B1B" },
-};
-const APPROVAL_STEPS = [
-  { role: "기안자", member: TEAM_MEMBERS[1], status: "approved" },
-  { role: "검토자", member: TEAM_MEMBERS[3], status: "rejected" },
-  { role: "최종 승인자", member: TEAM_MEMBERS[0], status: "pending" },
-];
 
 function stepClass(status) {
   if (status === "APPROVED") return s.stepApproved;
@@ -102,16 +97,8 @@ function LeaveDetail({ items, approval }) {
         <table className={s.detailTable}>
           <tbody>
             <tr>
-              <th>제목</th>
-              <td>{approval.title ?? "-"}</td>
-            </tr>
-            <tr>
               <th>소속</th>
               <td>{items.departmentName ?? "-"}</td>
-            </tr>
-            <tr>
-              <th>작성자</th>
-              <td>{items.name ?? "-"}</td>
             </tr>
           </tbody>
         </table>
@@ -153,7 +140,7 @@ function LeaveDetail({ items, approval }) {
 }
 
 // 구매요청서
-function PurchaseDetail({ items, approval }) {
+function PurchaseDetail({ items }) {
   const rows = parseJSON(items.items);
 
   return (
@@ -162,15 +149,8 @@ function PurchaseDetail({ items, approval }) {
         <table className={s.detailTable}>
           <tbody>
             <tr>
-              {" "}
-              <th>제목</th>
-              <td colSpan={3}>{approval.title ?? "-"}</td>
-            </tr>
-            <tr>
               <th>소속</th>
               <td>{items.departmentName ?? "-"}</td>
-              <th>작성자</th>
-              <td>{items.name ?? "-"}</td>
             </tr>
             <tr>
               <th>구매 용도</th>
@@ -215,7 +195,7 @@ function PurchaseDetail({ items, approval }) {
 }
 
 // 지출결의서
-function ExpenseDetail({ items, approval }) {
+function ExpenseDetail({ items }) {
   const rows = parseJSON(items.items);
 
   return (
@@ -224,14 +204,8 @@ function ExpenseDetail({ items, approval }) {
         <table className={s.detailTable}>
           <tbody>
             <tr>
-              <th>제목</th>
-              <td>{approval.title ?? "-"}</td>
-            </tr>
-            <tr>
               <th>소속</th>
               <td>{items.departmentName ?? "-"}</td>
-              <th>작성자</th>
-              <td>{items.name ?? "-"}</td>
             </tr>
             <tr>
               <th>지출 사유</th>
@@ -296,8 +270,6 @@ function BusinessTripDetail({ items }) {
           <table className={s.detailTable}>
             <tbody>
               <tr>
-                <th>시행자</th>
-                <td>{items.name ?? "-"}</td>
                 <th>소속</th>
                 <td>{items.departmentName ?? "-"}</td>
               </tr>
@@ -392,6 +364,32 @@ function BusinessTripDetail({ items }) {
   );
 }
 
+// 관리자가 등록한 커스텀 양식(CUSTOM) 상세
+// approval.formSchema(JSON 문자열)의 fields 배열을 기반으로 항목을 렌더링한다.
+function GenericDetail({ approval }) {
+  let fields = [];
+  try {
+    fields = JSON.parse(approval?.formSchema || "{}").fields ?? [];
+  } catch {
+    fields = [];
+  }
+
+  return (
+    <div className={s.detailTableWrap}>
+      <table className={s.detailTable}>
+        <tbody>
+          {fields.map((field) => (
+            <tr key={field.key}>
+              <th>{field.label}</th>
+              <td>{approval.items?.[field.key] ?? "-"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function ApprovalDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -401,6 +399,8 @@ export default function ApprovalDetail() {
   const [approval, setApproval] = useState(null);
   const [me, setMe] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [confirmAction, setConfirmAction] = useState(null); // "APPROVED" | "REJECTED" | null
+  const [commentInput, setCommentInput] = useState("");
   const fallbackStatusConfig = {
     label: "알 수 없음",
     bg: "#E5E7EB",
@@ -457,7 +457,7 @@ export default function ApprovalDetail() {
   }, [accessToken]);
 
   if (isLoading) {
-    return null;
+    return <div className={s.root}>로딩 중...</div>;
   }
 
   // 결재자 확인
@@ -478,26 +478,19 @@ export default function ApprovalDetail() {
     !isReference &&
     previousLinesApproved;
 
-  const handleApprove = async () => {
-    const result = await processApproval(accessToken, id, "APPROVED");
+  const handleConfirmProcess = async () => {
+    const result = await processApproval(
+      accessToken,
+      id,
+      confirmAction,
+      commentInput,
+    );
     if (result?.status === 200) {
-      alert("결재 승인이 완료되었습니다.");
-      navigate("/approval");
-    } else {
-      alert("처리 중 오류가 발생했습니다.");
-    }
-    getApprovalById(accessToken, id).then((data) => {
-      if (!data) return;
-      setApproval(data);
-      setStatus(data.status);
-      setApprovalLines(data.approvalLines ?? []);
-    });
-  };
-
-  const handleReject = async () => {
-    const result = await processApproval(accessToken, id, "REJECTED");
-    if (result?.status === 200) {
-      alert("결재 반려가 완료되었습니다.");
+      alert(
+        confirmAction === "REJECTED"
+          ? "결재 반려가 완료되었습니다."
+          : "결재 승인이 완료되었습니다.",
+      );
       navigate("/approval");
     } else {
       alert("처리 중 오류가 발생했습니다.");
@@ -530,6 +523,9 @@ export default function ApprovalDetail() {
     <div className={s.root}>
       <div className={s.section}>
         <div className={s.headerRow}>
+          <button onClick={() => navigate(-1)} className={s.backBtn}>
+            <ArrowLeft size={16} />
+          </button>
           <div className={s.headerLeft}>
             <div
               className={s.statusBadge}
@@ -546,9 +542,6 @@ export default function ApprovalDetail() {
               <div>
                 <p className={s.requesterName}>{approval.drafterName}</p>
                 <div style={{ display: "flex" }}>
-                  <p className={s.requesterDate} style={{ marginRight: "5px" }}>
-                    {me?.jobGrade} ·
-                  </p>
                   <p className={s.requesterDate}>
                     {new Date(approval.createdAt).toLocaleDateString("ko-KR")}
                   </p>
@@ -556,9 +549,6 @@ export default function ApprovalDetail() {
               </div>
             </div>
           </div>
-          <button onClick={() => navigate(-1)} className={s.closeBtn}>
-            <X size={20} />
-          </button>
         </div>
       </div>
 
@@ -620,6 +610,19 @@ export default function ApprovalDetail() {
                           ? "참조자"
                           : "-"}
                   </p>
+                  {step.processedAt && (
+                    <p className={s.stepTime}>
+                      {new Date(step.processedAt).toLocaleString("ko-KR", {
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  )}
+                  {step.comment && (
+                    <p className={s.stepComment}>{step.comment}</p>
+                  )}
                 </div>
               </Fragment>
             ))}
@@ -633,39 +636,78 @@ export default function ApprovalDetail() {
           <LeaveDetail items={approval.items} approval={approval}></LeaveDetail>
         )}
         {approval.formId === 2 && (
-          <ExpenseDetail
-            items={approval.items}
-            approval={approval}
-          ></ExpenseDetail>
+          <ExpenseDetail items={approval.items}></ExpenseDetail>
         )}
         {approval.formId === 3 && (
-          <PurchaseDetail
-            items={approval.items}
-            approval={approval}
-          ></PurchaseDetail>
+          <PurchaseDetail items={approval.items}></PurchaseDetail>
         )}
         {approval.formId === 4 && (
           <BusinessTripDetail items={approval.items}></BusinessTripDetail>
         )}
+        {![1, 2, 3, 4].includes(approval.formId) && (
+          <GenericDetail approval={approval} />
+        )}
       </div>
 
-      <div className={s.section}>
-        <WSFileList
-          files={files.map(({ file }) => file)}
-          onDownload={handleDownload}
-        />
-      </div>
+      {files.length > 0 && (
+        <div className={s.section}>
+          <h2 className={s.sectionTitle}>첨부파일</h2>
+          <WSFileList
+            files={files.map(({ file }) => file)}
+            onDownload={handleDownload}
+          />
+        </div>
+      )}
 
       {canProcess && (
         <div className={s.actions}>
-          <button className={s.btnReject} onClick={handleReject}>
+          <button
+            className={s.btnReject}
+            onClick={() => setConfirmAction("REJECTED")}
+          >
             결재 반려
           </button>
-          <button className={s.btnApprove} onClick={handleApprove}>
+          <button
+            className={s.btnApprove}
+            onClick={() => setConfirmAction("APPROVED")}
+          >
             결재 승인
           </button>
         </div>
       )}
+
+      <WSModal
+        isOpen={!!confirmAction}
+        onClose={() => {
+          setConfirmAction(null);
+          setCommentInput("");
+        }}
+        title={confirmAction === "REJECTED" ? "결재 반려" : "결재 승인"}
+        subtitle="결재 의견을 남길 수 있습니다 (선택)"
+        size="sm"
+      >
+        <WSTextarea
+          placeholder="결재 의견을 입력하세요"
+          value={commentInput}
+          onChange={(e) => setCommentInput(e.target.value)}
+          rows={4}
+        />
+        <WSModalActions>
+          <WSButton
+            label="취소"
+            variant="secondary"
+            onClick={() => {
+              setConfirmAction(null);
+              setCommentInput("");
+            }}
+          />
+          <WSButton
+            label={confirmAction === "REJECTED" ? "반려" : "승인"}
+            variant={confirmAction === "REJECTED" ? "danger" : "primary"}
+            onClick={handleConfirmProcess}
+          />
+        </WSModalActions>
+      </WSModal>
     </div>
   );
 }
