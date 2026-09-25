@@ -1,12 +1,11 @@
 package com.worksync.domain.chat.entity;
 
 import com.worksync.domain.employee.entity.Employee;
+import com.worksync.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -14,9 +13,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "chat_room")
-@EntityListeners(AuditingEntityListener.class)
 @Getter @NoArgsConstructor @AllArgsConstructor @Builder
-public class ChatRoom {
+public class ChatRoom extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,10 +41,6 @@ public class ChatRoom {
 
     @Column(name = "last_message_at")
     private LocalDateTime lastMessageAt;
-
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
 
     public void updateLastMessageAt(LocalDateTime time) {
         this.lastMessageAt = time;

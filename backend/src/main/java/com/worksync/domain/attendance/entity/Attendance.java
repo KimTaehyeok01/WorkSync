@@ -1,12 +1,11 @@
 package com.worksync.domain.attendance.entity;
 
 import com.worksync.domain.employee.entity.Employee;
+import com.worksync.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -16,9 +15,8 @@ import java.time.LocalDateTime;
     name = "attendance",
     uniqueConstraints = @UniqueConstraint(columnNames = {"employee_id", "work_date"})
 )
-@EntityListeners(AuditingEntityListener.class)
 @Getter @NoArgsConstructor @AllArgsConstructor @Builder
-public class Attendance {
+public class Attendance extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,13 +27,13 @@ public class Attendance {
     private Employee employee;
 
     @Column(name = "work_date", nullable = false)
-    private LocalDate workDate;
+    private LocalDate workDt;
 
     @Column(name = "check_in_time")
-    private LocalDateTime checkInTime;
+    private LocalDateTime checkedInAt;
 
     @Column(name = "check_out_time")
-    private LocalDateTime checkOutTime;
+    private LocalDateTime checkedOutAt;
 
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(nullable = false, columnDefinition = "attendance_status_type")
@@ -45,12 +43,8 @@ public class Attendance {
     @Column(name = "client_ip", length = 45)
     private String clientIp;
 
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
     // 퇴근시간 메서드 추가
     public void checkOut(LocalDateTime checkOutTime){
-        this.checkOutTime = checkOutTime;
+        this.checkedOutAt = checkOutTime;
     }
 }

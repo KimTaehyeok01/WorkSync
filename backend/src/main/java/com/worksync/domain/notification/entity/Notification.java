@@ -1,20 +1,18 @@
 package com.worksync.domain.notification.entity;
 
 import com.worksync.domain.employee.entity.Employee;
+import com.worksync.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "notification")
-@EntityListeners(AuditingEntityListener.class)
 @Getter @NoArgsConstructor @AllArgsConstructor @Builder
-public class Notification {
+public class Notification extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,10 +38,6 @@ public class Notification {
     @Column(name = "is_read", nullable = false)
     @Builder.Default
     private Boolean isRead = false;
-
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
 
     @Column(name = "read_at")
     private LocalDateTime readAt;

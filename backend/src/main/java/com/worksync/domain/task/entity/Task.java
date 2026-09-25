@@ -2,22 +2,19 @@ package com.worksync.domain.task.entity;
 
 import com.worksync.domain.department.entity.Department;
 import com.worksync.domain.employee.entity.Employee;
+import com.worksync.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "task")
-@EntityListeners(AuditingEntityListener.class)
 @Getter @NoArgsConstructor @AllArgsConstructor @Builder
-public class Task {
+public class Task extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -58,14 +55,6 @@ public class Task {
 
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
-
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
 
     public void update(String title,String description,Employee assignee,Department department
             ,TaskStatus status, Integer progress,LocalDate startDate,LocalDate dueDate){

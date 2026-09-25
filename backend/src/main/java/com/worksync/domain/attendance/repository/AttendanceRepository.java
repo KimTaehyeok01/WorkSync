@@ -13,17 +13,17 @@ import java.util.Optional;
 public interface AttendanceRepository extends JpaRepository<Attendance,Long> {
 
   // 오늘 출근 기록조회
-  Optional<Attendance> findByEmployeeIdAndWorkDate(Long employeeId, LocalDate workDate); // workDate 오늘 있으면 이미 출근완
+  Optional<Attendance> findByEmployeeIdAndWorkDt(Long employeeId, LocalDate workDt); // workDt 오늘 있으면 이미 출근완
 
   // 내 근태 목록 조회
-  List<Attendance> findByEmployeeIdAndWorkDateBetween(Long employeeId, LocalDate start, LocalDate end);
+  List<Attendance> findByEmployeeIdAndWorkDtBetween(Long employeeId, LocalDate start, LocalDate end);
 
   // 전체 근태 목록 - ADMIN용
-  List<Attendance> findByWorkDate(LocalDate workDate);
+  List<Attendance> findByWorkDt(LocalDate workDt);
 
   // 특정 부서 직원들의 특정 날짜 출근 기록 (출근/지각한 사람만)
-  @Query("SELECT a FROM Attendance a WHERE a.employee.department.id = :deptId AND a.workDate = :date")
-  List<Attendance> findByDepartmentAndWorkDate(@Param("deptId") Long deptId, @Param("date") LocalDate date);
+  @Query("SELECT a FROM Attendance a WHERE a.employee.department.id = :deptId AND a.workDt = :date")
+  List<Attendance> findByDepartmentAndWorkDt(@Param("deptId") Long deptId, @Param("date") LocalDate date);
 
   // 특정 부서의 전체 직원 목록 (결근 직원 포함)
   @Query("SELECT e FROM Employee e WHERE e.department.id = :deptId ORDER BY e.id")

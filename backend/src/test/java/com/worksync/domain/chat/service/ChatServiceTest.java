@@ -86,7 +86,6 @@ class ChatServiceTest {
                 .roomType(roomType)
                 .name(name)
                 .createdBy(createdBy)
-                .createdAt(LocalDateTime.now())
                 .build();
     }
 

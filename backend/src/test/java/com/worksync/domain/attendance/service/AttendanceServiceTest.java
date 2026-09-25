@@ -74,7 +74,7 @@ class AttendanceServiceTest {
                 LocalDateTime.now().getHour() >= 9 ? AttendanceStatus.LATE : AttendanceStatus.NORMAL;
 
         given(employeeRepository.findById(1L)).willReturn(Optional.of(employee));
-        given(attendanceRepository.findByEmployeeIdAndWorkDate(1L, today)).willReturn(Optional.empty());
+        given(attendanceRepository.findByEmployeeIdAndWorkDt(1L, today)).willReturn(Optional.empty());
         given(attendanceRepository.save(any(Attendance.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         // when
@@ -83,7 +83,7 @@ class AttendanceServiceTest {
         // then
         assertThat(result.getEmployeeId()).isEqualTo(1L);
         assertThat(result.getEmployeeName()).isEqualTo("김철수");
-        assertThat(result.getWorkDate()).isEqualTo(today);
+        assertThat(result.getWorkDt()).isEqualTo(today);
         assertThat(result.getStatus()).isEqualTo(expectedStatus);
         verifyNoInteractions(messagingTemplate);
     }
@@ -97,7 +97,7 @@ class AttendanceServiceTest {
         LocalDate today = LocalDate.now();
 
         given(employeeRepository.findById(1L)).willReturn(Optional.of(employee));
-        given(attendanceRepository.findByEmployeeIdAndWorkDate(1L, today)).willReturn(Optional.empty());
+        given(attendanceRepository.findByEmployeeIdAndWorkDt(1L, today)).willReturn(Optional.empty());
         given(attendanceRepository.save(any(Attendance.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         // when
@@ -129,10 +129,10 @@ class AttendanceServiceTest {
         // given
         Employee employee = buildEmployee(1L, "김철수", null);
         LocalDate today = LocalDate.now();
-        Attendance existing = Attendance.builder().id(10L).employee(employee).workDate(today).build();
+        Attendance existing = Attendance.builder().id(10L).employee(employee).workDt(today).build();
 
         given(employeeRepository.findById(1L)).willReturn(Optional.of(employee));
-        given(attendanceRepository.findByEmployeeIdAndWorkDate(1L, today)).willReturn(Optional.of(existing));
+        given(attendanceRepository.findByEmployeeIdAndWorkDt(1L, today)).willReturn(Optional.of(existing));
 
         // when & then
         assertThatThrownBy(() -> attendanceService.checkIn(1L, "127.0.0.1"))
@@ -151,19 +151,19 @@ class AttendanceServiceTest {
         Employee employee = buildEmployee(1L, "김철수", null);
         LocalDate today = LocalDate.now();
         Attendance attendance = Attendance.builder()
-                .id(10L).employee(employee).workDate(today)
-                .checkInTime(LocalDateTime.now().minusHours(8))
+                .id(10L).employee(employee).workDt(today)
+                .checkedInAt(LocalDateTime.now().minusHours(8))
                 .status(AttendanceStatus.NORMAL)
                 .build();
 
-        given(attendanceRepository.findByEmployeeIdAndWorkDate(1L, today)).willReturn(Optional.of(attendance));
+        given(attendanceRepository.findByEmployeeIdAndWorkDt(1L, today)).willReturn(Optional.of(attendance));
 
         // when
         AttendanceDto.Response result = attendanceService.checkOut(1L);
 
         // then
-        assertThat(result.getCheckOutTime()).isNotNull();
-        assertThat(attendance.getCheckOutTime()).isNotNull();
+        assertThat(result.getCheckedOutAt()).isNotNull();
+        assertThat(attendance.getCheckedOutAt()).isNotNull();
         verifyNoInteractions(messagingTemplate);
     }
 
@@ -175,12 +175,12 @@ class AttendanceServiceTest {
         Employee employee = buildEmployee(1L, "김철수", department);
         LocalDate today = LocalDate.now();
         Attendance attendance = Attendance.builder()
-                .id(10L).employee(employee).workDate(today)
-                .checkInTime(LocalDateTime.now().minusHours(8))
+                .id(10L).employee(employee).workDt(today)
+                .checkedInAt(LocalDateTime.now().minusHours(8))
                 .status(AttendanceStatus.NORMAL)
                 .build();
 
-        given(attendanceRepository.findByEmployeeIdAndWorkDate(1L, today)).willReturn(Optional.of(attendance));
+        given(attendanceRepository.findByEmployeeIdAndWorkDt(1L, today)).willReturn(Optional.of(attendance));
 
         // when
         attendanceService.checkOut(1L);
@@ -196,7 +196,7 @@ class AttendanceServiceTest {
     void checkOut_notFound_throwsAttendanceNotFound() {
         // given
         LocalDate today = LocalDate.now();
-        given(attendanceRepository.findByEmployeeIdAndWorkDate(1L, today)).willReturn(Optional.empty());
+        given(attendanceRepository.findByEmployeeIdAndWorkDt(1L, today)).willReturn(Optional.empty());
 
         // when & then
         assertThatThrownBy(() -> attendanceService.checkOut(1L))
@@ -212,13 +212,13 @@ class AttendanceServiceTest {
         Employee employee = buildEmployee(1L, "김철수", null);
         LocalDate today = LocalDate.now();
         Attendance attendance = Attendance.builder()
-                .id(10L).employee(employee).workDate(today)
-                .checkInTime(LocalDateTime.now().minusHours(8))
-                .checkOutTime(LocalDateTime.now().minusHours(1))
+                .id(10L).employee(employee).workDt(today)
+                .checkedInAt(LocalDateTime.now().minusHours(8))
+                .checkedOutAt(LocalDateTime.now().minusHours(1))
                 .status(AttendanceStatus.NORMAL)
                 .build();
 
-        given(attendanceRepository.findByEmployeeIdAndWorkDate(1L, today)).willReturn(Optional.of(attendance));
+        given(attendanceRepository.findByEmployeeIdAndWorkDt(1L, today)).willReturn(Optional.of(attendance));
 
         // when & then
         assertThatThrownBy(() -> attendanceService.checkOut(1L))
@@ -234,8 +234,8 @@ class AttendanceServiceTest {
     void checkInOnLogin_alreadyCheckedIn_noop() {
         // given
         LocalDate today = LocalDate.now();
-        Attendance existing = Attendance.builder().id(10L).workDate(today).build();
-        given(attendanceRepository.findByEmployeeIdAndWorkDate(1L, today)).willReturn(Optional.of(existing));
+        Attendance existing = Attendance.builder().id(10L).workDt(today).build();
+        given(attendanceRepository.findByEmployeeIdAndWorkDt(1L, today)).willReturn(Optional.of(existing));
 
         // when
         attendanceService.checkInOnLogin(1L, "127.0.0.1");
@@ -253,7 +253,7 @@ class AttendanceServiceTest {
         Employee employee = buildEmployee(1L, "김철수", department);
         LocalDate today = LocalDate.now();
 
-        given(attendanceRepository.findByEmployeeIdAndWorkDate(1L, today)).willReturn(Optional.empty());
+        given(attendanceRepository.findByEmployeeIdAndWorkDt(1L, today)).willReturn(Optional.empty());
         given(employeeRepository.findById(1L)).willReturn(Optional.of(employee));
 
         // when
@@ -273,7 +273,7 @@ class AttendanceServiceTest {
         Employee employee = buildEmployee(1L, "김철수", null);
         LocalDate today = LocalDate.now();
 
-        given(attendanceRepository.findByEmployeeIdAndWorkDate(1L, today)).willReturn(Optional.empty());
+        given(attendanceRepository.findByEmployeeIdAndWorkDt(1L, today)).willReturn(Optional.empty());
         given(employeeRepository.findById(1L)).willReturn(Optional.of(employee));
 
         // when
@@ -289,7 +289,7 @@ class AttendanceServiceTest {
     void checkInOnLogin_employeeNotFound_throwsEmployeeNotFound() {
         // given
         LocalDate today = LocalDate.now();
-        given(attendanceRepository.findByEmployeeIdAndWorkDate(1L, today)).willReturn(Optional.empty());
+        given(attendanceRepository.findByEmployeeIdAndWorkDt(1L, today)).willReturn(Optional.empty());
         given(employeeRepository.findById(1L)).willReturn(Optional.empty());
 
         // when & then
@@ -307,7 +307,7 @@ class AttendanceServiceTest {
     void checkOutOnLogout_noAttendanceToday_noop() {
         // given
         LocalDate today = LocalDate.now();
-        given(attendanceRepository.findByEmployeeIdAndWorkDate(1L, today)).willReturn(Optional.empty());
+        given(attendanceRepository.findByEmployeeIdAndWorkDt(1L, today)).willReturn(Optional.empty());
 
         // when
         attendanceService.checkOutOnLogout(1L);
@@ -324,18 +324,18 @@ class AttendanceServiceTest {
         LocalDate today = LocalDate.now();
         LocalDateTime existingCheckOut = LocalDateTime.now().minusHours(1);
         Attendance attendance = Attendance.builder()
-                .id(10L).employee(employee).workDate(today)
-                .checkInTime(LocalDateTime.now().minusHours(9))
-                .checkOutTime(existingCheckOut)
+                .id(10L).employee(employee).workDt(today)
+                .checkedInAt(LocalDateTime.now().minusHours(9))
+                .checkedOutAt(existingCheckOut)
                 .status(AttendanceStatus.NORMAL)
                 .build();
-        given(attendanceRepository.findByEmployeeIdAndWorkDate(1L, today)).willReturn(Optional.of(attendance));
+        given(attendanceRepository.findByEmployeeIdAndWorkDt(1L, today)).willReturn(Optional.of(attendance));
 
         // when
         attendanceService.checkOutOnLogout(1L);
 
         // then
-        assertThat(attendance.getCheckOutTime()).isEqualTo(existingCheckOut);
+        assertThat(attendance.getCheckedOutAt()).isEqualTo(existingCheckOut);
         verifyNoInteractions(messagingTemplate);
     }
 
@@ -347,17 +347,17 @@ class AttendanceServiceTest {
         Employee employee = buildEmployee(1L, "김철수", department);
         LocalDate today = LocalDate.now();
         Attendance attendance = Attendance.builder()
-                .id(10L).employee(employee).workDate(today)
-                .checkInTime(LocalDateTime.now().minusHours(9))
+                .id(10L).employee(employee).workDt(today)
+                .checkedInAt(LocalDateTime.now().minusHours(9))
                 .status(AttendanceStatus.NORMAL)
                 .build();
-        given(attendanceRepository.findByEmployeeIdAndWorkDate(1L, today)).willReturn(Optional.of(attendance));
+        given(attendanceRepository.findByEmployeeIdAndWorkDt(1L, today)).willReturn(Optional.of(attendance));
 
         // when
         attendanceService.checkOutOnLogout(1L);
 
         // then
-        assertThat(attendance.getCheckOutTime()).isNotNull();
+        assertThat(attendance.getCheckedOutAt()).isNotNull();
         verify(messagingTemplate).convertAndSend(
                 "/topic/attendance/5",
                 Map.of("employeeId", 1L, "status", "CHECK_OUT"));
@@ -370,17 +370,17 @@ class AttendanceServiceTest {
         Employee employee = buildEmployee(1L, "김철수", null);
         LocalDate today = LocalDate.now();
         Attendance attendance = Attendance.builder()
-                .id(10L).employee(employee).workDate(today)
-                .checkInTime(LocalDateTime.now().minusHours(9))
+                .id(10L).employee(employee).workDt(today)
+                .checkedInAt(LocalDateTime.now().minusHours(9))
                 .status(AttendanceStatus.NORMAL)
                 .build();
-        given(attendanceRepository.findByEmployeeIdAndWorkDate(1L, today)).willReturn(Optional.of(attendance));
+        given(attendanceRepository.findByEmployeeIdAndWorkDt(1L, today)).willReturn(Optional.of(attendance));
 
         // when
         attendanceService.checkOutOnLogout(1L);
 
         // then
-        assertThat(attendance.getCheckOutTime()).isNotNull();
+        assertThat(attendance.getCheckedOutAt()).isNotNull();
         verifyNoInteractions(messagingTemplate);
     }
 
@@ -392,10 +392,10 @@ class AttendanceServiceTest {
         // given
         Employee employee = buildEmployee(1L, "김철수", null);
         Attendance a1 = Attendance.builder().id(1L).employee(employee)
-                .workDate(LocalDate.of(2026, 8, 3)).status(AttendanceStatus.NORMAL).build();
+                .workDt(LocalDate.of(2026, 8, 3)).status(AttendanceStatus.NORMAL).build();
         Attendance a2 = Attendance.builder().id(2L).employee(employee)
-                .workDate(LocalDate.of(2026, 8, 4)).status(AttendanceStatus.LATE).build();
-        given(attendanceRepository.findByEmployeeIdAndWorkDateBetween(
+                .workDt(LocalDate.of(2026, 8, 4)).status(AttendanceStatus.LATE).build();
+        given(attendanceRepository.findByEmployeeIdAndWorkDtBetween(
                 1L, LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31)))
                 .willReturn(List.of(a1, a2));
 
@@ -416,8 +416,8 @@ class AttendanceServiceTest {
         Employee employee = buildEmployee(1L, "김철수", null);
         LocalDate date = LocalDate.of(2026, 8, 10);
         Attendance attendance = Attendance.builder().id(1L).employee(employee)
-                .workDate(date).status(AttendanceStatus.NORMAL).build();
-        given(attendanceRepository.findByWorkDate(date)).willReturn(List.of(attendance));
+                .workDt(date).status(AttendanceStatus.NORMAL).build();
+        given(attendanceRepository.findByWorkDt(date)).willReturn(List.of(attendance));
 
         // when
         List<AttendanceDto.Response> result = attendanceService.getAttendanceByDate(date);
@@ -453,12 +453,12 @@ class AttendanceServiceTest {
         Employee me = buildEmployee(1L, "김철수", department);
         Employee member2 = buildEmployee(2L, "박영희", department);
         LocalDate date = LocalDate.now();
-        Attendance attendanceForMe = Attendance.builder().id(1L).employee(me).workDate(date)
-                .status(AttendanceStatus.NORMAL).checkInTime(LocalDateTime.now()).build();
+        Attendance attendanceForMe = Attendance.builder().id(1L).employee(me).workDt(date)
+                .status(AttendanceStatus.NORMAL).checkedInAt(LocalDateTime.now()).build();
 
         given(employeeRepository.findById(1L)).willReturn(Optional.of(me));
         given(attendanceRepository.findEmployeesByDepartment(5L)).willReturn(List.of(me, member2));
-        given(attendanceRepository.findByDepartmentAndWorkDate(5L, date)).willReturn(List.of(attendanceForMe));
+        given(attendanceRepository.findByDepartmentAndWorkDt(5L, date)).willReturn(List.of(attendanceForMe));
 
         // when
         List<AttendanceDto.DepartmentResponse> result = attendanceService.getMyDepartmentStatus(1L, date);
@@ -467,7 +467,7 @@ class AttendanceServiceTest {
         assertThat(result).hasSize(2);
         assertThat(result.get(0).getStatus()).isEqualTo(AttendanceStatus.NORMAL);
         assertThat(result.get(1).getStatus()).isEqualTo(AttendanceStatus.ABSENT);
-        assertThat(result.get(1).getCheckInTime()).isNull();
+        assertThat(result.get(1).getCheckedInAt()).isNull();
     }
 
     @DisplayName("팀 현황 조회 시 존재하지 않는 사원이면 예외가 발생한다")
@@ -491,7 +491,7 @@ class AttendanceServiceTest {
         // given
         Employee employee = buildEmployee(1L, "김철수", null);
         Attendance attendance = Attendance.builder().id(1L).employee(employee)
-                .workDate(LocalDate.now()).status(AttendanceStatus.NORMAL).build();
+                .workDt(LocalDate.now()).status(AttendanceStatus.NORMAL).build();
         given(attendanceRepository.findById(1L)).willReturn(Optional.of(attendance));
 
         // when

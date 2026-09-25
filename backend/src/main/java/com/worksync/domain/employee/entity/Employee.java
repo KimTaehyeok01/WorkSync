@@ -1,22 +1,19 @@
 package com.worksync.domain.employee.entity;
 
 import com.worksync.domain.department.entity.Department;
+import com.worksync.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "employee")
-@EntityListeners(AuditingEntityListener.class)
 @Getter @NoArgsConstructor @AllArgsConstructor @Builder
-public class Employee {
+public class Employee extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -68,14 +65,6 @@ public class Employee {
 
     @Column(name = "locked_until")
     private LocalDateTime lockedUntil;
-
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
 
     public void update(String name, String phone, JobGrade jobGrade, EmployeeRole role,
                        Department department, String email, LocalDate hireDate, String profileImage, String encodedPassword) {

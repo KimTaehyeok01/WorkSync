@@ -2,22 +2,19 @@ package com.worksync.domain.leave.entity;
 
 import com.worksync.domain.approval.entity.ApprovalDoc;
 import com.worksync.domain.employee.entity.Employee;
+import com.worksync.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "leave_request")
-@EntityListeners(AuditingEntityListener.class)
 @Getter @NoArgsConstructor @AllArgsConstructor @Builder
-public class LeaveRequest {
+public class LeaveRequest extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -55,10 +52,6 @@ public class LeaveRequest {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approver_id")
     private Employee approver;
-
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
 
     public void approve() {
         this.status = LeaveStatus.APPROVED;

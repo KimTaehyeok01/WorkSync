@@ -42,7 +42,7 @@ public class AttendanceService {
     LocalDateTime now = LocalDateTime.now(); // 현재시간
 
     // 오늘 출근했는지 확인
-    if (attendanceRepository.findByEmployeeIdAndWorkDate(employeeId, today).isPresent()){
+    if (attendanceRepository.findByEmployeeIdAndWorkDt(employeeId, today).isPresent()){
       throw new CustomException(ErrorCode.ALREADY_CHECKED_IN);
     }
 
@@ -52,8 +52,8 @@ public class AttendanceService {
     // 출근기록 생성
     Attendance attendance = Attendance.builder()
             .employee(employee)
-            .workDate(today)
-            .checkInTime(now)
+            .workDt(today)
+            .checkedInAt(now)
             .status(status)
             .clientIp(clientIp)
             .build();
@@ -81,11 +81,11 @@ public class AttendanceService {
     LocalDateTime now = LocalDateTime.now();
 
     // 오늘 출근 기록조회
-    Attendance attendance = attendanceRepository.findByEmployeeIdAndWorkDate(employeeId,today)
+    Attendance attendance = attendanceRepository.findByEmployeeIdAndWorkDt(employeeId,today)
             .orElseThrow(()-> new CustomException(ErrorCode.ATTENDANCE_NOT_FOUND));
 
     // 퇴근했는지 확인
-    if (attendance.getCheckOutTime() != null){
+    if (attendance.getCheckedOutAt() != null){
       throw new CustomException(ErrorCode.ALREADY_CHECKED_OUT);
     }
 
@@ -111,7 +111,7 @@ public class AttendanceService {
     LocalDateTime now = LocalDateTime.now();
 
     // 이미 출근 기록 있으면 아무것도 안 함 (재로그인 허용)
-    if (attendanceRepository.findByEmployeeIdAndWorkDate(employeeId, today).isPresent()) {
+    if (attendanceRepository.findByEmployeeIdAndWorkDt(employeeId, today).isPresent()) {
       return;
     }
 
@@ -122,8 +122,8 @@ public class AttendanceService {
 
     Attendance attendance = Attendance.builder()
             .employee(employee)
-            .workDate(today)
-            .checkInTime(now)
+            .workDt(today)
+            .checkedInAt(now)
             .status(status)
             .clientIp(clientIp)
             .build();
@@ -143,8 +143,8 @@ public class AttendanceService {
   @Transactional
   public void checkOutOnLogout(Long employeeId) {
     LocalDate today = LocalDate.now();
-    attendanceRepository.findByEmployeeIdAndWorkDate(employeeId, today)
-            .filter(attendance -> attendance.getCheckOutTime() == null)
+    attendanceRepository.findByEmployeeIdAndWorkDt(employeeId, today)
+            .filter(attendance -> attendance.getCheckedOutAt() == null)
             .ifPresent(attendance -> {
               attendance.checkOut(LocalDateTime.now());
 
@@ -164,7 +164,7 @@ public class AttendanceService {
     LocalDate start = LocalDate.of(year, month, 1); // 해당월 첫째날 조회
     LocalDate end = start.withDayOfMonth(start.lengthOfMonth()); // 해당월 마지막날, lengthOfMonth() 해당월의 총 일수 반환
 
-    return attendanceRepository.findByEmployeeIdAndWorkDateBetween(employeeId, start, end)
+    return attendanceRepository.findByEmployeeIdAndWorkDtBetween(employeeId, start, end)
             .stream()
             .map(AttendanceDto.Response::from)
             .toList();
@@ -172,7 +172,7 @@ public class AttendanceService {
 
   // ADMIN 전체 근태 조회
   public List<AttendanceDto.Response> getAttendanceByDate(LocalDate date) {
-    return attendanceRepository.findByWorkDate(date)
+    return attendanceRepository.findByWorkDt(date)
             .stream()
             .map(AttendanceDto.Response::from)
             .toList();
@@ -194,7 +194,7 @@ public class AttendanceService {
 
     // 해당 날짜 출근 기록을 employeeId 기준으로 매핑 (출근/지각한 사람만 존재)
     Map<Long, Attendance> attendanceByEmployee =
-            attendanceRepository.findByDepartmentAndWorkDate(deptId, date)
+            attendanceRepository.findByDepartmentAndWorkDt(deptId, date)
                     .stream()
                     .collect(Collectors.toMap(a -> a.getEmployee().getId(), a -> a));
 

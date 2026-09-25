@@ -71,8 +71,8 @@ class DashboardServiceTest {
         short thisYear = (short) LocalDate.now().getYear();
 
         Attendance attendance = Attendance.builder()
-                .id(1L).employee(employee).workDate(LocalDate.now())
-                .checkInTime(LocalDateTime.now())
+                .id(1L).employee(employee).workDt(LocalDate.now())
+                .checkedInAt(LocalDateTime.now())
                 .status(AttendanceStatus.NORMAL)
                 .build();
 
@@ -80,7 +80,7 @@ class DashboardServiceTest {
                 .id(1L).employee(employee).year(thisYear)
                 .totalDays(BigDecimal.valueOf(15)).usedDays(BigDecimal.valueOf(3)).build();
 
-        given(attendanceRepository.findByEmployeeIdAndWorkDate(employeeId, LocalDate.now()))
+        given(attendanceRepository.findByEmployeeIdAndWorkDt(employeeId, LocalDate.now()))
                 .willReturn(Optional.of(attendance));
         given(approvalLineRepository.findByApproverIdAndStatus(employeeId, ApprovalLineStatus.WAITING))
                 .willReturn(List.of(ApprovalLine.builder().build(), ApprovalLine.builder().build()));
@@ -118,13 +118,13 @@ class DashboardServiceTest {
         short thisYear = (short) LocalDate.now().getYear();
 
         Attendance attendance = Attendance.builder()
-                .id(1L).employee(employee).workDate(LocalDate.now())
-                .checkInTime(LocalDateTime.now().minusHours(9))
-                .checkOutTime(LocalDateTime.now())
+                .id(1L).employee(employee).workDt(LocalDate.now())
+                .checkedInAt(LocalDateTime.now().minusHours(9))
+                .checkedOutAt(LocalDateTime.now())
                 .status(AttendanceStatus.NORMAL)
                 .build();
 
-        given(attendanceRepository.findByEmployeeIdAndWorkDate(employeeId, LocalDate.now()))
+        given(attendanceRepository.findByEmployeeIdAndWorkDt(employeeId, LocalDate.now()))
                 .willReturn(Optional.of(attendance));
         given(approvalLineRepository.findByApproverIdAndStatus(employeeId, ApprovalLineStatus.WAITING))
                 .willReturn(List.of());
@@ -151,7 +151,7 @@ class DashboardServiceTest {
         Long employeeId = 1L;
         short thisYear = (short) LocalDate.now().getYear();
 
-        given(attendanceRepository.findByEmployeeIdAndWorkDate(employeeId, LocalDate.now()))
+        given(attendanceRepository.findByEmployeeIdAndWorkDt(employeeId, LocalDate.now()))
                 .willReturn(Optional.empty());
         given(approvalLineRepository.findByApproverIdAndStatus(employeeId, ApprovalLineStatus.WAITING))
                 .willReturn(List.of());

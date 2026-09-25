@@ -5,6 +5,7 @@ import com.worksync.domain.attendance.entity.Attendance;
 import com.worksync.domain.attendance.entity.AttendanceStatus;
 import com.worksync.domain.employee.entity.Employee;
 import com.worksync.domain.employee.entity.JobGrade;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,14 +28,17 @@ public class AttendanceDto {
         @Schema(description = "직원 이름", example = "홍길동")
         private String employeeName;
 
+        @JsonProperty("workDate")
         @Schema(description = "근무 일자", example = "2026-08-09")
-        private LocalDate workDate;
+        private LocalDate workDt;
 
+        @JsonProperty("checkInTime")
         @Schema(description = "출근 시각")
-        private LocalDateTime checkInTime;
+        private LocalDateTime checkedInAt;
 
+        @JsonProperty("checkOutTime")
         @Schema(description = "퇴근 시각")
-        private LocalDateTime checkOutTime;
+        private LocalDateTime checkedOutAt;
 
         @Schema(description = "근태 상태 (NORMAL, LATE, EARLY_LEAVE, ABSENT)", example = "NORMAL")
         private AttendanceStatus status;
@@ -47,9 +51,9 @@ public class AttendanceDto {
                     .id(attendance.getId())
                     .employeeId(attendance.getEmployee().getId())
                     .employeeName(attendance.getEmployee().getName())
-                    .workDate(attendance.getWorkDate())
-                    .checkInTime(attendance.getCheckInTime())
-                    .checkOutTime(attendance.getCheckOutTime())
+                    .workDt(attendance.getWorkDt())
+                    .checkedInAt(attendance.getCheckedInAt())
+                    .checkedOutAt(attendance.getCheckedOutAt())
                     .status(attendance.getStatus())
                     .createdAt(attendance.getCreatedAt())
                     .build();
@@ -76,11 +80,13 @@ public class AttendanceDto {
         @Schema(description = "근태 상태 (NORMAL, LATE, EARLY_LEAVE, ABSENT)", example = "NORMAL")
         private AttendanceStatus status;     // 출근 기록 없으면 ABSENT
 
+        @JsonProperty("checkInTime")
         @Schema(description = "출근 시각 (결근이면 null)")
-        private LocalDateTime checkInTime;   // 결근이면 null
+        private LocalDateTime checkedInAt;   // 결근이면 null
 
+        @JsonProperty("checkOutTime")
         @Schema(description = "퇴근 시각 (미퇴근/결근이면 null)")
-        private LocalDateTime checkOutTime;  // 미퇴근/결근이면 null
+        private LocalDateTime checkedOutAt;  // 미퇴근/결근이면 null
 
         public static DepartmentResponse of(Employee employee, Attendance attendance) {
             return DepartmentResponse.builder()
@@ -89,8 +95,8 @@ public class AttendanceDto {
                     .jobGrade(employee.getJobGrade())
                     .profileImage(employee.getProfileImage())
                     .status(attendance != null ? attendance.getStatus() : AttendanceStatus.ABSENT)
-                    .checkInTime(attendance != null ? attendance.getCheckInTime() : null)
-                    .checkOutTime(attendance != null ? attendance.getCheckOutTime() : null)
+                    .checkedInAt(attendance != null ? attendance.getCheckedInAt() : null)
+                    .checkedOutAt(attendance != null ? attendance.getCheckedOutAt() : null)
                     .build();
         }
     }

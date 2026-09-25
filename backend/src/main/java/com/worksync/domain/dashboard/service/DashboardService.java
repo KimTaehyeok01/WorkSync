@@ -36,7 +36,7 @@ public class DashboardService {
 
     // 오늘 근태
     Optional<Attendance> todayAttendance =
-            attendanceRepository.findByEmployeeIdAndWorkDate(employeeId, LocalDate.now());
+            attendanceRepository.findByEmployeeIdAndWorkDt(employeeId, LocalDate.now());
 
     // 내가 처리해야할 결재 건수
     long pendingApprovalCount =
@@ -68,7 +68,7 @@ public class DashboardService {
             // 출근 기록 자체가 존재하는지 확인
             .checkedIn(todayAttendance.isPresent())
             // checkOutTime이 null이 아니면 퇴근한거
-            .checkedOut(todayAttendance.map(a -> a.getCheckOutTime() != null).orElse(false))
+            .checkedOut(todayAttendance.map(a -> a.getCheckedOutAt() != null).orElse(false))
             .pendingApprovalCount(pendingApprovalCount)
             .myRequestedApprovalCount(myRequestApprovalCount)
             .unreadNotificationCount(unreadNotificationCount)
