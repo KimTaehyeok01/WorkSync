@@ -4,6 +4,7 @@ package com.worksync.domain.task.service;
 import com.worksync.domain.department.entity.Department;
 import com.worksync.domain.department.repository.DepartmentRepository;
 import com.worksync.domain.employee.entity.Employee;
+import com.worksync.domain.employee.entity.EmployeeRole;
 import com.worksync.domain.employee.repository.EmployeeRepository;
 import com.worksync.domain.file.dto.FileDto;
 import com.worksync.domain.file.entity.RefType;
@@ -17,6 +18,7 @@ import com.worksync.domain.task.entity.TaskStatus;
 import com.worksync.domain.task.repository.TaskRepository;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
+import com.worksync.global.security.CurrentEmployeeProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -40,6 +42,8 @@ public class TaskService {
     private final NotificationService notificationService;
     private final AuditLogService auditLogService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final CurrentEmployeeProvider currentEmployeeProvider;
+    private final TaskAccessPolicy taskAccessPolicy;
 
     // 감사 로그 카테고리 / 액션명
     private static final String CATEGORY_TASK = "TASK";
@@ -110,6 +114,8 @@ public class TaskService {
         Task task=taskRepository.findById(taskId)
                 .orElseThrow(()->new CustomException(ErrorCode.TASK_NOT_FOUND));
 
+        checkViewPermission(task,currentEmployeeProvider.getCurrentEmployee());
+
         List<FileDto.UploadResponse> attachments=fileAttachmentRepository
                 .findByRefTypeAndRefId(refTypeName,taskId)
                 .stream()
@@ -122,17 +128,19 @@ public class TaskService {
 
     //전체목록(상태 필터+키워드+페이징)
     public Page<TaskDto.Response>getAll(TaskStatus status, String keyword, Pageable pageable){
-            return taskRepository.findAllWithFilter(status,keyword,pageable)
+            Employee me=currentEmployeeProvider.getCurrentEmployee();
+            return taskRepository.findAllWithFilter(status,keyword,isAdmin(me),getDepartmentId(me),me.getId(),pageable)
                     .map(TaskDto.Response::from);
     }
 
     //담당자별 목록(상태 필터+페이징)
     public Page<TaskDto.Response>getByAssignee(Long assigneeId,TaskStatus status,Pageable pageable){
+        Employee me=currentEmployeeProvider.getCurrentEmployee();
         if(status !=null){
-            return taskRepository.findByAssigneeWithFilter(assigneeId,status,pageable)
+            return taskRepository.findByAssigneeWithFilter(assigneeId,status,isAdmin(me),getDepartmentId(me),me.getId(),pageable)
                     .map(TaskDto.Response::from);
         }
-        return taskRepository.findByAssigneeWithFilter(assigneeId,null,pageable)
+        return taskRepository.findByAssigneeWithFilter(assigneeId,null,isAdmin(me),getDepartmentId(me),me.getId(),pageable)
                 .map(TaskDto.Response::from);
     }
 
@@ -144,7 +152,8 @@ public class TaskService {
 
     //부서별 목록
     public Page<TaskDto.Response>getByDepartment(Long departmentId,TaskStatus status,Pageable pageable){
-        return taskRepository.findByDepartmentWithFilter(departmentId,status,pageable)
+        Employee me=currentEmployeeProvider.getCurrentEmployee();
+        return taskRepository.findByDepartmentWithFilter(departmentId,status,isAdmin(me),getDepartmentId(me),me.getId(),pageable)
                 .map(TaskDto.Response::from);
     }
 
@@ -155,7 +164,10 @@ public class TaskService {
         Task task=taskRepository.findById(taskId)
                 .orElseThrow(()->new CustomException(ErrorCode.TASK_NOT_FOUND));
 
-        checkEditPermission(task,requesterId);
+        // 권한 판정은 로그인한 직원(SecurityContext) 한 사람 기준으로만 한다 — requesterId 와 같은 사람
+        Employee me=currentEmployeeProvider.getCurrentEmployee();
+        checkViewPermission(task,me);
+        checkUpdatePermission(task,me.getId(),request);
 
         //진행률 10단위 검증
         if (request.getProgress() !=null && request.getProgress() %10 !=0){
@@ -216,7 +228,12 @@ public class TaskService {
     public  void delete(Long taskId,Long requesterId){
         Task task=taskRepository.findById(taskId)
                 .orElseThrow(()->new CustomException(ErrorCode.TASK_NOT_FOUND));
-        checkEditPermission(task,requesterId);
+        Employee me=currentEmployeeProvider.getCurrentEmployee();
+        checkViewPermission(task,me);
+        // 삭제는 작성자만
+        if(!taskAccessPolicy.isCreator(task,me.getId())){
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
 
         // 감사 로그 — 업무 삭제 (삭제 전 actor 이름 확보)
         String actorName = employeeRepository.findById(requesterId)
@@ -226,14 +243,35 @@ public class TaskService {
         taskRepository.delete(task);
     }
 
-    //권한 체크
-    private void checkEditPermission(Task task,Long requesterId){
-        boolean isCreator=task.getCreator().getId().equals(requesterId);
-        boolean isAssignee=task.getAssignee() !=null
-                && task.getAssignee().getId().equals(requesterId);
+    //수정 권한 체크 — 작성자는 전부, 담당자는 상태·진행률만 바꿀 수 있다
+    private void checkUpdatePermission(Task task,Long requesterId,TaskDto.UpdateRequest request){
+        if(taskAccessPolicy.isCreator(task,requesterId)){
+            return;
+        }
+        boolean changesOtherFields=request.getTitle() !=null
+                || request.getDescription() !=null
+                || request.getAssigneeId() !=null
+                || request.getDepartmentId() !=null
+                || request.getStartDate() !=null
+                || request.getDueDate() !=null;
 
-        if(!isCreator && !isAssignee){
+        if(!taskAccessPolicy.isAssignee(task,requesterId) || changesOtherFields){
             throw new CustomException(ErrorCode.FORBIDDEN);
         }
+    }
+
+    // 볼 수 없는 업무는 존재 여부도 알려주지 않는다 (조회·수정·삭제 공통)
+    private void checkViewPermission(Task task,Employee me){
+        if(!taskAccessPolicy.canView(task,me)){
+            throw new CustomException(ErrorCode.TASK_NOT_FOUND);
+        }
+    }
+
+    private boolean isAdmin(Employee employee){
+        return employee.getRole() == EmployeeRole.ADMIN;
+    }
+
+    private Long getDepartmentId(Employee employee){
+        return employee.getDepartment() !=null ? employee.getDepartment().getId() : null;
     }
 }

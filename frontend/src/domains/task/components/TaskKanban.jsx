@@ -3,33 +3,36 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { WSAvatar } from "../../../components/common/CommonWidgets";
 import { TASK_STATUS_LABEL } from "../../../constants/statusLabels";
-import { getTaskList, getTasksByDepartment, updateTask } from "../services/taskApi";
+import { getTaskList, updateTask } from "../services/taskApi";
 import s from "./TaskKanban.module.css";
 
 const COLUMNS = ["TODO", "IN_PROGRESS", "DONE"];
 // 보드에는 페이지 없이 한 번에 보여준다
 const BOARD_SIZE = 200;
 
-export default function TaskKanban({ accessToken, role, departmentId, search, profiles }) {
+export default function TaskKanban({ accessToken, myId, search, profiles }) {
   const navigate = useNavigate();
   const [tasks, setTasks] = useState([]);
   const [draggingId, setDraggingId] = useState(null);
   const [overColumn, setOverColumn] = useState(null);
   const [error, setError] = useState("");
 
-  // 목록 화면과 같은 범위 — 관리자는 전체, 그 외에는 내 부서 업무
+  // 목록 화면과 같은 범위 — 서버가 내가 볼 수 있는 업무만 내려준다
   const load = async () => {
-    const data =
-      role === "ADMIN"
-        ? await getTaskList(accessToken, 0, BOARD_SIZE)
-        : await getTasksByDepartment(accessToken, departmentId, 0, BOARD_SIZE);
-    setTasks(data?.content ?? []);
+    const data = await getTaskList(accessToken, 0, BOARD_SIZE);
+    // 조회에 실패하면 보던 보드를 비우지 않고 그대로 둔다
+    if (!data) return;
+    setTasks(data.content ?? []);
   };
 
+  // 상태는 작성자·담당자만 바꿀 수 있다 — 내 id 를 모르는 동안에는 아무 카드도 끌 수 없다
+  const canMove = (task) =>
+    myId !== null && (task.creatorId === myId || task.assigneeId === myId);
+
   useEffect(() => {
-    if (!accessToken || role === null) return;
+    if (!accessToken) return;
     load();
-  }, [accessToken, role, departmentId]);
+  }, [accessToken]);
 
   const handleDrop = async (status) => {
     setOverColumn(null);
@@ -42,6 +45,10 @@ export default function TaskKanban({ accessToken, role, departmentId, search, pr
     const updated = await updateTask(accessToken, task.id, { status });
     if (!updated) {
       setError("상태를 바꾸지 못했습니다. 권한을 확인해 주세요.");
+      // 다시 불러오기까지 실패해도 카드가 옮겨진 채 남지 않게 먼저 제자리로 돌린다
+      setTasks((prev) =>
+        prev.map((t) => (t.id === task.id ? { ...t, status: task.status } : t)),
+      );
       load();
       return;
     }
@@ -80,8 +87,8 @@ export default function TaskKanban({ accessToken, role, departmentId, search, pr
                 {columnTasks.map((task) => (
                   <div
                     key={task.id}
-                    className={`${s.card} ${draggingId === task.id ? s.cardDragging : ""}`}
-                    draggable
+                    className={`${s.card} ${canMove(task) ? "" : s.cardLocked} ${draggingId === task.id ? s.cardDragging : ""}`}
+                    draggable={canMove(task)}
                     onDragStart={() => setDraggingId(task.id)}
                     onDragEnd={() => setDraggingId(null)}
                     onClick={() => navigate(`/tasks/${task.id}`)}

@@ -3,6 +3,8 @@ package com.worksync.domain.mail.service;
 
 import com.worksync.domain.employee.entity.Employee;
 import com.worksync.domain.employee.repository.EmployeeRepository;
+import com.worksync.domain.file.entity.RefType;
+import com.worksync.domain.file.repository.FileAttachmentRepository;
 import com.worksync.domain.mail.dto.MailDto;
 import com.worksync.domain.mail.entity.Mail;
 import com.worksync.domain.mail.entity.MailBox;
@@ -22,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -41,27 +44,32 @@ public class MailService {
 	private final MailRecipientRepository mailRecipientRepository;
 	private final EmployeeRepository employeeRepository;
 	private final NotificationService notificationService;
+	private final FileAttachmentRepository fileAttachmentRepository;
 
 	// 받은편지함
 	public Page<MailDto.ListResponse> getInbox(Long myId, boolean unreadOnly, String keyword, Pageable pageable) {
 		Page<MailRecipient> page = mailRecipientRepository.findInbox(myId, unreadOnly, normalize(keyword), pageable);
-		Map<Long, List<MailRecipient>> recipientsByMail = loadRecipients(
-				page.getContent().stream().map(r -> r.getMail().getId()).toList());
+		List<Long> mailIds = page.getContent().stream().map(r -> r.getMail().getId()).toList();
+		Map<Long, List<MailRecipient>> recipientsByMail = loadRecipients(mailIds);
+		Set<Long> attachedMailIds = loadAttachedMailIds(mailIds);
 
 		return page.map(mine -> MailDto.ListResponse.of(
 				mine.getMail(),
 				recipientsByMail.getOrDefault(mine.getMail().getId(), List.of()),
-				mine.getReadAt() != null));
+				mine.getReadAt() != null,
+				attachedMailIds.contains(mine.getMail().getId())));
 	}
 
 	// 보낸편지함
 	public Page<MailDto.ListResponse> getSent(Long myId, String keyword, Pageable pageable) {
 		Page<Mail> page = mailRepository.findSent(myId, normalize(keyword), pageable);
-		Map<Long, List<MailRecipient>> recipientsByMail = loadRecipients(
-				page.getContent().stream().map(Mail::getId).toList());
+		List<Long> mailIds = page.getContent().stream().map(Mail::getId).toList();
+		Map<Long, List<MailRecipient>> recipientsByMail = loadRecipients(mailIds);
+		Set<Long> attachedMailIds = loadAttachedMailIds(mailIds);
 
 		return page.map(mail -> MailDto.ListResponse.of(
-				mail, recipientsByMail.getOrDefault(mail.getId(), List.of()), true));
+				mail, recipientsByMail.getOrDefault(mail.getId(), List.of()), true,
+				attachedMailIds.contains(mail.getId())));
 	}
 
 	// 안 읽은 메일 수
@@ -152,6 +160,14 @@ public class MailService {
 		}
 		return mailRecipientRepository.findByMailIds(mailIds).stream()
 				.collect(Collectors.groupingBy(recipient -> recipient.getMail().getId()));
+	}
+
+	// 목록의 메일 중 첨부가 있는 메일 id — 한 번의 쿼리로 추린다
+	private Set<Long> loadAttachedMailIds(List<Long> mailIds) {
+		if (mailIds.isEmpty()) {
+			return Set.of();
+		}
+		return new HashSet<>(fileAttachmentRepository.findRefIdsWithAttachment(RefType.MAIL, mailIds));
 	}
 
 	private String normalize(String keyword) {

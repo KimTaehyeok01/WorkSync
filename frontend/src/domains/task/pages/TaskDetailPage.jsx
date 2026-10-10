@@ -8,6 +8,7 @@ import {
   getMyInfo,
   getEmployees,
   getTaskList,
+  updateTask,
 } from "../services/taskApi";
 import {
   WSAvatar,
@@ -15,20 +16,33 @@ import {
   WSCard,
   WSProgress,
 } from "../../../components/common/CommonWidgets";
-import { WSFileList } from "../../../components/common/FormComponents";
+import {
+  WSFileList,
+  WSSelect,
+  WSAlert,
+} from "../../../components/common/FormComponents";
 import useFileUpload from "../../../hooks/useFileUpload";
 import { getFile, saveFile, deleteFile } from "../../file/services/fileApi";
 import s from "./TaskDetailPage.module.css";
+
+// 담당자가 고르는 진행률 — 서버는 10 단위만 받는다
+const PROGRESS_OPTIONS = Array.from({ length: 11 }, (_, i) => ({
+  value: String(i * 10),
+  label: `${i * 10}%`,
+}));
 
 export default function TaskDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { accessToken } = useAuthContext();
   const [task, setTask] = useState(null);
+  const [loadFailed, setLoadFailed] = useState(false); // 볼 수 없거나 없는 업무
   const [allTasks, setAllTasks] = useState([]);
   const [myId, setMyId] = useState(null);
   const [role, setRole] = useState(null);
   const [profile, setProfile] = useState([]); // 목록 프로필이미지
+  const [progressInput, setProgressInput] = useState(""); // 담당자가 고른 진행률
+  const [progressError, setProgressError] = useState("");
 
   // 파일 선언
   const {
@@ -69,9 +83,15 @@ export default function TaskDetail() {
   useEffect(() => {
     if (!accessToken) return;
 
+    setLoadFailed(false);
+    setProgressError("");
     getTaskById(accessToken, id).then((data) => {
-      if (!data) return;
+      if (!data) {
+        setLoadFailed(true);
+        return;
+      }
       setTask(data);
+      setProgressInput(String(data.progress));
     });
     getTaskList(accessToken, 0, 9999).then((data) => {
       if (!data) return;
@@ -109,6 +129,35 @@ export default function TaskDetail() {
 
     URL.revokeObjectURL(url);
   };
+
+  // 담당자의 진행률 저장 — 다른 필드를 함께 보내면 서버가 거절하므로 progress 만 보낸다
+  const handleProgressSave = async () => {
+    setProgressError("");
+    const updated = await updateTask(accessToken, task.id, {
+      progress: Number(progressInput),
+    });
+    if (!updated) {
+      setProgressError("진행률을 저장하지 못했습니다.");
+      return;
+    }
+    // 저장하는 사이 다른 업무로 넘어갔으면 그 업무의 표시는 건드리지 않는다
+    setTask((prev) =>
+      prev.id === updated.id ? { ...prev, progress: updated.progress } : prev,
+    );
+  };
+
+  if (loadFailed) {
+    return (
+      <div className={s.notFound}>
+        <p>볼 수 없거나 삭제된 업무입니다.</p>
+        <WSButton
+          label="업무 목록으로"
+          variant="secondary"
+          onClick={() => navigate("/tasks")}
+        />
+      </div>
+    );
+  }
 
   if (!task) {
     return <div>로딩 중...</div>;
@@ -148,6 +197,40 @@ export default function TaskDetail() {
                     <WSProgress value={task.progress} />
                   </div>
                 </div>
+                {myId !== null && task.assigneeId === myId && (
+                  <div className={s.infoCol}>
+                    <p className={s.infoLabel}>진행률 변경</p>
+                    <div className={s.infoValue}>
+                      <div className={s.progressEdit}>
+                        <div className={s.progressSelect}>
+                          <WSSelect
+                            placeholder="진행률"
+                            value={progressInput}
+                            onChange={(e) => setProgressInput(e.target.value)}
+                            options={PROGRESS_OPTIONS}
+                          />
+                        </div>
+                        <WSButton
+                          label="저장"
+                          onClick={handleProgressSave}
+                          disabled={
+                            progressInput === "" ||
+                            Number(progressInput) === task.progress
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {progressError && (
+                  <div className={s.progressAlert}>
+                    <WSAlert
+                      type="error"
+                      message={progressError}
+                      onClose={() => setProgressError("")}
+                    />
+                  </div>
+                )}
                 <div className={s.infoCol}>
                   <p className={s.infoLabel}>담당자</p>
                   <div className={s.infoValue}>
@@ -203,7 +286,7 @@ export default function TaskDetail() {
           </WSCard>
 
           <div className={s.actionsCol}>
-            {(task.creatorId === myId || task.assigneeId === myId) && (
+            {task.creatorId === myId && (
               <>
                 <WSButton
                   label="수정"

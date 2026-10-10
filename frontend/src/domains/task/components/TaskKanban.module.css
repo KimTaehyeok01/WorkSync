@@ -76,6 +76,10 @@
   box-shadow: var(--ws-shadow-md);
   transform: translateY(-1px);
 }
+/* 끌어서 옮길 수 없는 카드 — 눌러서 상세로 가는 것만 되므로 손 모양(grab) 대신 pointer */
+.cardLocked {
+  cursor: pointer;
+}
 .cardDragging {
   opacity: 0.45;
 }

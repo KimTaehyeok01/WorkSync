@@ -4,6 +4,7 @@ package com.worksync.domain.task.service;
 import com.worksync.domain.department.entity.Department;
 import com.worksync.domain.department.repository.DepartmentRepository;
 import com.worksync.domain.employee.entity.Employee;
+import com.worksync.domain.employee.entity.EmployeeRole;
 import com.worksync.domain.employee.repository.EmployeeRepository;
 import com.worksync.domain.file.entity.FileAttachment;
 import com.worksync.domain.file.entity.RefType;
@@ -17,10 +18,13 @@ import com.worksync.domain.task.entity.TaskStatus;
 import com.worksync.domain.task.repository.TaskRepository;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
+import com.worksync.global.security.CurrentEmployeeProvider;
+import com.worksync.global.security.CustomUserDetails;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -28,9 +32,14 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -39,6 +48,7 @@ import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
@@ -61,8 +71,28 @@ class TaskServiceTest {
     @Mock
     private SimpMessagingTemplate messagingTemplate;
 
-    @InjectMocks
     private TaskService taskService;
+
+    // 권한 규칙(TaskAccessPolicy)과 로그인 직원 조회(CurrentEmployeeProvider)는 mock 이 아닌 실제 객체로 검증한다
+    // 기본 로그인 사용자는 대부분의 테스트에서 업무 생성자로 쓰는 1번 직원
+    @BeforeEach
+    void setUp() {
+        taskService = new TaskService(taskRepository, employeeRepository, departmentRepository,
+                fileAttachmentRepository, notificationService, auditLogService, messagingTemplate,
+                new CurrentEmployeeProvider(employeeRepository), new TaskAccessPolicy());
+        loginAs(buildEmployee(1L, "김철수"));
+    }
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
+
+    private void loginAs(Employee employee) {
+        CustomUserDetails principal = new CustomUserDetails(employee);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()));
+    }
 
     private Employee buildEmployee(Long id, String name) {
         return Employee.builder()
@@ -71,6 +101,18 @@ class TaskServiceTest {
                 .name(name)
                 .email(name + id + "@worksync.com")
                 .password("encoded-password")
+                .build();
+    }
+
+    private Employee buildEmployee(Long id, String name, EmployeeRole role, Department department) {
+        return Employee.builder()
+                .id(id)
+                .empNo("EMP" + id)
+                .name(name)
+                .email(name + id + "@worksync.com")
+                .password("encoded-password")
+                .role(role)
+                .department(department)
                 .build();
     }
 
@@ -263,6 +305,7 @@ class TaskServiceTest {
                 .filePath("path/to/file").refType(RefType.TASK).refId(10L).build();
 
         given(taskRepository.findById(10L)).willReturn(Optional.of(task));
+        given(employeeRepository.findById(1L)).willReturn(Optional.of(creator));
         given(fileAttachmentRepository.findByRefTypeAndRefId(RefType.TASK, 10L))
                 .willReturn(List.of(attachment));
 
@@ -284,6 +327,7 @@ class TaskServiceTest {
         Task task = buildTask(10L, creator, null, null, TaskStatus.TODO);
 
         given(taskRepository.findById(10L)).willReturn(Optional.of(task));
+        given(employeeRepository.findById(1L)).willReturn(Optional.of(creator));
         given(fileAttachmentRepository.findByRefTypeAndRefId(RefType.TASK, 10L))
                 .willReturn(List.of());
 
@@ -310,18 +354,141 @@ class TaskServiceTest {
                 .isEqualTo(ErrorCode.TASK_NOT_FOUND);
     }
 
+    @DisplayName("작성자·담당자가 아니고 부서도 다른 직원이 조회하면 존재하지 않는 업무로 응답한다")
+    @Test
+    void getById_unrelatedEmployee_throwsTaskNotFound() {
+        // given
+        Employee creator = buildEmployee(1L, "김철수");
+        Employee assignee = buildEmployee(2L, "박영희");
+        Task task = buildTask(10L, creator, assignee, buildDepartment(1L, "개발팀"), TaskStatus.TODO);
+        Employee outsider = buildEmployee(3L, "이민수", EmployeeRole.USER, buildDepartment(2L, "영업팀"));
+        loginAs(outsider);
+
+        given(taskRepository.findById(10L)).willReturn(Optional.of(task));
+        given(employeeRepository.findById(3L)).willReturn(Optional.of(outsider));
+
+        // when & then
+        assertThatThrownBy(() -> taskService.getById(10L))
+                .isInstanceOf(CustomException.class)
+                .extracting(e -> ((CustomException) e).getErrorCode())
+                .isEqualTo(ErrorCode.TASK_NOT_FOUND);
+        verifyNoInteractions(fileAttachmentRepository);
+    }
+
+    @DisplayName("부서가 없는 직원은 부서가 없는 남의 업무를 조회할 수 없다")
+    @Test
+    void getById_bothWithoutDepartment_throwsTaskNotFound() {
+        // given
+        Employee creator = buildEmployee(1L, "김철수");
+        Task task = buildTask(10L, creator, null, null, TaskStatus.TODO);
+        Employee outsider = buildEmployee(3L, "이민수", EmployeeRole.USER, null);
+        loginAs(outsider);
+
+        given(taskRepository.findById(10L)).willReturn(Optional.of(task));
+        given(employeeRepository.findById(3L)).willReturn(Optional.of(outsider));
+
+        // when & then
+        assertThatThrownBy(() -> taskService.getById(10L))
+                .isInstanceOf(CustomException.class)
+                .extracting(e -> ((CustomException) e).getErrorCode())
+                .isEqualTo(ErrorCode.TASK_NOT_FOUND);
+    }
+
+    @DisplayName("업무에 지정된 부서의 소속 직원은 작성자·담당자가 아니어도 조회할 수 있다")
+    @Test
+    void getById_sameDepartmentEmployee_success() {
+        // given
+        Employee creator = buildEmployee(1L, "김철수");
+        Department department = buildDepartment(1L, "개발팀");
+        Task task = buildTask(10L, creator, null, department, TaskStatus.TODO);
+        Employee colleague = buildEmployee(3L, "이민수", EmployeeRole.USER, buildDepartment(1L, "개발팀"));
+        loginAs(colleague);
+
+        given(taskRepository.findById(10L)).willReturn(Optional.of(task));
+        given(employeeRepository.findById(3L)).willReturn(Optional.of(colleague));
+        given(fileAttachmentRepository.findByRefTypeAndRefId(RefType.TASK, 10L))
+                .willReturn(List.of());
+
+        // when
+        TaskDto.Response result = taskService.getById(10L);
+
+        // then
+        assertThat(result.getId()).isEqualTo(10L);
+    }
+
+    @DisplayName("담당자는 부서가 달라도 업무를 조회할 수 있다")
+    @Test
+    void getById_asAssignee_success() {
+        // given
+        Employee creator = buildEmployee(1L, "김철수");
+        Employee assignee = buildEmployee(2L, "박영희", EmployeeRole.USER, buildDepartment(2L, "영업팀"));
+        Task task = buildTask(10L, creator, assignee, buildDepartment(1L, "개발팀"), TaskStatus.TODO);
+        loginAs(assignee);
+
+        given(taskRepository.findById(10L)).willReturn(Optional.of(task));
+        given(employeeRepository.findById(2L)).willReturn(Optional.of(assignee));
+        given(fileAttachmentRepository.findByRefTypeAndRefId(RefType.TASK, 10L))
+                .willReturn(List.of());
+
+        // when
+        TaskDto.Response result = taskService.getById(10L);
+
+        // then
+        assertThat(result.getId()).isEqualTo(10L);
+    }
+
+    @DisplayName("관리자는 관련 없는 업무도 조회할 수 있다")
+    @Test
+    void getById_admin_success() {
+        // given
+        Employee creator = buildEmployee(1L, "김철수");
+        Task task = buildTask(10L, creator, null, buildDepartment(1L, "개발팀"), TaskStatus.TODO);
+        Employee admin = buildEmployee(9L, "관리자", EmployeeRole.ADMIN, null);
+        loginAs(admin);
+
+        given(taskRepository.findById(10L)).willReturn(Optional.of(task));
+        given(employeeRepository.findById(9L)).willReturn(Optional.of(admin));
+        given(fileAttachmentRepository.findByRefTypeAndRefId(RefType.TASK, 10L))
+                .willReturn(List.of());
+
+        // when
+        TaskDto.Response result = taskService.getById(10L);
+
+        // then
+        assertThat(result.getId()).isEqualTo(10L);
+    }
+
+    @DisplayName("인증 정보 없이 업무를 조회하면 예외가 발생한다")
+    @Test
+    void getById_withoutAuthentication_throwsInvalidToken() {
+        // given
+        SecurityContextHolder.clearContext();
+        Employee creator = buildEmployee(1L, "김철수");
+        Task task = buildTask(10L, creator, null, null, TaskStatus.TODO);
+
+        given(taskRepository.findById(10L)).willReturn(Optional.of(task));
+
+        // when & then
+        assertThatThrownBy(() -> taskService.getById(10L))
+                .isInstanceOf(CustomException.class)
+                .extracting(e -> ((CustomException) e).getErrorCode())
+                .isEqualTo(ErrorCode.INVALID_TOKEN);
+    }
+
     // === getAll ===
 
-    @DisplayName("상태와 키워드로 전체 업무 목록을 조회한다")
+    @DisplayName("상태와 키워드로 전체 업무 목록을 조회하면 내 부서와 직원 ID 로 조회 범위가 제한된다")
     @Test
     void getAll_success() {
         // given
         Employee creator = buildEmployee(1L, "김철수");
+        Employee me = buildEmployee(1L, "김철수", EmployeeRole.USER, buildDepartment(7L, "개발팀"));
         Task task = buildTask(10L, creator, null, null, TaskStatus.TODO);
         Pageable pageable = PageRequest.of(0, 10);
         Page<Task> page = new PageImpl<>(List.of(task), pageable, 1);
 
-        given(taskRepository.findAllWithFilter(TaskStatus.TODO, "보고서", pageable)).willReturn(page);
+        given(employeeRepository.findById(1L)).willReturn(Optional.of(me));
+        given(taskRepository.findAllWithFilter(TaskStatus.TODO, "보고서", false, 7L, 1L, pageable)).willReturn(page);
 
         // when
         Page<TaskDto.Response> result = taskService.getAll(TaskStatus.TODO, "보고서", pageable);
@@ -331,36 +498,92 @@ class TaskServiceTest {
         assertThat(result.getContent().get(0).getTitle()).isEqualTo(task.getTitle());
     }
 
+    @DisplayName("관리자가 전체 업무 목록을 조회하면 관리자 여부가 전달된다")
+    @Test
+    void getAll_admin_passesAdminFlag() {
+        // given
+        Employee admin = buildEmployee(9L, "관리자", EmployeeRole.ADMIN, buildDepartment(7L, "개발팀"));
+        loginAs(admin);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Task> page = new PageImpl<>(List.of());
+
+        given(employeeRepository.findById(9L)).willReturn(Optional.of(admin));
+        given(taskRepository.findAllWithFilter(null, null, true, 7L, 9L, pageable)).willReturn(page);
+
+        // when
+        taskService.getAll(null, null, pageable);
+
+        // then
+        verify(taskRepository).findAllWithFilter(null, null, true, 7L, 9L, pageable);
+    }
+
+    @DisplayName("부서가 없는 직원이 전체 업무 목록을 조회하면 부서 조건 없이 본인 ID 만 전달된다")
+    @Test
+    void getAll_withoutDepartment_passesNullDepartment() {
+        // given
+        Employee me = buildEmployee(1L, "김철수", EmployeeRole.USER, null);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Task> page = new PageImpl<>(List.of());
+
+        given(employeeRepository.findById(1L)).willReturn(Optional.of(me));
+        given(taskRepository.findAllWithFilter(null, null, false, null, 1L, pageable)).willReturn(page);
+
+        // when
+        taskService.getAll(null, null, pageable);
+
+        // then
+        verify(taskRepository).findAllWithFilter(null, null, false, null, 1L, pageable);
+    }
+
+    @DisplayName("인증 정보 없이 전체 업무 목록을 조회하면 예외가 발생한다")
+    @Test
+    void getAll_withoutAuthentication_throwsInvalidToken() {
+        // given
+        SecurityContextHolder.clearContext();
+        Pageable pageable = PageRequest.of(0, 10);
+
+        // when & then
+        assertThatThrownBy(() -> taskService.getAll(null, null, pageable))
+                .isInstanceOf(CustomException.class)
+                .extracting(e -> ((CustomException) e).getErrorCode())
+                .isEqualTo(ErrorCode.INVALID_TOKEN);
+        verifyNoInteractions(taskRepository);
+    }
+
     // === getByAssignee ===
 
     @DisplayName("상태 필터가 있으면 필터가 적용된 담당자별 목록을 조회한다")
     @Test
     void getByAssignee_withStatus_delegatesWithStatus() {
         // given
+        Employee me = buildEmployee(1L, "김철수", EmployeeRole.USER, buildDepartment(7L, "개발팀"));
         Pageable pageable = PageRequest.of(0, 10);
         Page<Task> page = new PageImpl<>(List.of());
-        given(taskRepository.findByAssigneeWithFilter(2L, TaskStatus.DONE, pageable)).willReturn(page);
+        given(employeeRepository.findById(1L)).willReturn(Optional.of(me));
+        given(taskRepository.findByAssigneeWithFilter(2L, TaskStatus.DONE, false, 7L, 1L, pageable)).willReturn(page);
 
         // when
         taskService.getByAssignee(2L, TaskStatus.DONE, pageable);
 
         // then
-        verify(taskRepository).findByAssigneeWithFilter(2L, TaskStatus.DONE, pageable);
+        verify(taskRepository).findByAssigneeWithFilter(2L, TaskStatus.DONE, false, 7L, 1L, pageable);
     }
 
     @DisplayName("상태 필터가 없으면 전체 상태의 담당자별 목록을 조회한다")
     @Test
     void getByAssignee_withoutStatus_delegatesWithNullStatus() {
         // given
+        Employee me = buildEmployee(1L, "김철수", EmployeeRole.USER, buildDepartment(7L, "개발팀"));
         Pageable pageable = PageRequest.of(0, 10);
         Page<Task> page = new PageImpl<>(List.of());
-        given(taskRepository.findByAssigneeWithFilter(2L, null, pageable)).willReturn(page);
+        given(employeeRepository.findById(1L)).willReturn(Optional.of(me));
+        given(taskRepository.findByAssigneeWithFilter(2L, null, false, 7L, 1L, pageable)).willReturn(page);
 
         // when
         taskService.getByAssignee(2L, null, pageable);
 
         // then
-        verify(taskRepository).findByAssigneeWithFilter(2L, null, pageable);
+        verify(taskRepository).findByAssigneeWithFilter(2L, null, false, 7L, 1L, pageable);
     }
 
     // === getByCreator ===
@@ -385,20 +608,22 @@ class TaskServiceTest {
 
     // === getByDepartment ===
 
-    @DisplayName("부서 기준으로 업무 목록을 조회한다")
+    @DisplayName("부서 기준으로 업무 목록을 조회하면 조회할 부서와 내 부서가 구분되어 전달된다")
     @Test
     void getByDepartment_success() {
         // given
+        Employee me = buildEmployee(1L, "김철수", EmployeeRole.USER, buildDepartment(7L, "개발팀"));
         Pageable pageable = PageRequest.of(0, 10);
         Page<Task> page = new PageImpl<>(List.of());
 
-        given(taskRepository.findByDepartmentWithFilter(1L, TaskStatus.TODO, pageable)).willReturn(page);
+        given(employeeRepository.findById(1L)).willReturn(Optional.of(me));
+        given(taskRepository.findByDepartmentWithFilter(5L, TaskStatus.TODO, false, 7L, 1L, pageable)).willReturn(page);
 
         // when
-        taskService.getByDepartment(1L, TaskStatus.TODO, pageable);
+        taskService.getByDepartment(5L, TaskStatus.TODO, pageable);
 
         // then
-        verify(taskRepository).findByDepartmentWithFilter(1L, TaskStatus.TODO, pageable);
+        verify(taskRepository).findByDepartmentWithFilter(5L, TaskStatus.TODO, false, 7L, 1L, pageable);
     }
 
     // === update ===
@@ -448,36 +673,92 @@ class TaskServiceTest {
                 .isEqualTo(ErrorCode.TASK_NOT_FOUND);
     }
 
-    @DisplayName("생성자도 담당자도 아닌 사용자가 수정하면 예외가 발생한다")
+    @DisplayName("작성자·담당자가 아니고 부서도 다른 직원이 수정하면 존재하지 않는 업무로 응답한다")
     @Test
-    void update_forbidden_notCreatorNorAssignee_throwsForbidden() {
+    void update_unrelatedEmployee_throwsTaskNotFound() {
         // given
         Employee creator = buildEmployee(1L, "김철수");
         Employee assignee = buildEmployee(2L, "박영희");
-        Task task = buildTask(10L, creator, assignee, null, TaskStatus.TODO);
+        Task task = buildTask(10L, creator, assignee, buildDepartment(1L, "개발팀"), TaskStatus.TODO);
+        Employee outsider = buildEmployee(3L, "이민수", EmployeeRole.USER, buildDepartment(2L, "영업팀"));
+        loginAs(outsider);
 
         given(taskRepository.findById(10L)).willReturn(Optional.of(task));
+        given(employeeRepository.findById(3L)).willReturn(Optional.of(outsider));
         TaskDto.UpdateRequest request = new TaskDto.UpdateRequest();
+        request.setStatus(TaskStatus.IN_PROGRESS);
+
+        // when & then
+        assertThatThrownBy(() -> taskService.update(10L, 3L, request))
+                .isInstanceOf(CustomException.class)
+                .extracting(e -> ((CustomException) e).getErrorCode())
+                .isEqualTo(ErrorCode.TASK_NOT_FOUND);
+        assertThat(task.getStatus()).isEqualTo(TaskStatus.TODO);
+        verifyNoInteractions(auditLogService);
+    }
+
+    @DisplayName("같은 부서 동료는 업무를 볼 수 있어도 수정할 수는 없다")
+    @Test
+    void update_sameDepartmentColleague_throwsForbidden() {
+        // given
+        Employee creator = buildEmployee(1L, "김철수");
+        Employee assignee = buildEmployee(2L, "박영희");
+        Task task = buildTask(10L, creator, assignee, buildDepartment(1L, "개발팀"), TaskStatus.TODO);
+        Employee colleague = buildEmployee(3L, "이민수", EmployeeRole.USER, buildDepartment(1L, "개발팀"));
+        loginAs(colleague);
+
+        given(taskRepository.findById(10L)).willReturn(Optional.of(task));
+        given(employeeRepository.findById(3L)).willReturn(Optional.of(colleague));
+        TaskDto.UpdateRequest request = new TaskDto.UpdateRequest();
+        request.setStatus(TaskStatus.IN_PROGRESS);
 
         // when & then
         assertThatThrownBy(() -> taskService.update(10L, 3L, request))
                 .isInstanceOf(CustomException.class)
                 .extracting(e -> ((CustomException) e).getErrorCode())
                 .isEqualTo(ErrorCode.FORBIDDEN);
+        assertThat(task.getStatus()).isEqualTo(TaskStatus.TODO);
+        verifyNoInteractions(auditLogService);
     }
 
-    @DisplayName("담당자가 업무를 수정하면 정상 반영된다")
+    @DisplayName("관리자라도 작성자가 아니면 업무를 수정할 수 없다")
     @Test
-    void update_asAssignee_success() {
+    void update_asAdmin_throwsForbidden() {
+        // given
+        Employee creator = buildEmployee(1L, "김철수");
+        Employee assignee = buildEmployee(2L, "박영희");
+        Task task = buildTask(10L, creator, assignee, buildDepartment(1L, "개발팀"), TaskStatus.TODO);
+        Employee admin = buildEmployee(9L, "관리자", EmployeeRole.ADMIN, null);
+        loginAs(admin);
+
+        given(taskRepository.findById(10L)).willReturn(Optional.of(task));
+        given(employeeRepository.findById(9L)).willReturn(Optional.of(admin));
+        TaskDto.UpdateRequest request = new TaskDto.UpdateRequest();
+        request.setStatus(TaskStatus.IN_PROGRESS);
+
+        // when & then
+        assertThatThrownBy(() -> taskService.update(10L, 9L, request))
+                .isInstanceOf(CustomException.class)
+                .extracting(e -> ((CustomException) e).getErrorCode())
+                .isEqualTo(ErrorCode.FORBIDDEN);
+        assertThat(task.getStatus()).isEqualTo(TaskStatus.TODO);
+        verifyNoInteractions(auditLogService);
+    }
+
+    @DisplayName("담당자가 상태만 변경하면 정상 반영되고 담당자·부서는 그대로 유지된다")
+    @Test
+    void update_asAssignee_statusOnly_success() {
         // given
         Long taskId = 10L;
         Long requesterId = 2L;
         Employee creator = buildEmployee(1L, "김철수");
         Employee assignee = buildEmployee(2L, "박영희");
-        Task task = buildTask(taskId, creator, assignee, null, TaskStatus.TODO);
+        Department department = buildDepartment(1L, "개발팀");
+        Task task = buildTask(taskId, creator, assignee, department, TaskStatus.TODO);
+        loginAs(assignee);
 
         TaskDto.UpdateRequest request = new TaskDto.UpdateRequest();
-        request.setDescription("수정된 설명");
+        request.setStatus(TaskStatus.IN_PROGRESS);
 
         given(taskRepository.findById(taskId)).willReturn(Optional.of(task));
         given(fileAttachmentRepository.findByRefTypeAndRefId(RefType.TASK, taskId)).willReturn(List.of());
@@ -487,8 +768,133 @@ class TaskServiceTest {
         TaskDto.Response result = taskService.update(taskId, requesterId, request);
 
         // then
-        assertThat(result.getDescription()).isEqualTo("수정된 설명");
+        assertThat(result.getStatus()).isEqualTo(TaskStatus.IN_PROGRESS);
+        assertThat(result.getTitle()).isEqualTo("주간 보고서 작성");
+        assertThat(result.getAssigneeId()).isEqualTo(2L);
+        assertThat(result.getDepartmentId()).isEqualTo(1L);
+        verify(messagingTemplate).convertAndSendToUser(eq("2"), eq("/queue/tasks/status"), anyMap());
+    }
+
+    @DisplayName("담당자가 진행률만 변경하면 정상 반영된다")
+    @Test
+    void update_asAssignee_progressOnly_success() {
+        // given
+        Long taskId = 10L;
+        Long requesterId = 2L;
+        Employee creator = buildEmployee(1L, "김철수");
+        Employee assignee = buildEmployee(2L, "박영희");
+        Task task = buildTask(taskId, creator, assignee, null, TaskStatus.TODO);
+        loginAs(assignee);
+
+        TaskDto.UpdateRequest request = new TaskDto.UpdateRequest();
+        request.setProgress(80);
+
+        given(taskRepository.findById(taskId)).willReturn(Optional.of(task));
+        given(fileAttachmentRepository.findByRefTypeAndRefId(RefType.TASK, taskId)).willReturn(List.of());
+        given(employeeRepository.findById(requesterId)).willReturn(Optional.of(assignee));
+
+        // when
+        TaskDto.Response result = taskService.update(taskId, requesterId, request);
+
+        // then
+        assertThat(result.getProgress()).isEqualTo(80);
         verifyNoInteractions(messagingTemplate);
+    }
+
+    @DisplayName("담당자가 제목을 함께 바꾸려 하면 예외가 발생하고 업무는 변경되지 않는다")
+    @Test
+    void update_asAssignee_withTitle_throwsForbidden() {
+        // given
+        Employee creator = buildEmployee(1L, "김철수");
+        Employee assignee = buildEmployee(2L, "박영희");
+        Task task = buildTask(10L, creator, assignee, null, TaskStatus.TODO);
+        loginAs(assignee);
+        given(taskRepository.findById(10L)).willReturn(Optional.of(task));
+        given(employeeRepository.findById(2L)).willReturn(Optional.of(assignee));
+
+        TaskDto.UpdateRequest request = new TaskDto.UpdateRequest();
+        request.setStatus(TaskStatus.IN_PROGRESS);
+        request.setTitle("제목 변경");
+
+        // when & then
+        assertThatThrownBy(() -> taskService.update(10L, 2L, request))
+                .isInstanceOf(CustomException.class)
+                .extracting(e -> ((CustomException) e).getErrorCode())
+                .isEqualTo(ErrorCode.FORBIDDEN);
+        assertThat(task.getTitle()).isEqualTo("주간 보고서 작성");
+        assertThat(task.getStatus()).isEqualTo(TaskStatus.TODO);
+        verifyNoInteractions(auditLogService);
+    }
+
+    @DisplayName("담당자가 내용·담당자·부서·기간 중 하나라도 바꾸려 하면 예외가 발생한다")
+    @Test
+    void update_asAssignee_withRestrictedField_throwsForbidden() {
+        // given
+        Employee creator = buildEmployee(1L, "김철수");
+        Employee assignee = buildEmployee(2L, "박영희");
+        Task task = buildTask(10L, creator, assignee, null, TaskStatus.TODO);
+        loginAs(assignee);
+        given(taskRepository.findById(10L)).willReturn(Optional.of(task));
+        given(employeeRepository.findById(2L)).willReturn(Optional.of(assignee));
+
+        Map<String, Consumer<TaskDto.UpdateRequest>> restrictedFields = Map.of(
+                "description", request -> request.setDescription("수정된 설명"),
+                "assigneeId", request -> request.setAssigneeId(3L),
+                "departmentId", request -> request.setDepartmentId(1L),
+                "startDate", request -> request.setStartDate(LocalDate.of(2026, 8, 1)),
+                "dueDate", request -> request.setDueDate(LocalDate.of(2026, 8, 15)));
+
+        restrictedFields.forEach((field, setField) -> {
+            TaskDto.UpdateRequest request = new TaskDto.UpdateRequest();
+            request.setStatus(TaskStatus.IN_PROGRESS);
+            setField.accept(request);
+
+            // when & then
+            assertThatThrownBy(() -> taskService.update(10L, 2L, request))
+                    .as(field)
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.FORBIDDEN);
+        });
+        verify(employeeRepository, never()).findById(3L);
+        verifyNoInteractions(departmentRepository, auditLogService);
+    }
+
+    @DisplayName("생성자는 제목·내용·담당자·부서·기간을 모두 수정할 수 있다")
+    @Test
+    void update_asCreator_allFields_success() {
+        // given
+        Long taskId = 10L;
+        Long requesterId = 1L;
+        Employee creator = buildEmployee(1L, "김철수");
+        Employee newAssignee = buildEmployee(3L, "이민수");
+        Department department = buildDepartment(1L, "개발팀");
+        Task task = buildTask(taskId, creator, null, null, TaskStatus.TODO);
+
+        TaskDto.UpdateRequest request = new TaskDto.UpdateRequest();
+        request.setTitle("월간 보고서 작성");
+        request.setDescription("수정된 설명");
+        request.setAssigneeId(3L);
+        request.setDepartmentId(1L);
+        request.setStartDate(LocalDate.of(2026, 8, 1));
+        request.setDueDate(LocalDate.of(2026, 8, 15));
+
+        given(taskRepository.findById(taskId)).willReturn(Optional.of(task));
+        given(employeeRepository.findById(3L)).willReturn(Optional.of(newAssignee));
+        given(departmentRepository.findById(1L)).willReturn(Optional.of(department));
+        given(fileAttachmentRepository.findByRefTypeAndRefId(RefType.TASK, taskId)).willReturn(List.of());
+        given(employeeRepository.findById(requesterId)).willReturn(Optional.of(creator));
+
+        // when
+        TaskDto.Response result = taskService.update(taskId, requesterId, request);
+
+        // then
+        assertThat(result.getTitle()).isEqualTo("월간 보고서 작성");
+        assertThat(result.getDescription()).isEqualTo("수정된 설명");
+        assertThat(result.getAssigneeId()).isEqualTo(3L);
+        assertThat(result.getDepartmentId()).isEqualTo(1L);
+        assertThat(result.getStartDate()).isEqualTo(LocalDate.of(2026, 8, 1));
+        assertThat(result.getDueDate()).isEqualTo(LocalDate.of(2026, 8, 15));
     }
 
     @DisplayName("수정 시 진행률이 10단위가 아니면 예외가 발생한다")
@@ -498,6 +904,7 @@ class TaskServiceTest {
         Employee creator = buildEmployee(1L, "김철수");
         Task task = buildTask(10L, creator, null, null, TaskStatus.TODO);
         given(taskRepository.findById(10L)).willReturn(Optional.of(task));
+        given(employeeRepository.findById(1L)).willReturn(Optional.of(creator));
 
         TaskDto.UpdateRequest request = new TaskDto.UpdateRequest();
         request.setProgress(45);
@@ -516,6 +923,7 @@ class TaskServiceTest {
         Employee creator = buildEmployee(1L, "김철수");
         Task task = buildTask(10L, creator, null, null, TaskStatus.TODO);
         given(taskRepository.findById(10L)).willReturn(Optional.of(task));
+        given(employeeRepository.findById(1L)).willReturn(Optional.of(creator));
         given(employeeRepository.findById(99L)).willReturn(Optional.empty());
 
         TaskDto.UpdateRequest request = new TaskDto.UpdateRequest();
@@ -535,6 +943,7 @@ class TaskServiceTest {
         Employee creator = buildEmployee(1L, "김철수");
         Task task = buildTask(10L, creator, null, null, TaskStatus.TODO);
         given(taskRepository.findById(10L)).willReturn(Optional.of(task));
+        given(employeeRepository.findById(1L)).willReturn(Optional.of(creator));
         given(departmentRepository.findById(5L)).willReturn(Optional.empty());
 
         TaskDto.UpdateRequest request = new TaskDto.UpdateRequest();
@@ -602,19 +1011,87 @@ class TaskServiceTest {
                 .isEqualTo(ErrorCode.TASK_NOT_FOUND);
     }
 
-    @DisplayName("생성자도 담당자도 아닌 사용자가 삭제하면 예외가 발생한다")
+    @DisplayName("작성자·담당자가 아니고 부서도 다른 직원이 삭제하면 존재하지 않는 업무로 응답한다")
     @Test
-    void delete_forbidden_throwsForbidden() {
+    void delete_unrelatedEmployee_throwsTaskNotFound() {
         // given
         Employee creator = buildEmployee(1L, "김철수");
-        Task task = buildTask(10L, creator, null, null, TaskStatus.TODO);
+        Task task = buildTask(10L, creator, null, buildDepartment(1L, "개발팀"), TaskStatus.TODO);
+        Employee outsider = buildEmployee(3L, "이민수", EmployeeRole.USER, buildDepartment(2L, "영업팀"));
+        loginAs(outsider);
 
         given(taskRepository.findById(10L)).willReturn(Optional.of(task));
+        given(employeeRepository.findById(3L)).willReturn(Optional.of(outsider));
+
+        // when & then
+        assertThatThrownBy(() -> taskService.delete(10L, 3L))
+                .isInstanceOf(CustomException.class)
+                .extracting(e -> ((CustomException) e).getErrorCode())
+                .isEqualTo(ErrorCode.TASK_NOT_FOUND);
+        verify(taskRepository, never()).delete(any(Task.class));
+        verifyNoInteractions(auditLogService);
+    }
+
+    @DisplayName("담당자가 업무를 삭제하면 예외가 발생하고 업무는 삭제되지 않는다")
+    @Test
+    void delete_asAssignee_throwsForbidden() {
+        // given
+        Employee creator = buildEmployee(1L, "김철수");
+        Employee assignee = buildEmployee(2L, "박영희");
+        Task task = buildTask(10L, creator, assignee, null, TaskStatus.TODO);
+        loginAs(assignee);
+
+        given(taskRepository.findById(10L)).willReturn(Optional.of(task));
+        given(employeeRepository.findById(2L)).willReturn(Optional.of(assignee));
+
+        // when & then
+        assertThatThrownBy(() -> taskService.delete(10L, 2L))
+                .isInstanceOf(CustomException.class)
+                .extracting(e -> ((CustomException) e).getErrorCode())
+                .isEqualTo(ErrorCode.FORBIDDEN);
+        verify(taskRepository, never()).delete(any(Task.class));
+        verifyNoInteractions(auditLogService);
+    }
+
+    @DisplayName("같은 부서 동료는 업무를 볼 수 있어도 삭제할 수는 없다")
+    @Test
+    void delete_sameDepartmentColleague_throwsForbidden() {
+        // given
+        Employee creator = buildEmployee(1L, "김철수");
+        Task task = buildTask(10L, creator, null, buildDepartment(1L, "개발팀"), TaskStatus.TODO);
+        Employee colleague = buildEmployee(3L, "이민수", EmployeeRole.USER, buildDepartment(1L, "개발팀"));
+        loginAs(colleague);
+
+        given(taskRepository.findById(10L)).willReturn(Optional.of(task));
+        given(employeeRepository.findById(3L)).willReturn(Optional.of(colleague));
 
         // when & then
         assertThatThrownBy(() -> taskService.delete(10L, 3L))
                 .isInstanceOf(CustomException.class)
                 .extracting(e -> ((CustomException) e).getErrorCode())
                 .isEqualTo(ErrorCode.FORBIDDEN);
+        verify(taskRepository, never()).delete(any(Task.class));
+        verifyNoInteractions(auditLogService);
+    }
+
+    @DisplayName("관리자라도 작성자가 아니면 업무를 삭제할 수 없다")
+    @Test
+    void delete_asAdmin_throwsForbidden() {
+        // given
+        Employee creator = buildEmployee(1L, "김철수");
+        Task task = buildTask(10L, creator, null, buildDepartment(1L, "개발팀"), TaskStatus.TODO);
+        Employee admin = buildEmployee(9L, "관리자", EmployeeRole.ADMIN, null);
+        loginAs(admin);
+
+        given(taskRepository.findById(10L)).willReturn(Optional.of(task));
+        given(employeeRepository.findById(9L)).willReturn(Optional.of(admin));
+
+        // when & then
+        assertThatThrownBy(() -> taskService.delete(10L, 9L))
+                .isInstanceOf(CustomException.class)
+                .extracting(e -> ((CustomException) e).getErrorCode())
+                .isEqualTo(ErrorCode.FORBIDDEN);
+        verify(taskRepository, never()).delete(any(Task.class));
+        verifyNoInteractions(auditLogService);
     }
 }

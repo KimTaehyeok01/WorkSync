@@ -1,13 +1,72 @@
 .root {
   display: grid;
-  grid-template-columns: 380px minmax(0, 1fr);
+  grid-template-columns: 220px minmax(0, 1fr);
   gap: var(--ws-space-lg);
   height: calc(100vh - var(--ws-topbar-h) - 48px);
   min-height: 480px;
 }
 
-/* ── 왼쪽 메일함 ── */
-.listPane {
+/* ── 왼쪽 메일함 메뉴 ── */
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ws-space-lg);
+  min-height: 0;
+  padding: var(--ws-space-lg);
+  background: var(--ws-surface);
+  border: 1px solid var(--ws-border-light);
+  border-radius: var(--ws-radius-lg);
+  box-shadow: var(--ws-shadow-sm);
+}
+/* 공용 버튼의 inline-flex 를 덮어 전체 폭으로 — 선택자를 겹쳐 순서와 상관없이 이기게 한다 */
+.side .composeBtn {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 11px 16px;
+}
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: var(--ws-space-sm);
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: var(--ws-radius-md);
+  color: var(--ws-text-600);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-align: left;
+  transition: background 0.15s;
+}
+.menuItem:hover {
+  background: #f9fafb;
+}
+.menuItemActive,
+.menuItemActive:hover {
+  color: var(--ws-primary);
+  background: var(--ws-primary-soft);
+}
+.menuLabel {
+  flex: 1;
+}
+.badge {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--ws-primary);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* ── 오른쪽 메인 ── */
+.main {
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -17,45 +76,43 @@
   box-shadow: var(--ws-shadow-sm);
   overflow: hidden;
 }
-.listHeader {
+.mainHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--ws-space-sm);
-  padding: var(--ws-space-md) var(--ws-space-lg);
-  border-bottom: 1px solid var(--ws-border-light);
+  flex-wrap: wrap;
+  gap: var(--ws-space-md);
+  padding: var(--ws-space-lg) var(--ws-space-xl);
 }
-.boxTabs {
+.titleGroup {
   display: flex;
-  gap: 2px;
-  padding: 3px;
-  border-radius: var(--ws-radius-md);
-  background: #f3f4f6;
+  align-items: baseline;
+  gap: var(--ws-space-md);
 }
-.boxTab {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: var(--ws-radius-sm);
+.title {
+  margin: 0;
+  color: var(--ws-text-900);
+  font-size: 18px;
+  font-weight: 700;
+}
+.counts {
   color: var(--ws-text-500);
   font-size: 12.5px;
-  font-weight: 600;
 }
-.boxTabActive {
-  color: var(--ws-primary);
-  background: var(--ws-surface);
-  box-shadow: var(--ws-shadow-sm);
-}
-
-.listTools {
+.tools {
   display: flex;
   align-items: center;
   gap: var(--ws-space-sm);
-  padding: var(--ws-space-md) var(--ws-space-lg);
+  min-width: 0;
 }
-.listTools > :first-child {
-  flex: 1;
+.searchBox {
+  flex: 1 1 220px;
+  min-width: 0;
+  max-width: 320px;
+}
+/* 공용 검색 입력은 폭이 300px 로 고정돼 있어 옆의 "안 읽음" 버튼을 밀어내므로, 이 화면에서는 남는 폭만 쓰게 한다 */
+.searchBox input {
+  width: 100%;
 }
 .filterChip {
   flex-shrink: 0;
@@ -72,79 +129,95 @@
   background: var(--ws-primary-soft);
 }
 
+/* ── 표 모양 목록 ── */
+.rowGrid {
+  display: grid;
+  grid-template-columns: 22px 160px minmax(0, 1fr) 96px;
+  align-items: center;
+  column-gap: var(--ws-space-sm);
+  padding: 0 var(--ws-space-xl);
+}
+.tableHead {
+  height: 36px;
+  border-top: 1px solid var(--ws-border-light);
+  border-bottom: 1px solid var(--ws-border-light);
+  color: var(--ws-text-500);
+  background: #f9fafb;
+  font-size: 12px;
+  font-weight: 600;
+}
+.headDate {
+  text-align: right;
+}
 .list {
   flex: 1;
   overflow-y: auto;
 }
-.item {
-  position: relative;
+.listError {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
   gap: var(--ws-space-md);
+  padding: 48px var(--ws-space-lg);
+  color: var(--ws-text-500);
+  font-size: 13.5px;
+}
+.listError p {
+  margin: 0;
+}
+.row {
   width: 100%;
-  padding: var(--ws-space-md) var(--ws-space-lg);
+  height: 44px;
   border-bottom: 1px solid var(--ws-border-light);
   text-align: left;
   transition: background 0.15s;
 }
-.item:hover {
+.row:hover {
   background: #f9fafb;
 }
-.itemActive,
-.itemActive:hover {
-  background: var(--ws-primary-soft);
-}
-.itemBody {
+.cellMark {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
-}
-.itemTop {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--ws-space-sm);
-}
-.itemName {
-  color: var(--ws-text-700);
-  font-size: 12.5px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.itemTime {
-  flex-shrink: 0;
-  color: var(--ws-text-400);
-  font-size: 11.5px;
-}
-.itemSubject {
-  color: var(--ws-text-800);
-  font-size: 13.5px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.itemPreview {
-  color: var(--ws-text-400);
-  font-size: 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-/* 안 읽은 메일은 굵게 */
-.itemUnread .itemName,
-.itemUnread .itemSubject {
-  color: var(--ws-text-900);
-  font-weight: 700;
+  align-items: center;
 }
 .unreadDot {
-  flex-shrink: 0;
   width: 8px;
   height: 8px;
-  margin-top: 6px;
   border-radius: 50%;
   background: var(--ws-primary);
+}
+.cellFrom,
+.subjectText {
+  overflow: hidden;
+  color: var(--ws-text-700);
+  font-size: 13px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.cellSubject {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.subjectText {
+  color: var(--ws-text-800);
+  font-size: 13.5px;
+}
+.clip {
+  flex-shrink: 0;
+  color: var(--ws-text-400);
+}
+.cellDate {
+  color: var(--ws-text-400);
+  font-size: 12px;
+  text-align: right;
+  white-space: nowrap;
+}
+/* 안 읽은 메일은 굵게 */
+.rowUnread .cellFrom,
+.rowUnread .subjectText {
+  color: var(--ws-text-900);
+  font-weight: 700;
 }
 
 .pager {
@@ -172,28 +245,14 @@
   cursor: not-allowed;
 }
 
-/* ── 오른쪽 본문 ── */
-.detailPane {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  padding: var(--ws-space-xl) var(--ws-space-2xl);
-  background: var(--ws-surface);
-  border: 1px solid var(--ws-border-light);
-  border-radius: var(--ws-radius-lg);
-  box-shadow: var(--ws-shadow-sm);
-  overflow-y: auto;
-}
-.detailPaneEmpty {
-  align-items: center;
-  justify-content: center;
-}
-.detailActions {
+/* ── 상세 ── */
+.detailBar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--ws-space-sm);
-  margin-bottom: var(--ws-space-lg);
+  padding: var(--ws-space-md) var(--ws-space-xl);
+  border-bottom: 1px solid var(--ws-border-light);
 }
 .detailButtons {
   display: flex;
@@ -202,12 +261,18 @@
   margin-left: auto;
 }
 .backBtn {
-  display: none;
+  display: flex;
   align-items: center;
   gap: 2px;
   color: var(--ws-text-600);
   font-size: 13px;
   font-weight: 600;
+}
+.detailBody {
+  flex: 1;
+  min-height: 0;
+  padding: var(--ws-space-xl) var(--ws-space-2xl);
+  overflow-y: auto;
 }
 .subject {
   margin: 0 0 var(--ws-space-lg);
@@ -255,8 +320,20 @@
   color: var(--ws-text-400);
   font-size: 12px;
 }
+.attachments {
+  padding: var(--ws-space-lg) 0;
+  border-bottom: 1px solid var(--ws-border-light);
+}
+.attachTitle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  color: var(--ws-text-600);
+  font-size: 12.5px;
+  font-weight: 600;
+}
 .content {
-  flex: 1;
   padding: var(--ws-space-2xl) 0;
   color: var(--ws-text-800);
   font-size: 14px;
@@ -299,16 +376,52 @@
   font-size: 11px;
 }
 
-/* 좁은 화면 — 목록과 본문을 한 번에 하나씩 */
+/* 좁은 화면 — 왼쪽 메뉴를 위쪽 가로 줄로 접는다 */
 @media (max-width: 1023px) {
   .root {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
   }
-  .listPaneHidden,
-  .detailPaneEmpty {
-    display: none;
+  .side {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--ws-space-sm);
+    padding: var(--ws-space-sm) var(--ws-space-md);
   }
-  .backBtn {
-    display: flex;
+  .side .composeBtn {
+    width: auto;
+    padding: 8px 14px;
+  }
+  .menu {
+    flex-direction: row;
+    gap: var(--ws-space-xs);
+  }
+  .menuItem {
+    width: auto;
+    padding: 7px 12px;
+  }
+  .searchBox {
+    max-width: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .mainHeader {
+    padding: var(--ws-space-md);
+  }
+  .tools {
+    width: 100%;
+  }
+  .rowGrid {
+    grid-template-columns: 14px 84px minmax(0, 1fr) 76px;
+    padding: 0 var(--ws-space-md);
+  }
+  .detailBar {
+    flex-wrap: wrap;
+    padding: var(--ws-space-md);
+  }
+  .detailBody {
+    padding: var(--ws-space-lg);
   }
 }

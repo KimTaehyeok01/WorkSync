@@ -127,10 +127,13 @@ public class MailDto {
 		@Schema(description = "읽음 여부 — 받은편지함은 내가 읽었는지, 보낸편지함은 항상 true", example = "false")
 		private Boolean isRead;
 
+		@Schema(description = "첨부파일 유무", example = "false")
+		private Boolean hasAttachment;
+
 		@Schema(description = "보낸 일시")
 		private LocalDateTime createdAt;
 
-		public static ListResponse of(Mail mail, List<MailRecipient> recipients, boolean read) {
+		public static ListResponse of(Mail mail, List<MailRecipient> recipients, boolean read, boolean hasAttachment) {
 			String content = mail.getContent();
 			return ListResponse.builder()
 					.id(mail.getId())
@@ -139,6 +142,7 @@ public class MailDto {
 					.sender(PersonResponse.from(mail.getSender()))
 					.recipientSummary(summarize(recipients))
 					.isRead(read)
+					.hasAttachment(hasAttachment)
 					.createdAt(mail.getCreatedAt())
 					.build();
 		}

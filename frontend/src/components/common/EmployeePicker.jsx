@@ -10,7 +10,9 @@ export default function EmployeePicker({
   employees,
   selectedIds,
   onChange,
-  placeholder = "이름으로 검색",
+  // 켜면 이메일로도 찾고, 추천 목록·칩에 이메일을 함께 보여준다 (메일 받는 사람·참조)
+  byEmail = false,
+  placeholder = byEmail ? "이메일 입력" : "이름으로 검색",
   excludeIds = [],
   disabled = false,
 }) {
@@ -31,14 +33,23 @@ export default function EmployeePicker({
     .map((id) => employees.find((e) => e.id === id))
     .filter(Boolean);
 
+  // byEmail: 입력과 이메일이 완전히 같은(대소문자 무시) 직원인지
+  const isExactEmail = (e) =>
+    byEmail &&
+    keyword.trim() !== "" &&
+    (e.email ?? "").toLowerCase() === keyword.trim().toLowerCase();
+
   const suggestions = employees
     .filter((e) => !selectedIds.includes(e.id) && !excludeIds.includes(e.id))
     .filter((e) => e.status !== "INACTIVE")
     .filter((e) =>
-      `${e.name} ${e.departmentName ?? ""}`
+      `${e.name} ${e.departmentName ?? ""}${byEmail ? ` ${e.email ?? ""}` : ""}`
         .toLowerCase()
         .includes(keyword.trim().toLowerCase()),
     )
+    // 완전 일치를 맨 위로 — 8명으로 자르기 전에 올려야 잘려 나가지 않는다.
+    // sort 는 안정 정렬이라 그 외 순서(와 byEmail 이 꺼졌을 때의 순서)는 그대로다
+    .sort((a, b) => isExactEmail(b) - isExactEmail(a))
     .slice(0, MAX_SUGGESTIONS);
 
   const add = (id) => {
@@ -53,7 +64,11 @@ export default function EmployeePicker({
       <div className={`${s.box} ${disabled ? s.boxDisabled : ""}`}>
         {selected.map((employee) => (
           <span key={employee.id} className={s.chip}>
-            {employee.name}
+            <span className={s.chipLabel}>
+              {byEmail && employee.email
+                ? `${employee.name} <${employee.email}>`
+                : employee.name}
+            </span>
             {!disabled && (
               <button
                 type="button"
@@ -81,6 +96,19 @@ export default function EmployeePicker({
               if (e.key === "Backspace" && keyword === "" && selectedIds.length > 0) {
                 remove(selectedIds[selectedIds.length - 1]);
               }
+              // 이메일을 치고 Enter 하면 열려 있는 추천 목록의 맨 위를 고른다.
+              // 한글 조합 중에는 고르지 않되, 폼 제출은 그때도 막는다
+              if (byEmail && e.key === "Enter") {
+                e.preventDefault();
+                if (
+                  !e.nativeEvent.isComposing &&
+                  open &&
+                  keyword.trim() !== "" &&
+                  suggestions.length > 0
+                ) {
+                  add(suggestions[0].id);
+                }
+              }
             }}
           />
         )}
@@ -100,6 +128,7 @@ export default function EmployeePicker({
               <WSAvatar src={employee.profileImage} name={employee.name} size={26} />
               <span className={s.optionName}>{employee.name}</span>
               <span className={s.optionSub}>{employee.departmentName ?? "미배정"}</span>
+              {byEmail && <span className={s.optionEmail}>{employee.email}</span>}
             </button>
           ))}
         </div>

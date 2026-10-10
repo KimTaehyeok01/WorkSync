@@ -17,6 +17,7 @@ import {
   WSFileUploadZone,
   WSCalendarpicker,
   WSFileList,
+  WSAlert,
 } from "../../../components/common/FormComponents";
 import useFileUpload from "../../../hooks/useFileUpload";
 import { getFile, saveFile, deleteFile } from "../../file/services/fileApi";
@@ -67,6 +68,8 @@ export default function TaskUpdate() {
   const [role, setRole] = useState(null);
   const [myDepartmentId, setMyDepartmentId] = useState(null);
   const [myId, setMyId] = useState(null);
+  const [creatorId, setCreatorId] = useState(null);
+  const [error, setError] = useState("");
 
   // 파일 선언
   const {
@@ -84,7 +87,11 @@ export default function TaskUpdate() {
     if (!accessToken) return;
 
     getMyInfo(accessToken).then((data) => {
-      if (!data) return;
+      // 내 정보를 확인하지 못하면 작성자인지 판정할 수 없으니 상세로 보낸다
+      if (!data) {
+        navigate(`/tasks/${taskId}`, { replace: true });
+        return;
+      }
       setRole(data.role);
       setMyId(data.id);
       setMyDepartmentId(data.departmentId);
@@ -102,8 +109,13 @@ export default function TaskUpdate() {
 
     //기존 업무 데이터 불러오기
     getTaskById(accessToken, taskId).then((data) => {
-      if (!data) return;
+      // 볼 수 없거나 없는 업무면 목록으로 보낸다
+      if (!data) {
+        navigate("/tasks", { replace: true });
+        return;
+      }
 
+      setCreatorId(data.creatorId);
       setForm({
         title: data.title,
         description: data.description,
@@ -134,11 +146,18 @@ export default function TaskUpdate() {
     });
   }, [accessToken, taskId]);
 
+  // 수정은 작성자만 — 내 정보와 업무가 둘 다 로드된 뒤에 판정한다
+  useEffect(() => {
+    if (myId === null || creatorId === null) return;
+    if (creatorId !== myId) navigate(`/tasks/${taskId}`, { replace: true });
+  }, [myId, creatorId, taskId, navigate]);
+
   const isValid = form.title.trim().length > 0;
   const isTitleTooLong = form.title.length > 30;
 
   async function handleSubmit() {
     if (!isValid) return;
+    setError("");
 
     const data = {
       title: form.title,
@@ -152,9 +171,12 @@ export default function TaskUpdate() {
     };
 
     try {
-      await updateTask(accessToken, taskId, data).then((res) => {
-        if (!res) return;
-      });
+      const res = await updateTask(accessToken, taskId, data);
+      // 서버가 거절(403·400 등)하면 성공 화면으로 넘어가지 않는다
+      if (!res) {
+        setError("저장하지 못했습니다. 권한이나 입력값을 확인해 주세요.");
+        return;
+      }
 
       // 파일 경로가 있으면 파일 저장
       for (const file of uploadedFile) {
@@ -196,6 +218,11 @@ export default function TaskUpdate() {
         </div>
       </div>
     );
+  }
+
+  // 작성자로 확인되기 전에는 폼을 보여주지 않는다 (작성자가 아니면 위 effect 가 상세로 보낸다)
+  if (myId === null || creatorId !== myId) {
+    return <div>로딩 중...</div>;
   }
 
   return (
@@ -365,6 +392,13 @@ export default function TaskUpdate() {
           </WSCard>
 
           <div className={s.actionsCol}>
+            {error && (
+              <WSAlert
+                type="error"
+                message={error}
+                onClose={() => setError("")}
+              />
+            )}
             <WSButton
               label="수정 등록"
               icon={<Pencil size={16} />}

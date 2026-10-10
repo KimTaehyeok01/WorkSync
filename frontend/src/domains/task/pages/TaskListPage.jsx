@@ -3,12 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ClipboardList, Plus, List, Columns3 } from "lucide-react";
 import TaskKanban from "../components/TaskKanban";
 import useAuthContext from "../../../store/AuthContext";
-import {
-  getTaskList,
-  getTasksByDepartment,
-  getMyInfo,
-  getEmployees,
-} from "../services/taskApi";
+import { getTaskList, getEmployees, getMyInfo } from "../services/taskApi";
 import {
   WSAvatar,
   WSBadge,
@@ -43,13 +38,11 @@ export default function Tasks() {
   const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(false);
   const { accessToken } = useAuthContext();
-  const [role, setRole] = useState(null);
-  const [departmentId, setDepartmentId] = useState(null);
   const [profile, setProfile] = useState([]); // 목록 프로필이미지
+  const [myId, setMyId] = useState(null); // 칸반에서 내가 옮길 수 있는 카드 판정용
   const [view, setView] = useState("list"); // 보기 방식: list | kanban
   const navigate = useNavigate();
 
-  //내 정보 불러오기
   useEffect(() => {
     if (!accessToken) return;
 
@@ -60,35 +53,20 @@ export default function Tasks() {
 
     getMyInfo(accessToken).then((data) => {
       if (!data) return;
-      setRole(data.role);
-      setDepartmentId(data.departmentId);
+      setMyId(data.id);
     });
   }, [accessToken]);
 
   useEffect(() => {
-    if (!accessToken || role === null) return;
+    if (!accessToken) return;
 
-    if (role === "ADMIN") {
-      // ADMIN 이면 전체 목록 보이기
-      getTaskList(accessToken, page - 1, 10, statusFilter).then((data) => {
-        if (!data) return;
-        setTasks(data.content);
-        setTotalElements(data.totalElements);
-      });
-    } else {
-      getTasksByDepartment(
-        accessToken,
-        departmentId,
-        page - 1,
-        10,
-        statusFilter,
-      ).then((data) => {
-        if (!data) return;
-        setTasks(data.content);
-        setTotalElements(data.totalElements);
-      });
-    }
-  }, [accessToken, role, departmentId, page, statusFilter]);
+    // 서버가 내가 볼 수 있는 업무(작성·담당·지정 부서·관리자)만 내려준다
+    getTaskList(accessToken, page - 1, 10, statusFilter).then((data) => {
+      if (!data) return;
+      setTasks(data.content);
+      setTotalElements(data.totalElements);
+    });
+  }, [accessToken, page, statusFilter]);
 
   const filtered = tasks.filter((task) => {
     const matchSearch =
@@ -150,8 +128,7 @@ export default function Tasks() {
       {view === "kanban" ? (
         <TaskKanban
           accessToken={accessToken}
-          role={role}
-          departmentId={departmentId}
+          myId={myId}
           search={search}
           profiles={profile}
         />

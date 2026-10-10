@@ -3,6 +3,8 @@ package com.worksync.domain.mail.service;
 
 import com.worksync.domain.employee.entity.Employee;
 import com.worksync.domain.employee.repository.EmployeeRepository;
+import com.worksync.domain.file.entity.RefType;
+import com.worksync.domain.file.repository.FileAttachmentRepository;
 import com.worksync.domain.mail.dto.MailDto;
 import com.worksync.domain.mail.entity.Mail;
 import com.worksync.domain.mail.entity.MailBox;
@@ -21,8 +23,13 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -35,6 +42,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 /** MailService 단위 테스트. */
 @ExtendWith(MockitoExtension.class)
@@ -48,6 +56,8 @@ class MailServiceTest {
 	private EmployeeRepository employeeRepository;
 	@Mock
 	private NotificationService notificationService;
+	@Mock
+	private FileAttachmentRepository fileAttachmentRepository;
 
 	@InjectMocks
 	private MailService mailService;
@@ -78,6 +88,110 @@ class MailServiceTest {
 		mail.addRecipient(buildEmployee(2L), RecipientType.TO);
 		mail.addRecipient(buildEmployee(3L), RecipientType.CC);
 		return mail;
+	}
+
+	// === 목록의 첨부 유무(hasAttachment) ===
+
+	@DisplayName("받은편지함 목록은 첨부가 있는 메일만 hasAttachment 가 true 이고 첨부 조회는 한 번만 한다")
+	@Test
+	void getInbox_mapsHasAttachmentWithSingleQuery() {
+		// given
+		Pageable pageable = PageRequest.of(0, 10);
+		Mail withFile = buildMail(10L);
+		Mail withoutFile = buildMail(11L);
+		MailRecipient mineOnWithFile = withFile.getRecipients().get(0);
+		MailRecipient mineOnWithoutFile = withoutFile.getRecipients().get(0);
+		List<MailRecipient> allRecipients = new ArrayList<>(withFile.getRecipients());
+		allRecipients.addAll(withoutFile.getRecipients());
+
+		given(mailRecipientRepository.findInbox(2L, false, null, pageable))
+				.willReturn(new PageImpl<>(List.of(mineOnWithFile, mineOnWithoutFile), pageable, 2));
+		given(mailRecipientRepository.findByMailIds(List.of(10L, 11L))).willReturn(allRecipients);
+		given(fileAttachmentRepository.findRefIdsWithAttachment(RefType.MAIL, List.of(10L, 11L)))
+				.willReturn(List.of(10L));
+
+		// when
+		Page<MailDto.ListResponse> result = mailService.getInbox(2L, false, null, pageable);
+
+		// then
+		assertThat(result.getContent()).extracting(MailDto.ListResponse::getId).containsExactly(10L, 11L);
+		assertThat(result.getContent()).extracting(MailDto.ListResponse::getHasAttachment)
+				.containsExactly(true, false);
+		verify(fileAttachmentRepository).findRefIdsWithAttachment(any(), any());
+	}
+
+	@DisplayName("보낸편지함 목록도 첨부가 있는 메일만 hasAttachment 가 true 이다")
+	@Test
+	void getSent_mapsHasAttachment() {
+		// given
+		Pageable pageable = PageRequest.of(0, 10);
+		Mail withFile = buildMail(10L);
+		Mail withoutFile = buildMail(11L);
+		List<MailRecipient> allRecipients = new ArrayList<>(withFile.getRecipients());
+		allRecipients.addAll(withoutFile.getRecipients());
+
+		given(mailRepository.findSent(1L, null, pageable))
+				.willReturn(new PageImpl<>(List.of(withFile, withoutFile), pageable, 2));
+		given(mailRecipientRepository.findByMailIds(List.of(10L, 11L))).willReturn(allRecipients);
+		given(fileAttachmentRepository.findRefIdsWithAttachment(RefType.MAIL, List.of(10L, 11L)))
+				.willReturn(List.of(11L));
+
+		// when
+		Page<MailDto.ListResponse> result = mailService.getSent(1L, null, pageable);
+
+		// then
+		assertThat(result.getContent()).extracting(MailDto.ListResponse::getHasAttachment)
+				.containsExactly(false, true);
+		assertThat(result.getContent()).allMatch(MailDto.ListResponse::getIsRead);
+	}
+
+	@DisplayName("첨부가 하나도 없으면 모든 메일의 hasAttachment 가 false 이다")
+	@Test
+	void getInbox_noAttachments_allFalse() {
+		// given
+		Pageable pageable = PageRequest.of(0, 10);
+		Mail mail = buildMail(10L);
+		given(mailRecipientRepository.findInbox(2L, true, "회의", pageable))
+				.willReturn(new PageImpl<>(List.of(mail.getRecipients().get(0)), pageable, 1));
+		given(mailRecipientRepository.findByMailIds(List.of(10L))).willReturn(mail.getRecipients());
+		given(fileAttachmentRepository.findRefIdsWithAttachment(RefType.MAIL, List.of(10L))).willReturn(List.of());
+
+		// when
+		Page<MailDto.ListResponse> result = mailService.getInbox(2L, true, "회의", pageable);
+
+		// then
+		assertThat(result.getContent().get(0).getHasAttachment()).isFalse();
+		assertThat(result.getContent().get(0).getIsRead()).isFalse();
+	}
+
+	@DisplayName("받은편지함이 비어 있으면 첨부 조회를 호출하지 않는다")
+	@Test
+	void getInbox_emptyPage_doesNotQueryAttachments() {
+		// given
+		Pageable pageable = PageRequest.of(0, 10);
+		given(mailRecipientRepository.findInbox(2L, false, null, pageable)).willReturn(Page.empty(pageable));
+
+		// when
+		Page<MailDto.ListResponse> result = mailService.getInbox(2L, false, null, pageable);
+
+		// then
+		assertThat(result.getContent()).isEmpty();
+		verifyNoInteractions(fileAttachmentRepository);
+	}
+
+	@DisplayName("보낸편지함이 비어 있으면 첨부 조회를 호출하지 않는다")
+	@Test
+	void getSent_emptyPage_doesNotQueryAttachments() {
+		// given
+		Pageable pageable = PageRequest.of(0, 10);
+		given(mailRepository.findSent(1L, null, pageable)).willReturn(Page.empty(pageable));
+
+		// when
+		Page<MailDto.ListResponse> result = mailService.getSent(1L, null, pageable);
+
+		// then
+		assertThat(result.getContent()).isEmpty();
+		verifyNoInteractions(fileAttachmentRepository);
 	}
 
 	@DisplayName("메일을 보내면 받는 사람·참조가 저장되고 수신자에게 알림이 간다")

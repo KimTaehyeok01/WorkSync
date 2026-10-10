@@ -1,10 +1,12 @@
 package com.worksync.global.config;
 
+import com.worksync.domain.employee.entity.EmployeeStatus;
 import com.worksync.domain.employee.repository.EmployeeRepository;
 import com.worksync.global.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.MessageDeliveryException;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
@@ -42,6 +44,14 @@ public class StompHandler implements ChannelInterceptor {
             if (token != null && jwtTokenProvider.validateAccessToken(token)) {
                 // 토큰에서 사용자 ID 추출
                 Long employeeId = jwtTokenProvider.getEmployeeId(token);
+
+                // INACTIVE(퇴직) 직원은 토큰이 유효해도 연결 자체를 거부한다 (예외 → CONNECT 실패, 클라이언트에 ERROR 프레임)
+                boolean inactive = employeeRepository.findById(employeeId)
+                        .map(employee -> employee.getStatus() == EmployeeStatus.INACTIVE)
+                        .orElse(false);
+                if (inactive) {
+                    throw new MessageDeliveryException(message, "퇴직 처리된 직원은 연결할 수 없습니다.");
+                }
 
                 // Authentication 객체 생성
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(

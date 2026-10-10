@@ -107,6 +107,11 @@ public class AuthService {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
 
+        // INACTIVE(퇴직) 직원은 토큰을 재발급하지 않는다
+        if (employee.getStatus() == EmployeeStatus.INACTIVE) {
+            throw new CustomException(ErrorCode.EMPLOYEE_INACTIVE);
+        }
+
         String newAccessToken = jwtTokenProvider.generateAccessToken(
                 employee.getId(), employee.getEmail(), employee.getRole().name());
         String newRefreshToken = jwtTokenProvider.generateRefreshToken(employee.getId());
@@ -126,8 +131,10 @@ public class AuthService {
         Long employeeId = jwtTokenProvider.getEmployeeId(request.getRefreshToken());
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
-        // 로그아웃 = 오프라인(AWAY). INACTIVE(퇴직)로 만들면 재로그인이 차단됨
-        employee.changeStatus(EmployeeStatus.AWAY);
+        // 로그아웃 = 오프라인(AWAY). 단, INACTIVE(퇴직) 직원은 상태를 되돌리지 않는다(재로그인 차단 유지)
+        if (employee.getStatus() != EmployeeStatus.INACTIVE) {
+            employee.changeStatus(EmployeeStatus.AWAY);
+        }
 
         // 로그아웃 = 퇴근 처리
         attendanceService.checkOutOnLogout(employee.getId());

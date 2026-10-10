@@ -199,6 +199,31 @@ class AuthServiceTest {
         assertThat(result.get("refreshToken")).isEqualTo("new-refresh");
     }
 
+    @DisplayName("퇴직(INACTIVE) 사원은 토큰을 재발급받을 수 없다")
+    @Test
+    void reissue_inactive_throwsEmployeeInactive() {
+        // given
+        Employee employee = Employee.builder()
+                .id(1L).empNo("EMP001").name("홍길동").email("hong@worksync.com")
+                .password("encoded-pwd").role(EmployeeRole.USER)
+                .status(EmployeeStatus.INACTIVE)
+                .build();
+
+        AuthDto.ReissueRequest request = new AuthDto.ReissueRequest();
+        request.setRefreshToken("valid-refresh");
+
+        given(jwtTokenProvider.validateRefreshToken("valid-refresh")).willReturn(true);
+        given(jwtTokenProvider.getEmployeeId("valid-refresh")).willReturn(1L);
+        given(employeeRepository.findById(1L)).willReturn(Optional.of(employee));
+
+        // when & then
+        assertThatThrownBy(() -> authService.reissue(request))
+                .isInstanceOf(CustomException.class)
+                .extracting(e -> ((CustomException) e).getErrorCode())
+                .isEqualTo(ErrorCode.EMPLOYEE_INACTIVE);
+        verify(jwtTokenProvider, never()).generateAccessToken(anyLong(), anyString(), anyString());
+    }
+
     @DisplayName("유효하지 않은 리프레시 토큰이면 예외가 발생한다")
     @Test
     void reissue_invalidToken_throwsInvalidToken() {
@@ -255,6 +280,32 @@ class AuthServiceTest {
 
         // then
         assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.AWAY);
+        verify(attendanceService).checkOutOnLogout(1L);
+        verify(auditLogService).log(anyLong(), anyString(), eq("로그아웃"), eq("AUTH"), any(), anyString(), anyString());
+    }
+
+    @DisplayName("퇴직(INACTIVE) 사원이 로그아웃해도 상태가 AWAY로 바뀌지 않는다")
+    @Test
+    void logout_inactive_keepsInactiveStatus() {
+        // given
+        Employee employee = Employee.builder()
+                .id(1L).empNo("EMP001").name("홍길동").email("hong@worksync.com")
+                .password("encoded-pwd")
+                .status(EmployeeStatus.INACTIVE)
+                .build();
+
+        AuthDto.ReissueRequest request = new AuthDto.ReissueRequest();
+        request.setRefreshToken("valid-refresh");
+
+        given(jwtTokenProvider.validateRefreshToken("valid-refresh")).willReturn(true);
+        given(jwtTokenProvider.getEmployeeId("valid-refresh")).willReturn(1L);
+        given(employeeRepository.findById(1L)).willReturn(Optional.of(employee));
+
+        // when
+        authService.logout(request, "127.0.0.1", "JUnit");
+
+        // then — 상태는 INACTIVE 그대로, 로그아웃 자체(퇴근·감사 로그)는 성공
+        assertThat(employee.getStatus()).isEqualTo(EmployeeStatus.INACTIVE);
         verify(attendanceService).checkOutOnLogout(1L);
         verify(auditLogService).log(anyLong(), anyString(), eq("로그아웃"), eq("AUTH"), any(), anyString(), anyString());
     }

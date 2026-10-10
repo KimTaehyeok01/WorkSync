@@ -160,7 +160,7 @@ export default function BoardDetail() {
             />
           </WSCard>
           <PostReadStatus accessToken={accessToken} postId={postId} />
-          {me && post && (me.id === post.authorId || me.role === "ADMIN") && (
+          {me && post && me.id === post.authorId && (
             <>
               <div className={s.actionsCol}>
                 <WSButton

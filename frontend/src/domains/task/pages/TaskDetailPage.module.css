@@ -128,6 +128,21 @@
   font-weight: 600;
 }
 
+/* 담당자용 진행률 변경 — 선택과 저장 버튼을 한 줄로 */
+.progressEdit {
+  display: flex;
+  align-items: center;
+  gap: var(--ws-space-sm);
+}
+.progressSelect {
+  width: 96px;
+}
+/* 저장 실패 안내 — 표의 행 사이에 폭을 채워 보여준다 */
+.progressAlert {
+  align-self: stretch;
+  padding: var(--ws-space-sm) 0;
+}
+
 .details {
   width: 100%;
   display: flex;

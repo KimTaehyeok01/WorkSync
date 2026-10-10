@@ -1,5 +1,6 @@
 package com.worksync.global.security;
 
+import com.worksync.domain.employee.entity.EmployeeStatus;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,10 +34,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Long employeeId = jwtTokenProvider.getEmployeeId(token);
             UserDetails userDetails = customUserDetailsService.loadUserById(employeeId);
 
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            // INACTIVE(퇴직) 직원은 토큰이 유효해도 인증을 등록하지 않는다 → 인증 없음으로 401 처리
+            boolean inactive = userDetails instanceof CustomUserDetails details
+                    && details.getEmployee().getStatus() == EmployeeStatus.INACTIVE;
+
+            if (!inactive) {
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
         }
 
         filterChain.doFilter(request, response);

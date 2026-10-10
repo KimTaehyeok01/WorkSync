@@ -9,7 +9,8 @@ public enum RefType {
     POST,
     DEPARTMENT,
     EMPLOYEE,
-    BOARD;
+    BOARD,
+    MAIL;
 
     public static RefType fromTypeName(String refName) {
         return Arrays.stream(values())
