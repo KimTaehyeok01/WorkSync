@@ -42,6 +42,10 @@ const PAGE_TITLES = {
     title: "새 작업 등록",
     breadcrumb: ["홈", "업무", "새 작업"],
   },
+  "/calendar": { title: "캘린더", breadcrumb: ["홈", "캘린더"] },
+  "/reservation": { title: "자원 예약", breadcrumb: ["홈", "예약"] },
+  "/attendance": { title: "근태/연차", breadcrumb: ["홈", "근태/연차"] },
+  "/mypage": { title: "마이페이지", breadcrumb: ["홈", "마이페이지"] },
   "/messenger": { title: "메신저", breadcrumb: ["홈", "메신저"] },
   "/organization": { title: "조직도", breadcrumb: ["홈", "인사", "조직도"] },
   "/organization/new": {
@@ -359,6 +363,17 @@ export function TopBar({ pathname, onMenuClick }) {
 
         {showProfile && (
           <div className={`${styles.dropdown} ${styles.profileDropdown}`}>
+            <button
+              className={styles.menuItem}
+              type="button"
+              onClick={() => {
+                setShowProfile(false);
+                navigate("/mypage");
+              }}
+            >
+              <User size={15} />
+              마이페이지
+            </button>
             {status === "ACTIVE" ? (
               <button
                 className={`${styles.menuItem} ${styles.profileAwayBadge}`}

@@ -20,6 +20,10 @@ import TaskUpdatePage from "../domains/task/pages/TaskUpdatePage";
 import ChatPage from "../domains/chat/pages/ChatPage";
 import LoginPage from "../domains/auth/pages/LoginPage";
 import AuditLogPage from "../domains/audit/pages/AuditLogPage";
+import AttendancePage from "../domains/attendance/pages/AttendancePage";
+import MyPage from "../domains/mypage/pages/MyPage";
+import CalendarPage from "../domains/calendar/pages/CalendarPage";
+import ReservationPage from "../domains/reservation/pages/ReservationPage";
 import styles from "./AppRouter.module.css";
 import useAuthContext from "../store/AuthContext";
 
@@ -73,6 +77,10 @@ export const router = createBrowserRouter([
       { path: "tasks/edit/:id", Component: TaskUpdatePage },
       { path: "messenger", Component: ChatPage },
       { path: "audit-log", Component: AuditLogPage },
+      { path: "attendance", Component: AttendancePage },
+      { path: "mypage", Component: MyPage },
+      { path: "calendar", Component: CalendarPage },
+      { path: "reservation", Component: ReservationPage },
       { path: "*", Component: NotFound },
     ],
   },

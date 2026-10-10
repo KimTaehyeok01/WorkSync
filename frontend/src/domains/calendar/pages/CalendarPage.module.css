@@ -1,0 +1,171 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ws-space-lg);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ws-space-md);
+}
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--ws-space-sm);
+}
+.navBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--ws-border);
+  border-radius: var(--ws-radius-sm);
+  color: var(--ws-text-600);
+  background: var(--ws-surface);
+}
+.navBtn:hover {
+  background: #f9fafb;
+}
+.monthLabel {
+  min-width: 110px;
+  text-align: center;
+  color: var(--ws-text-900);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ws-space-lg);
+}
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ws-text-600);
+  font-size: 12px;
+}
+.legendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  background: var(--ws-surface);
+  border: 1px solid var(--ws-border);
+  border-radius: var(--ws-radius-md);
+  overflow: hidden;
+}
+.weekday {
+  padding: var(--ws-space-sm);
+  text-align: center;
+  color: var(--ws-text-600);
+  font-size: 12px;
+  font-weight: 600;
+  background: #f9fafb;
+  border-bottom: 1px solid var(--ws-border);
+}
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 112px;
+  padding: 6px;
+  border-right: 1px solid var(--ws-border-light);
+  border-bottom: 1px solid var(--ws-border-light);
+  cursor: pointer;
+}
+.cell:nth-child(7n) {
+  border-right: none;
+}
+.cell:hover {
+  background: #fafbfc;
+}
+.cellOutside {
+  background: #fafafa;
+}
+.cellOutside .dayNumber {
+  opacity: 0.4;
+}
+
+.dayNumber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: var(--ws-text-700);
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: 50%;
+}
+.sunday {
+  color: var(--ws-danger);
+}
+.saturday {
+  color: var(--ws-primary);
+}
+.dayNumber.today {
+  color: #fff;
+  background: var(--ws-primary);
+}
+
+.chip {
+  display: block;
+  width: 100%;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chipTime {
+  margin-right: 4px;
+  font-weight: 700;
+}
+.chipPersonal {
+  color: #1e40af;
+  background: #dbeafe;
+}
+.chipDepartment {
+  color: #065f46;
+  background: #d1fae5;
+}
+.chipCompany {
+  color: #5b21b6;
+  background: #ede9fe;
+}
+.chipLeave {
+  color: #92400e;
+  background: #fef3c7;
+  cursor: default;
+}
+.chipTask {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+
+@media (max-width: 767px) {
+  .cell {
+    min-height: 76px;
+    padding: 3px;
+  }
+  .chip {
+    padding: 1px 3px;
+    font-size: 10px;
+  }
+  .toolbar {
+    flex-wrap: wrap;
+  }
+}

@@ -1,0 +1,156 @@
+/* 홈 화면 왼쪽 위젯(근무체크·미니 달력·내 예약) 공용 스타일 */
+
+/* 근무체크 */
+.clockDate {
+  margin: 0 0 var(--ws-space-xs);
+  color: var(--ws-text-500);
+  font-size: 12.5px;
+}
+.clockRow {
+  display: flex;
+  align-items: center;
+  gap: var(--ws-space-md);
+}
+.clock {
+  color: var(--ws-text-900);
+  font-size: 26px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.statusBadge {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.statusBefore {
+  color: var(--ws-text-600);
+  background: #f3f4f6;
+}
+.statusWorking {
+  color: #059669;
+  background: #d1fae5;
+}
+.statusDone {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+.checkTimes {
+  display: flex;
+  gap: var(--ws-space-lg);
+  margin-top: var(--ws-space-md);
+  color: var(--ws-text-600);
+  font-size: 12.5px;
+}
+.checkActions {
+  display: flex;
+  gap: var(--ws-space-sm);
+  margin-top: var(--ws-space-md);
+}
+.error {
+  margin: var(--ws-space-sm) 0 0;
+  color: var(--ws-danger);
+  font-size: 12px;
+}
+
+/* 미니 달력 */
+.miniNav {
+  display: flex;
+  align-items: center;
+  gap: var(--ws-space-xs);
+}
+.miniNavBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--ws-border);
+  border-radius: var(--ws-radius-sm);
+  color: var(--ws-text-600);
+}
+.miniNavBtn:hover {
+  background: #f9fafb;
+}
+.miniGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  row-gap: 2px;
+  text-align: center;
+}
+.miniWeekday {
+  padding-bottom: var(--ws-space-xs);
+  color: var(--ws-text-400);
+  font-size: 11px;
+  font-weight: 600;
+}
+.miniDay {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin: 0 auto;
+  border-radius: 50%;
+  color: var(--ws-text-700);
+  font-size: 12px;
+}
+.miniDay:hover {
+  background: #f3f4f6;
+}
+.miniDayOutside {
+  color: var(--ws-text-300);
+}
+.miniDayToday {
+  color: var(--ws-primary);
+  font-weight: 700;
+}
+.miniDaySelected,
+.miniDaySelected:hover {
+  color: #fff;
+  background: var(--ws-primary);
+}
+.miniDot {
+  position: absolute;
+  bottom: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ws-warning);
+}
+
+/* 선택일 일정·내 예약 목록 */
+.dayList {
+  margin-top: var(--ws-space-md);
+  padding-top: var(--ws-space-md);
+  border-top: 1px solid var(--ws-border-light);
+}
+.dayListTitle {
+  margin: 0 0 var(--ws-space-sm);
+  color: var(--ws-text-800);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.dayItem {
+  display: flex;
+  gap: var(--ws-space-sm);
+  padding: var(--ws-space-xs) 0;
+  font-size: 12.5px;
+}
+.dayItemTime {
+  flex-shrink: 0;
+  color: var(--ws-primary);
+  font-weight: 600;
+}
+.dayItemTitle {
+  color: var(--ws-text-700);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.empty {
+  margin: 0;
+  color: var(--ws-text-400);
+  font-size: 12.5px;
+}

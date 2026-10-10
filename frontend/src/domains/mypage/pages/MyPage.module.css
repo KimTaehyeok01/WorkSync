@@ -1,0 +1,75 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ws-space-xl);
+  max-width: 720px;
+}
+.loading {
+  color: var(--ws-text-500);
+  font-size: 13px;
+}
+
+.profile {
+  display: flex;
+  gap: 32px;
+  padding-bottom: var(--ws-space-2xl);
+  margin-bottom: var(--ws-space-2xl);
+  border-bottom: 1px solid var(--ws-border-light);
+}
+.avatarCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ws-space-md);
+}
+.avatarActions {
+  display: flex;
+  gap: var(--ws-space-xs);
+}
+.fileInput {
+  display: none;
+}
+
+.infoCol {
+  flex: 1;
+}
+.name {
+  margin: 0 0 var(--ws-space-md);
+  color: var(--ws-text-900);
+  font-size: 18px;
+  font-weight: 700;
+}
+.infoList {
+  margin: 0;
+}
+.infoRow {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  padding: 6px 0;
+  font-size: 13px;
+}
+.infoRow dt {
+  color: var(--ws-text-500);
+}
+.infoRow dd {
+  margin: 0;
+  color: var(--ws-text-800);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ws-space-lg);
+  max-width: 420px;
+}
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 767px) {
+  .profile {
+    flex-direction: column;
+    gap: var(--ws-space-xl);
+  }
+}

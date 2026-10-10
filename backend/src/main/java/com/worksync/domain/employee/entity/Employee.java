@@ -79,6 +79,16 @@ public class Employee extends BaseTimeEntity {
         if (encodedPassword != null) this.password = encodedPassword;
     }
 
+    // 본인 프로필 수정 (마이페이지) — 연락처·프로필 이미지만 변경 가능
+    public void updateMyProfile(String phone, String profileImage) {
+        this.phone = phone;
+        this.profileImage = profileImage;
+    }
+
+    public void changePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
     public void changeStatus(EmployeeStatus status) {
         this.status = status;
     }

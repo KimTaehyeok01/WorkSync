@@ -18,6 +18,7 @@ public enum ErrorCode {
     EMPLOYEE_INACTIVE(403, "퇴직한 사원입니다."),
     DUPLICATE_EMAIL(409, "이미 사용 중인 이메일입니다."),
     DUPLICATE_EMP_NO(409, "이미 사용 중인 사원번호입니다."),
+    INVALID_PASSWORD(400, "현재 비밀번호가 올바르지 않습니다."),
 
     // 부서
     DEPARTMENT_NOT_FOUND(404, "존재하지 않는 부서입니다."),
@@ -71,6 +72,16 @@ public enum ErrorCode {
 
     // 알림
     NOTIFICATION_NOT_FOUND(404, "존재하지 않는 알림입니다."),
+
+    // 캘린더 일정
+    SCHEDULE_NOT_FOUND(404, "존재하지 않는 일정입니다."),
+    INVALID_SCHEDULE_PERIOD(400, "종료 일시는 시작 일시보다 빠를 수 없습니다."),
+
+    // 자원 예약
+    RESOURCE_NOT_FOUND(404, "존재하지 않는 자원입니다."),
+    RESERVATION_NOT_FOUND(404, "존재하지 않는 예약입니다."),
+    RESERVATION_CONFLICT(409, "해당 시간에 이미 예약이 있습니다."),
+    INVALID_RESERVATION_PERIOD(400, "예약 종료 시각은 시작 시각보다 늦어야 합니다."),
 
     // 공통
     FORBIDDEN(403, "접근 권한이 없습니다."),

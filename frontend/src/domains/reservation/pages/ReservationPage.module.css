@@ -1,0 +1,131 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ws-space-xl);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ws-space-md);
+  flex-wrap: wrap;
+}
+.toolbarActions {
+  display: flex;
+  gap: var(--ws-space-sm);
+}
+
+.tableScroll {
+  overflow-x: auto;
+}
+.table {
+  display: grid;
+  grid-template-columns: 160px repeat(12, minmax(64px, 1fr));
+  min-width: 928px;
+}
+/* 행 래퍼는 그리드에 참여하지 않고 자식 셀이 직접 배치되도록 한다 */
+.resourceRow {
+  display: contents;
+}
+.headCell {
+  padding: var(--ws-space-sm);
+  text-align: center;
+  color: var(--ws-text-600);
+  font-size: 12px;
+  font-weight: 600;
+  background: #f9fafb;
+  border-bottom: 1px solid var(--ws-border);
+  border-right: 1px solid var(--ws-border-light);
+}
+.resourceCell {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: var(--ws-space-sm) var(--ws-space-md);
+  border-bottom: 1px solid var(--ws-border-light);
+  border-right: 1px solid var(--ws-border-light);
+}
+.resourceName {
+  color: var(--ws-text-900);
+  font-size: 13px;
+  font-weight: 600;
+}
+.resourceSub {
+  color: var(--ws-text-500);
+  font-size: 11.5px;
+}
+
+.slot {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 52px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--ws-border-light);
+  border-right: 1px solid var(--ws-border-light);
+  border-radius: 0;
+  overflow: hidden;
+}
+button.slot:hover {
+  background: var(--ws-primary-soft);
+}
+.slotTaken {
+  background: #f3f4f6;
+}
+/* 취소 가능한 예약(내 예약, 관리자는 전체) — 클릭하면 취소 확인 */
+.slotMine {
+  background: #dbeafe;
+  cursor: pointer;
+}
+.slotTitle {
+  color: var(--ws-text-800);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.slotSub {
+  color: var(--ws-text-500);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.myRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ws-space-md);
+  padding: var(--ws-space-md) var(--ws-space-xl);
+  border-bottom: 1px solid var(--ws-border-light);
+}
+.myRow:last-child {
+  border-bottom: none;
+}
+.myTitle {
+  margin: 0 0 2px;
+  color: var(--ws-text-900);
+  font-size: 13px;
+  font-weight: 600;
+}
+.mySub {
+  margin: 0;
+  color: var(--ws-text-500);
+  font-size: 12px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ws-space-md);
+}
+.timeRow {
+  display: flex;
+  align-items: center;
+  gap: var(--ws-space-sm);
+  color: var(--ws-text-500);
+}

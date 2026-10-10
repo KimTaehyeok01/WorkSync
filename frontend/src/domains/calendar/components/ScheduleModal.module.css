@@ -1,0 +1,37 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ws-space-md);
+}
+
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: var(--ws-space-sm);
+  color: var(--ws-text-700);
+  font-size: 13px;
+  width: fit-content;
+  cursor: pointer;
+}
+
+/* 시작·종료를 한 줄씩 — 날짜와 시간이 남은 폭을 반씩 나눠 가져 글자가 잘리지 않는다 */
+.period {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: var(--ws-space-sm) var(--ws-space-md);
+}
+.periodLabel {
+  color: var(--ws-text-500);
+  font-size: 12.5px;
+}
+.periodInputs {
+  display: flex;
+  gap: var(--ws-space-sm);
+}
+.periodInputs input {
+  flex: 1;
+  min-width: 0;
+  padding-left: var(--ws-space-md);
+  padding-right: var(--ws-space-sm);
+}

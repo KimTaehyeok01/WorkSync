@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -147,6 +148,31 @@ public class LeaveService {
                                 .build()));
 
         return LeaveDto.BalanceResponse.from(balance);
+    }
+
+    // 내 휴가 신청 내역 조회 (연도 기준)
+    public List<LeaveDto.Response> getMyRequests(Long employeeId, int year) {
+        return leaveRequestRepository
+                .findByEmployeeIdAndStartDateBetweenOrderByStartDateDesc(
+                        employeeId, LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31))
+                .stream()
+                .map(LeaveDto.Response::from)
+                .toList();
+    }
+
+    // 내 부서의 승인된 휴가 조회 (캘린더 표시용) — 부서 미배정이면 빈 목록
+    public List<LeaveDto.CalendarResponse> getDepartmentLeaves(Long employeeId, LocalDate from, LocalDate to) {
+        Employee me = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
+        if (me.getDepartment() == null) {
+            return List.of();
+        }
+
+        return leaveRequestRepository
+                .findByDepartmentAndPeriod(me.getDepartment().getId(), LeaveStatus.APPROVED, from, to)
+                .stream()
+                .map(LeaveDto.CalendarResponse::from)
+                .toList();
     }
 
     // 휴가 결재가 최종 승인되면 연차를 차감한다 (ApprovalApprovedEvent 구독)

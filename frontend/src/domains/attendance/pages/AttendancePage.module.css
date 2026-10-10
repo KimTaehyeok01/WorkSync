@@ -1,0 +1,142 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ws-space-xl);
+}
+
+.tabs {
+  display: flex;
+  gap: var(--ws-space-xs);
+  border-bottom: 1px solid var(--ws-border);
+}
+.tab {
+  padding: var(--ws-space-sm) var(--ws-space-lg);
+  color: var(--ws-text-500);
+  font-size: 13.5px;
+  font-weight: 600;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.tabActive {
+  color: var(--ws-primary);
+  border-bottom-color: var(--ws-primary);
+}
+
+.topGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--ws-space-lg);
+}
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--ws-space-lg);
+}
+
+.todayTimes {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+.timeLabel {
+  margin: 0 0 var(--ws-space-xs);
+  color: var(--ws-text-500);
+  font-size: 12px;
+}
+.timeValue {
+  margin: 0;
+  color: var(--ws-text-900);
+  font-size: 22px;
+  font-weight: 700;
+}
+.todayActions {
+  display: flex;
+  gap: var(--ws-space-sm);
+  margin-top: var(--ws-space-xl);
+}
+.message {
+  margin: var(--ws-space-md) 0 0;
+  color: var(--ws-danger);
+  font-size: 12.5px;
+}
+
+.balanceRow {
+  display: flex;
+  gap: 40px;
+}
+.balanceItem {
+  min-width: 60px;
+}
+.remaining {
+  color: var(--ws-primary);
+}
+
+.monthNav {
+  display: flex;
+  align-items: center;
+  gap: var(--ws-space-sm);
+}
+.monthBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--ws-border);
+  border-radius: var(--ws-radius-sm);
+  color: var(--ws-text-600);
+  background: var(--ws-surface);
+}
+.monthBtn:hover {
+  background: #f9fafb;
+}
+.monthLabel {
+  min-width: 84px;
+  text-align: center;
+  color: var(--ws-text-800);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.row {
+  display: grid;
+  gap: var(--ws-space-lg);
+  padding: var(--ws-space-md) var(--ws-space-xl);
+  border-bottom: 1px solid var(--ws-border-light);
+  align-items: center;
+  color: var(--ws-text-700);
+  font-size: 13px;
+}
+.rowMy {
+  grid-template-columns: 140px 100px 120px 120px 1fr;
+}
+.rowAdmin {
+  grid-template-columns: 160px 100px 120px 120px 1fr;
+}
+.rowLeave {
+  grid-template-columns: 90px 1fr 80px 100px;
+}
+.row:last-child {
+  border-bottom: none;
+}
+.rowClickable {
+  cursor: pointer;
+}
+.rowClickable:hover {
+  background: #f9fafb;
+}
+.cellStrong {
+  color: var(--ws-text-900);
+  font-weight: 600;
+}
+
+@media (max-width: 767px) {
+  .topGrid,
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+  .todayTimes,
+  .balanceRow {
+    gap: var(--ws-space-2xl);
+  }
+}

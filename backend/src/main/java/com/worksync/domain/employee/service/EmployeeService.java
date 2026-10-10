@@ -146,6 +146,26 @@ public class EmployeeService {
         return EmployeeDto.Response.from(employee);
     }
 
+    // 내 프로필 수정 (본인) — 연락처·프로필 이미지
+    @Transactional
+    public EmployeeDto.Response updateMyProfile(Long id, EmployeeDto.MyProfileRequest request) {
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
+        employee.updateMyProfile(request.getPhone(), request.getProfileImage());
+        return EmployeeDto.Response.from(employee);
+    }
+
+    // 내 비밀번호 변경 (본인) — 현재 비밀번호가 일치해야 변경
+    @Transactional
+    public void changeMyPassword(Long id, EmployeeDto.PasswordChangeRequest request) {
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
+        if (!passwordEncoder.matches(request.getCurrentPassword(), employee.getPassword())) {
+            throw new CustomException(ErrorCode.INVALID_PASSWORD);
+        }
+        employee.changePassword(passwordEncoder.encode(request.getNewPassword()));
+    }
+
     // 직원 삭제 (ADMIN)
     @Transactional
     public void deleteEmployee(Long id) {

@@ -28,6 +28,10 @@ import {
   WSButton,
 } from "../../../components/common/CommonWidgets";
 import useAuthContext from "../../../store/AuthContext";
+import { toDateString } from "../../../utils/dateFormatter";
+import AttendanceWidget from "../components/AttendanceWidget";
+import ScheduleWidget from "../components/ScheduleWidget";
+import ReservationWidget from "../components/ReservationWidget";
 import s from "./DashboardPage.module.css";
 
 const ATTENDANCE_STATUS_LABEL = {
@@ -103,7 +107,7 @@ export default function DashboardPage() {
 
   // 나의 팀 출근 현황 갱신
   const refreshAttendance = async () => {
-    const today = new Date().toISOString().split("T")[0];
+    const today = toDateString(new Date());
     const attendanceRes = await getDepartmentAttendance(accessToken, today);
     setTeamAttendance(attendanceRes ?? []);
   };
@@ -117,7 +121,7 @@ export default function DashboardPage() {
   const fetchDashboard = async () => {
     try {
       setLoading(true);
-      const today = new Date().toISOString().split("T")[0];
+      const today = toDateString(new Date());
       const [dashboardRes, postRes, attendanceRes] = await Promise.all([
         getDashboard(accessToken),
         getRecentPosts(accessToken),
@@ -126,7 +130,7 @@ export default function DashboardPage() {
         refreshUnreadMessages(),
       ]);
       setDashboard(dashboardRes ?? null);
-      setRecentPosts(postRes.slice(0, 3) ?? []);
+      setRecentPosts(postRes ?? []);
       setTeamAttendance(attendanceRes ?? []);
     } catch (error) {
       console.error("Dashboard API Error", error);
@@ -271,11 +275,11 @@ export default function DashboardPage() {
 
       {/* ── 메인 그리드 ── */}
       <div className={s.mainGrid}>
-        {/* 왼쪽 2칸 */}
+        {/* 본문 열 — 화면에서는 가운데 */}
         <div className={`${s.mainCol} ${s.mainColLeft}`}>
-          {/* ─ 최근 게시글 ─ */}
+          {/* ─ 뉴스피드 (공지 게시글) ─ */}
           <WSCard
-            title="최근 게시글"
+            title="뉴스피드"
             subtitle="공지사항"
             action={
               <div className={s.headerActions}>
@@ -408,8 +412,15 @@ export default function DashboardPage() {
           </WSCard>
         </div>
 
-        {/* 오른쪽 1칸 */}
-        <div className={s.mainCol}>
+        {/* 위젯 열 1칸 — CSS order로 화면에서는 왼쪽에 배치 */}
+        <div className={`${s.mainCol} ${s.mainColSide}`}>
+          <AttendanceWidget />
+          <ScheduleWidget />
+          <ReservationWidget />
+        </div>
+
+        {/* 현황 열 1칸 — 화면 오른쪽 */}
+        <div className={`${s.mainCol} ${s.mainColRight}`}>
           {/* ─ 나의 팀 현황 ─ */}
           <WSCard title="나의 팀 현황" subtitle={`오늘, ${todayShort}`}>
             {teamAttendance.length === 0 ? (

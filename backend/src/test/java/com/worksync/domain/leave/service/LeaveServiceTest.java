@@ -10,6 +10,7 @@ import com.worksync.domain.approval.event.ApprovalApprovedEvent;
 import com.worksync.domain.approval.event.ApprovalRejectedEvent;
 import com.worksync.domain.approval.repository.ApprovalDocRepository;
 import com.worksync.domain.approval.repository.ApprovalFormRepository;
+import com.worksync.domain.department.entity.Department;
 import com.worksync.domain.employee.entity.Employee;
 import com.worksync.domain.employee.repository.EmployeeRepository;
 import com.worksync.domain.leave.dto.LeaveDto;
@@ -32,6 +33,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -405,5 +407,76 @@ class LeaveServiceTest {
 
         // then
         verifyNoInteractions(annualLeaveBalanceRepository);
+    }
+
+    @DisplayName("내 휴가 신청 내역을 조회하면 해당 연도 1월 1일~12월 31일 범위로 조회해 응답으로 변환한다")
+    @Test
+    void getMyRequests_success_returnsMappedList() {
+        // given
+        Employee employee = buildEmployee(1L, "김철수");
+        LeaveRequest leaveRequest = LeaveRequest.builder()
+                .id(1L).employee(employee)
+                .leaveType(LeaveType.ANNUAL)
+                .startDate(LocalDate.of(2026, 8, 10))
+                .endDate(LocalDate.of(2026, 8, 11))
+                .daysCount(BigDecimal.valueOf(2))
+                .status(LeaveStatus.APPROVED)
+                .build();
+        given(leaveRequestRepository.findByEmployeeIdAndStartDateBetweenOrderByStartDateDesc(
+                1L, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31)))
+                .willReturn(List.of(leaveRequest));
+
+        // when
+        List<LeaveDto.Response> result = leaveService.getMyRequests(1L, 2026);
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getStatus()).isEqualTo(LeaveStatus.APPROVED);
+        assertThat(result.get(0).getStartDate()).isEqualTo(LocalDate.of(2026, 8, 10));
+    }
+
+    @DisplayName("부서 휴가를 조회하면 내 부서의 승인된 휴가만 조회한다")
+    @Test
+    void getDepartmentLeaves_success_queriesApprovedOfMyDepartment() {
+        // given
+        Department department = Department.builder().id(10L).name("개발팀").build();
+        Employee me = Employee.builder()
+                .id(1L).empNo("EMP1").name("김철수").email("kim@worksync.com")
+                .password("encoded-password").department(department).build();
+        LeaveRequest leaveRequest = LeaveRequest.builder()
+                .id(1L).employee(me)
+                .leaveType(LeaveType.ANNUAL)
+                .startDate(LocalDate.of(2026, 10, 12))
+                .endDate(LocalDate.of(2026, 10, 13))
+                .daysCount(BigDecimal.valueOf(2))
+                .status(LeaveStatus.APPROVED)
+                .build();
+        given(employeeRepository.findById(1L)).willReturn(Optional.of(me));
+        given(leaveRequestRepository.findByDepartmentAndPeriod(
+                10L, LeaveStatus.APPROVED, LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 31)))
+                .willReturn(List.of(leaveRequest));
+
+        // when
+        List<LeaveDto.CalendarResponse> result = leaveService.getDepartmentLeaves(
+                1L, LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 31));
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getEmployeeName()).isEqualTo("김철수");
+    }
+
+    @DisplayName("부서가 없는 사용자가 부서 휴가를 조회하면 빈 목록을 반환한다")
+    @Test
+    void getDepartmentLeaves_noDepartment_returnsEmpty() {
+        // given
+        given(employeeRepository.findById(1L)).willReturn(Optional.of(buildEmployee(1L, "김철수")));
+
+        // when
+        List<LeaveDto.CalendarResponse> result = leaveService.getDepartmentLeaves(
+                1L, LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 31));
+
+        // then
+        assertThat(result).isEmpty();
+        verifyNoInteractions(leaveRequestRepository);
     }
 }

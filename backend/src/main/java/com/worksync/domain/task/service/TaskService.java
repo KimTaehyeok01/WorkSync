@@ -106,7 +106,7 @@ public class TaskService {
     }
 
     //단건 조회(첨부파일 포함)
-    public  TaskDto.Response getById(Long taskId){
+    public TaskDto.Response getById(Long taskId){
         Task task=taskRepository.findById(taskId)
                 .orElseThrow(()->new CustomException(ErrorCode.TASK_NOT_FOUND));
 
@@ -233,7 +233,7 @@ public class TaskService {
                 && task.getAssignee().getId().equals(requesterId);
 
         if(!isCreator && !isAssignee){
-            throw  new CustomException(ErrorCode.FORBIDDEN);
+            throw new CustomException(ErrorCode.FORBIDDEN);
         }
     }
 }

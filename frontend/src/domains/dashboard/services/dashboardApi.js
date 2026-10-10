@@ -40,9 +40,9 @@ export async function getPendingApprovals(accessToken) {
     });
 }
 
-// 최근 게시물 조회 (공지사항 게시판 기준, 최신 4건)
+// 최근 게시물 조회 (공지사항 게시판 기준, 최신 5건)
 // 1) GET /api/boards?boardType=NOTICE → 공지사항 게시판 ID 획득
-// 2) GET /api/boards/{id}/posts?size=4&sort=createdAt,desc → 최신 게시물 조회
+// 2) GET /api/boards/{id}/posts?size=5&sort=createdAt,desc → 최신 게시물 조회
 // 반환: [{ id, boardId, boardName, authorId, authorName, title, content, createdAt }, ...]
 export async function getRecentPosts(accessToken) {
   try {
@@ -60,10 +60,10 @@ export async function getRecentPosts(accessToken) {
 
     if (boards.length === 0) return [];
 
-    // 2) 첫 번째 공지사항 게시판의 최신 게시물 4건
+    // 2) 첫 번째 공지사항 게시판의 최신 게시물 5건
     const boardId = boards[0].id;
     const postsRes = await fetch(
-      `${BASE_URL}/boards/${boardId}/posts?size=4&sort=createdAt,desc`,
+      `${BASE_URL}/boards/${boardId}/posts?size=5&sort=createdAt,desc`,
       {
         method: "GET",
         headers: {

@@ -55,18 +55,49 @@
   gap: 16px;
 }
 
+/*
+ * 카드 배치 — 내용 높이가 비슷한 카드끼리 같은 줄에 놓아 빈 공간 없이 줄 끝이 맞는다.
+ *   1줄: 근무체크 | 결재 대기 문서 | 나의 팀 현황   (짧은 카드)
+ *   2줄: 미니 달력 | 뉴스피드       | 업무 진행률    (긴 카드)
+ *   3줄:    〃     |    〃          | 내 예약
+ */
 .mainGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 320px minmax(0, 1fr) 320px;
+  grid-template-rows: auto auto 1fr;
+  grid-template-areas:
+    "check approval team"
+    "cal   feed     tasks"
+    "cal   feed     resv";
   gap: 20px;
 }
+/* 열 래퍼는 배치에 참여하지 않고, 안의 카드가 직접 그리드 칸을 차지한다 */
 .mainCol {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  display: contents;
 }
-.mainColLeft {
-  grid-column: span 2;
+.mainCol > * {
+  min-width: 0;
+}
+.mainColLeft > :nth-child(1) {
+  grid-area: feed;
+}
+.mainColLeft > :nth-child(2) {
+  grid-area: approval;
+}
+.mainColSide > :nth-child(1) {
+  grid-area: check;
+}
+.mainColSide > :nth-child(2) {
+  grid-area: cal;
+}
+.mainColSide > :nth-child(3) {
+  grid-area: resv;
+}
+.mainColRight > :nth-child(1) {
+  grid-area: team;
+}
+.mainColRight > :nth-child(2) {
+  grid-area: tasks;
 }
 
 .headerActions {
@@ -155,9 +186,11 @@
   font-size: 13px;
   font-weight: 400;
   margin-top: 8px;
+  /* 뉴스피드 — 본문을 3줄까지 미리보기 */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .postStats {
   display: flex;
@@ -177,7 +210,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 32px 0;
+  padding: 12px 0;
   gap: 12px;
 }
 .emptyIconWrap {
@@ -322,10 +355,13 @@
   margin-top: 2px;
 }
 
+/* 팀원이 많아도 윗줄 카드 높이가 늘어나지 않도록 목록 안에서 스크롤 */
 .attendList {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  max-height: 190px;
+  overflow-y: auto;
 }
 .attendRow {
   display: flex;
@@ -389,15 +425,34 @@
   background: var(--progress-color);
 }
 
+/* 중간 폭 — 2열로 접는다 */
+@media (max-width: 1279px) {
+  .mainGrid {
+    grid-template-columns: 320px minmax(0, 1fr);
+    grid-template-rows: auto;
+    grid-template-areas:
+      "check approval"
+      "team  approval"
+      "cal   feed"
+      "resv  tasks";
+  }
+}
+
+/* 좁은 폭 — 한 줄로 쌓는다 */
 @media (max-width: 1023px) {
   .statsGrid {
     grid-template-columns: repeat(2, 1fr);
   }
   .mainGrid {
-    grid-template-columns: 1fr;
-  }
-  .mainColLeft {
-    grid-column: span 1;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "check"
+      "approval"
+      "team"
+      "cal"
+      "feed"
+      "tasks"
+      "resv";
   }
 }
 

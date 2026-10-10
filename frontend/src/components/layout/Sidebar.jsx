@@ -15,6 +15,9 @@ import {
   LogIn,
   Activity,
   X,
+  Clock,
+  CalendarDays,
+  CalendarClock,
 } from "lucide-react";
 import { getNotifications } from "../../domains/notification/services/notificationApi";
 import styles from "./Sidebar.module.css";
@@ -37,6 +40,9 @@ const MAIN_NAV = [
     id: "ws-task",
     type: "TASK",
   },
+  { path: "/calendar", label: "캘린더", icon: CalendarDays, id: "ws-cal" },
+  { path: "/reservation", label: "예약", icon: CalendarClock, id: "ws-rsv" },
+  { path: "/attendance", label: "근태/연차", icon: Clock, id: "ws-att" },
   {
     path: "/messenger",
     label: "메신저",
@@ -139,13 +145,20 @@ export function Sidebar({ isOpen, onClose }) {
       {isOpen && <div className={styles.overlay} onClick={onClose} />}
       <aside className={`${styles.aside} ${isOpen ? styles.asideOpen : ""}`}>
       <div className={styles.brand}>
-        <div className={styles.brandLogo}>
-          <img src={logo} alt="WorkSync" />
-        </div>
-        <div>
-          <div className={styles.brandName}>WorkSync</div>
-          <div className={styles.brandSub}>ENTERPRISE v2.4</div>
-        </div>
+        <NavLink
+          to="/"
+          className={styles.brandLink}
+          onClick={onClose}
+          aria-label="대시보드로 이동"
+        >
+          <div className={styles.brandLogo}>
+            <img src={logo} alt="WorkSync" />
+          </div>
+          <div>
+            <div className={styles.brandName}>WorkSync</div>
+            <div className={styles.brandSub}>ENTERPRISE v2.4</div>
+          </div>
+        </NavLink>
         <button className={styles.closeBtn} onClick={onClose} aria-label="메뉴 닫기">
           <X size={18} />
         </button>

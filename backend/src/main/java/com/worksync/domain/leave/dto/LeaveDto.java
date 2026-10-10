@@ -55,6 +55,41 @@ public class LeaveDto {
         }
     }
 
+    // 캘린더 표시용 — 사유·결재자 등 민감 정보는 제외
+    @Getter @Builder
+    @Schema(name = "LeaveDto.CalendarResponse")
+    public static class CalendarResponse {
+
+        @Schema(description = "휴가 신청 ID", example = "1")
+        private Long id;
+
+        @Schema(description = "직원 ID", example = "1")
+        private Long employeeId;
+
+        @Schema(description = "직원 이름", example = "홍길동")
+        private String employeeName;
+
+        @Schema(description = "휴가 유형 (ANNUAL, HALF, SICK, FAMILY, OTHER)", example = "ANNUAL")
+        private LeaveType leaveType;
+
+        @Schema(description = "휴가 시작일", format = "yyyy-MM-dd", example = "2026-08-10")
+        private LocalDate startDate;
+
+        @Schema(description = "휴가 종료일", format = "yyyy-MM-dd", example = "2026-08-11")
+        private LocalDate endDate;
+
+        public static CalendarResponse from(LeaveRequest request) {
+            return CalendarResponse.builder()
+                    .id(request.getId())
+                    .employeeId(request.getEmployee().getId())
+                    .employeeName(request.getEmployee().getName())
+                    .leaveType(request.getLeaveType())
+                    .startDate(request.getStartDate())
+                    .endDate(request.getEndDate())
+                    .build();
+        }
+    }
+
     @Getter @Setter
     @Schema(name = "LeaveDto.CreateRequest")
     public static class CreateRequest {

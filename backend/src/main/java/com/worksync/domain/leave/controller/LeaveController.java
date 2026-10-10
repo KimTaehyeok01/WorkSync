@@ -12,7 +12,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @Tag(name = "Leave", description = "휴가 API")
 @Slf4j
@@ -44,5 +48,27 @@ public class LeaveController {
         Long targetId = (employeeId != null) ? employeeId : userDetails.getId();
 
         return ResponseEntity.ok(ApiResponse.ok(leaveService.getBalance(targetId)));
+    }
+
+    //내 휴가 신청 내역 조회
+    @Operation(summary = "내 휴가 신청 내역 조회 (연도별)")
+    @GetMapping("/my")
+    public ResponseEntity<ApiResponse<List<LeaveDto.Response>>> getMyRequests(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam("year") int year) {
+
+        return ResponseEntity.ok(ApiResponse.ok(leaveService.getMyRequests(userDetails.getId(), year)));
+    }
+
+    //내 부서 승인 휴가 조회 (캘린더 표시용)
+    @Operation(summary = "내 부서 승인 휴가 조회 (캘린더 표시용)")
+    @GetMapping("/department")
+    public ResponseEntity<ApiResponse<List<LeaveDto.CalendarResponse>>> getDepartmentLeaves(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam("from") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam("to") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+
+        return ResponseEntity.ok(ApiResponse.ok(
+                leaveService.getDepartmentLeaves(userDetails.getId(), from, to)));
     }
 }

@@ -467,4 +467,62 @@ class EmployeeServiceTest {
                 .isEqualTo(ErrorCode.EMPLOYEE_NOT_FOUND);
         verifyNoInteractions(messagingTemplate, auditLogService);
     }
+
+    @DisplayName("내 프로필을 수정하면 연락처와 프로필 이미지가 변경된다")
+    @Test
+    void updateMyProfile_success_updatesPhoneAndImage() {
+        // given
+        Employee employee = buildEmployee(1L, "김철수");
+        EmployeeDto.MyProfileRequest request = new EmployeeDto.MyProfileRequest();
+        request.setPhone("010-1111-2222");
+        request.setProfileImage("https://storage/profile.png");
+        given(employeeRepository.findById(1L)).willReturn(Optional.of(employee));
+
+        // when
+        EmployeeDto.Response result = employeeService.updateMyProfile(1L, request);
+
+        // then
+        assertThat(result.getPhone()).isEqualTo("010-1111-2222");
+        assertThat(result.getProfileImage()).isEqualTo("https://storage/profile.png");
+        assertThat(result.getName()).isEqualTo("김철수");
+    }
+
+    @DisplayName("현재 비밀번호가 일치하면 새 비밀번호를 인코딩해 저장한다")
+    @Test
+    void changeMyPassword_success_encodesNewPassword() {
+        // given
+        Employee employee = buildEmployee(1L, "김철수");
+        EmployeeDto.PasswordChangeRequest request = new EmployeeDto.PasswordChangeRequest();
+        request.setCurrentPassword("old-password");
+        request.setNewPassword("new-password");
+        given(employeeRepository.findById(1L)).willReturn(Optional.of(employee));
+        given(passwordEncoder.matches("old-password", "encoded-password")).willReturn(true);
+        given(passwordEncoder.encode("new-password")).willReturn("encoded-new-password");
+
+        // when
+        employeeService.changeMyPassword(1L, request);
+
+        // then
+        assertThat(employee.getPassword()).isEqualTo("encoded-new-password");
+    }
+
+    @DisplayName("현재 비밀번호가 틀리면 INVALID_PASSWORD 예외가 발생하고 비밀번호는 바뀌지 않는다")
+    @Test
+    void changeMyPassword_wrongCurrentPassword_throwsInvalidPassword() {
+        // given
+        Employee employee = buildEmployee(1L, "김철수");
+        EmployeeDto.PasswordChangeRequest request = new EmployeeDto.PasswordChangeRequest();
+        request.setCurrentPassword("wrong-password");
+        request.setNewPassword("new-password");
+        given(employeeRepository.findById(1L)).willReturn(Optional.of(employee));
+        given(passwordEncoder.matches("wrong-password", "encoded-password")).willReturn(false);
+
+        // when & then
+        assertThatThrownBy(() -> employeeService.changeMyPassword(1L, request))
+                .isInstanceOf(CustomException.class)
+                .extracting(e -> ((CustomException) e).getErrorCode())
+                .isEqualTo(ErrorCode.INVALID_PASSWORD);
+        assertThat(employee.getPassword()).isEqualTo("encoded-password");
+        verify(passwordEncoder, never()).encode(any());
+    }
 }

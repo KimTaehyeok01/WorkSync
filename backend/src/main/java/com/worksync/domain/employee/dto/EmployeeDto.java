@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -151,5 +152,32 @@ public class EmployeeDto {
 
         @Schema(description = "입사일", example = "2026-01-01")
         private LocalDate hireDate;
+    }
+
+    @Getter @Setter
+    @Schema(name = "EmployeeDto.MyProfileRequest")
+    public static class MyProfileRequest {
+
+        @Size(max = 20)
+        @Schema(description = "연락처", example = "010-1234-5678")
+        private String phone;
+
+        @Size(max = 512)
+        @Schema(description = "프로필 이미지 경로 (null이면 이미지 삭제)")
+        private String profileImage;
+    }
+
+    @Getter @Setter
+    @Schema(name = "EmployeeDto.PasswordChangeRequest")
+    public static class PasswordChangeRequest {
+
+        @NotBlank
+        @Schema(description = "현재 비밀번호")
+        private String currentPassword;
+
+        @NotBlank
+        @Size(min = 8, max = 72)
+        @Schema(description = "새 비밀번호 (8자 이상)")
+        private String newPassword;
     }
 }

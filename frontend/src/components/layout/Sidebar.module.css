@@ -17,6 +17,11 @@
   padding: 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
+.brandLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 .brandLogo {
   width: 36px;
   height: 36px;
