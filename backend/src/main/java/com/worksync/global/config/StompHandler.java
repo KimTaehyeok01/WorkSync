@@ -39,7 +39,7 @@ public class StompHandler implements ChannelInterceptor {
             }
 
             // 토큰 유효성 검사
-            if (token != null && jwtTokenProvider.validateToken(token)) {
+            if (token != null && jwtTokenProvider.validateAccessToken(token)) {
                 // 토큰에서 사용자 ID 추출
                 Long employeeId = jwtTokenProvider.getEmployeeId(token);
 

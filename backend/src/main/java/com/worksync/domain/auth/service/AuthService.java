@@ -99,7 +99,7 @@ public class AuthService {
     public Map<String, String> reissue(AuthDto.ReissueRequest request) {
         String refreshToken = request.getRefreshToken();
 
-        if (!jwtTokenProvider.validateToken(refreshToken)) {
+        if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
             throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
 
@@ -120,7 +120,7 @@ public class AuthService {
     // 로그아웃
     @Transactional
     public void logout(AuthDto.ReissueRequest request, String clientIp, String userAgent) {
-        if (!jwtTokenProvider.validateToken(request.getRefreshToken())) {
+        if (!jwtTokenProvider.validateRefreshToken(request.getRefreshToken())) {
             throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
         Long employeeId = jwtTokenProvider.getEmployeeId(request.getRefreshToken());

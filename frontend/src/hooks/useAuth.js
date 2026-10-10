@@ -30,6 +30,8 @@ export default function useAuth() {
     const json = await response.json();
     if (!response.ok) {
       localStorage.removeItem("refreshToken");
+      // 재발급 실패 = 세션 종료 — Access Token도 비워 로그인 화면으로 보낸다
+      setAccessToken(null);
       throw new Error(json.message || "재발급 실패");
     }
     setAccessToken(json.data.accessToken);

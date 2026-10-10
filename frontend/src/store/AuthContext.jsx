@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useRef } from "react";
 import useAuth from "../hooks/useAuth";
+import { installAuthInterceptor } from "../api/httpClient";
 
 // createContext = 빈 보관함 생성
 // AuthContext.Provider = 값을 넣는 입구
@@ -44,6 +45,12 @@ export function AuthProvider({ children }) {
         console.log("인증 에러: " + error);
       });
   };
+
+  // Access Token 만료(401) 시 자동 재발급 후 재시도 — 모든 API 호출에 한 번에 적용
+  // refresh는 렌더마다 새로 만들어지므로 ref로 최신 함수를 가리킨다
+  const refreshRef = useRef(refresh);
+  refreshRef.current = refresh;
+  useEffect(() => installAuthInterceptor(() => refreshRef.current), []);
 
   // 앱 시작 후 전에 로그인 상태 확인 (refreshToken 있는지 확인)
   useEffect(() => {

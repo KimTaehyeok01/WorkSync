@@ -185,7 +185,7 @@ class AuthServiceTest {
         AuthDto.ReissueRequest request = new AuthDto.ReissueRequest();
         request.setRefreshToken("valid-refresh");
 
-        given(jwtTokenProvider.validateToken("valid-refresh")).willReturn(true);
+        given(jwtTokenProvider.validateRefreshToken("valid-refresh")).willReturn(true);
         given(jwtTokenProvider.getEmployeeId("valid-refresh")).willReturn(1L);
         given(employeeRepository.findById(1L)).willReturn(Optional.of(employee));
         given(jwtTokenProvider.generateAccessToken(1L, "hong@worksync.com", "USER")).willReturn("new-access");
@@ -206,7 +206,7 @@ class AuthServiceTest {
         AuthDto.ReissueRequest request = new AuthDto.ReissueRequest();
         request.setRefreshToken("invalid-refresh");
 
-        given(jwtTokenProvider.validateToken("invalid-refresh")).willReturn(false);
+        given(jwtTokenProvider.validateRefreshToken("invalid-refresh")).willReturn(false);
 
         // when & then
         assertThatThrownBy(() -> authService.reissue(request))
@@ -222,7 +222,7 @@ class AuthServiceTest {
         AuthDto.ReissueRequest request = new AuthDto.ReissueRequest();
         request.setRefreshToken("valid-refresh");
 
-        given(jwtTokenProvider.validateToken("valid-refresh")).willReturn(true);
+        given(jwtTokenProvider.validateRefreshToken("valid-refresh")).willReturn(true);
         given(jwtTokenProvider.getEmployeeId("valid-refresh")).willReturn(999L);
         given(employeeRepository.findById(999L)).willReturn(Optional.empty());
 
@@ -246,7 +246,7 @@ class AuthServiceTest {
         AuthDto.ReissueRequest request = new AuthDto.ReissueRequest();
         request.setRefreshToken("valid-refresh");
 
-        given(jwtTokenProvider.validateToken("valid-refresh")).willReturn(true);
+        given(jwtTokenProvider.validateRefreshToken("valid-refresh")).willReturn(true);
         given(jwtTokenProvider.getEmployeeId("valid-refresh")).willReturn(1L);
         given(employeeRepository.findById(1L)).willReturn(Optional.of(employee));
 
@@ -266,7 +266,7 @@ class AuthServiceTest {
         AuthDto.ReissueRequest request = new AuthDto.ReissueRequest();
         request.setRefreshToken("invalid-refresh");
 
-        given(jwtTokenProvider.validateToken("invalid-refresh")).willReturn(false);
+        given(jwtTokenProvider.validateRefreshToken("invalid-refresh")).willReturn(false);
 
         // when & then
         assertThatThrownBy(() -> authService.logout(request, "127.0.0.1", "JUnit"))
@@ -284,7 +284,7 @@ class AuthServiceTest {
         AuthDto.ReissueRequest request = new AuthDto.ReissueRequest();
         request.setRefreshToken("valid-refresh");
 
-        given(jwtTokenProvider.validateToken("valid-refresh")).willReturn(true);
+        given(jwtTokenProvider.validateRefreshToken("valid-refresh")).willReturn(true);
         given(jwtTokenProvider.getEmployeeId("valid-refresh")).willReturn(999L);
         given(employeeRepository.findById(999L)).willReturn(Optional.empty());
 
