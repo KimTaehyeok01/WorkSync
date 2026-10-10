@@ -10,6 +10,7 @@ import {
   WSFormField,
   WSInput,
   WSButton,
+  WSAlert,
 } from "../../../components/common/CommonWidgets";
 import style from "../pages/OrganizationListPage.module.css";
 import useAuthContext from "../../../store/AuthContext";
@@ -22,6 +23,9 @@ export default function DeptModal({
   accessToken,
   addDeptName,
   setAddDeptName,
+  addDeptError,
+  setAddDeptError,
+  adding,
   editDeptName,
   setEditDeptName,
   editDeptId,
@@ -32,6 +36,13 @@ export default function DeptModal({
   modalView,
   setModalView,
 }) {
+  // 부서 추가 화면을 열 때마다 이전 입력과 에러를 비운다
+  const openAdd = () => {
+    setAddDeptName("");
+    setAddDeptError("");
+    setModalView("add");
+  };
+
   return (
     <>
       <WSModal
@@ -47,20 +58,13 @@ export default function DeptModal({
             description="새 부서를 추가하여 조직 관리 시스템을 시작해 보세요. 더욱 효율적인 업무 관리가 가능합니다."
             action={{
               label: "신규 부서 추가",
-              onClick: () => {
-                setModalView("add");
-              },
+              onClick: openAdd,
               icon: <Plus size={16} />,
             }}
           />
         ) : (
           <>
-            <button
-              onClick={() => {
-                setModalView("add");
-              }}
-              className={style.addDeptBtn}
-            >
+            <button onClick={openAdd} className={style.addDeptBtn}>
               <Plus size={16} />
               신규 부서 추가
             </button>
@@ -95,23 +99,35 @@ export default function DeptModal({
           <WSInput
             type="text"
             value={addDeptName}
-            onChange={(e) => setAddDeptName(e.target.value)}
+            onChange={(e) => {
+              setAddDeptName(e.target.value);
+              setAddDeptError("");
+            }}
             placeholder="부서명을 입력하세요"
           />
         </WSFormField>
+
+        {addDeptError && (
+          <WSAlert
+            type="error"
+            message={addDeptError}
+            onClose={() => setAddDeptError("")}
+          />
+        )}
 
         <WSModalActions>
           <WSButton
             label="취소"
             variant="secondary"
             onClick={() => {
+              setAddDeptError("");
               setModalView("dept");
             }}
           />
           <WSButton
             label="추가"
             variant="primary"
-            disabled={!addDeptName.trim()}
+            disabled={!addDeptName.trim() || adding}
             onClick={handleAdd}
           />
         </WSModalActions>

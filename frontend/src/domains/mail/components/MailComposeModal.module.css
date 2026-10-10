@@ -1,0 +1,41 @@
+/* 메일 작성 모달 — 라벨이 왼쪽에 놓이는 행 배치와 첨부 영역 스타일 */
+.form {
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+}
+.row {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--ws-space-md);
+  margin-bottom: var(--ws-space-md);
+}
+.label {
+  padding-top: 11px;
+  color: var(--ws-text-600);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.required {
+  margin-left: 2px;
+  color: var(--ws-danger);
+}
+/* 업로드 영역을 메일 작성 모달에 맞게 낮춘다 */
+.attach > [role="button"] {
+  padding: 14px 16px;
+}
+.uploading {
+  margin: var(--ws-space-sm) 0 0;
+  color: var(--ws-text-500);
+  font-size: 12px;
+}
+
+@media (max-width: 480px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--ws-space-xs);
+  }
+  .label {
+    padding-top: 0;
+  }
+}

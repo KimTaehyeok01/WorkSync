@@ -40,6 +40,8 @@ export default function OrganizationListPage() {
   const [departments, setDepartments] = useState([]);
   const [employee, setEmployee] = useState([]);
   const [addDeptName, setAddDeptName] = useState("");
+  const [addDeptError, setAddDeptError] = useState("");
+  const [adding, setAdding] = useState(false);
   const [editDeptName, setEditDeptName] = useState("");
   const [editDeptId, setEditDeptId] = useState("");
   const [modalView, setModalView] = useState("dept");
@@ -94,7 +96,7 @@ export default function OrganizationListPage() {
   const filtered = employee.filter((item) => {
     const matchSearch =
       item.name.toLowerCase().includes(search.toLowerCase()) ||
-      item.departmentName.toLowerCase().includes(search.toLowerCase());
+      (item.departmentName ?? "").toLowerCase().includes(search.toLowerCase());
     const matchDept = deptFilter === "all" || item.departmentId === deptFilter;
     return matchSearch && matchDept;
   });
@@ -104,12 +106,26 @@ export default function OrganizationListPage() {
 
   // 부서 추가 API
   async function handleAdd() {
-    if (addDeptName.trim()) {
-      await createDepartments(accessToken, addDeptName).then((response) => {
-        setDepartments([...departments, response.data]);
-      });
+    // 더블클릭으로 요청이 두 번 나가지 않게 진행 중에는 막는다
+    if (adding || !addDeptName.trim()) return;
+    setAdding(true);
+    try {
+      const response = await createDepartments(accessToken, addDeptName.trim());
 
+      // 서버가 거절(이름 중복·권한 없음 등)하면 data 가 null — 목록에 넣지 않고 사유를 보여준다
+      const succeeded =
+        response && response.status >= 200 && response.status < 300 && response.data;
+      if (!succeeded) {
+        setAddDeptError(response?.message || "부서를 추가하지 못했습니다.");
+        return;
+      }
+
+      setDepartments([...departments, response.data]);
+      setAddDeptName("");
+      setAddDeptError("");
       setModalView("dept");
+    } finally {
+      setAdding(false);
     }
   }
 
@@ -126,9 +142,21 @@ export default function OrganizationListPage() {
 
       if (editDeptId) {
         await deleteDepartments(accessToken, editDeptId).then((response) => {
+          // 서버가 삭제하지 않았는데 화면에서만 지워지지 않도록 성공일 때만 반영한다
+          if (!response) {
+            alert("부서를 삭제하지 못했습니다.");
+            return;
+          }
           setDepartments(
             departments.filter((dept) => dept.id !== Number(editDeptId)),
           );
+          // 삭제한 부서를 보고 있었다면 전체로 되돌린다
+          if (deptFilter === Number(editDeptId)) {
+            setDeptFilter("all");
+            setPage(1);
+          }
+          // 직원들의 부서가 비었으니 직원 목록을 다시 불러온다
+          setBulkVersion((version) => version + 1);
           setModalView("dept");
         });
       }
@@ -140,25 +168,27 @@ export default function OrganizationListPage() {
   // 부서 수정 API
   async function handleEdit() {
     if (editDeptName.trim()) {
-      try {
-        const response = await editDepartments(
-          accessToken,
-          editDeptName,
-          editDeptId,
-        );
-        if (!response.data) {
-          alert("이미 존재하는 부서명입니다.");
-          return;
-        }
-        setDepartments(
-          departments.map((dept) =>
-            dept.id === response.data.id ? response.data : dept,
-          ),
-        );
-        setModalView("dept");
-      } catch (error) {
-        alert("이미 존재하는 부서입니다.");
+      const response = await editDepartments(
+        accessToken,
+        editDeptName.trim(),
+        editDeptId,
+      );
+
+      // 성공 판정은 부서 추가와 같다 — 거절·네트워크 오류면 서버 메시지(없으면 기본 문구)를 보여준다
+      const succeeded =
+        response && response.status >= 200 && response.status < 300 && response.data;
+      if (!succeeded) {
+        alert(response?.message || "부서명을 수정하지 못했습니다.");
+        return;
       }
+      setDepartments(
+        departments.map((dept) =>
+          dept.id === response.data.id ? response.data : dept,
+        ),
+      );
+      // 직원 표의 부서명도 새 이름으로 보이도록 목록을 다시 불러온다
+      setBulkVersion((version) => version + 1);
+      setModalView("dept");
     }
   }
 
@@ -274,10 +304,16 @@ export default function OrganizationListPage() {
         departments={departments}
         setDepartments={setDepartments}
         isOpen={deptModal}
-        onClose={() => setDeptModal(false)}
+        onClose={() => {
+          setDeptModal(false);
+          setAddDeptError("");
+        }}
         accessToken={accessToken}
         addDeptName={addDeptName}
         setAddDeptName={setAddDeptName}
+        addDeptError={addDeptError}
+        setAddDeptError={setAddDeptError}
+        adding={adding}
         editDeptName={editDeptName}
         setEditDeptName={setEditDeptName}
         editDeptId={editDeptId}
