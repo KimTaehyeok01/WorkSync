@@ -8,8 +8,9 @@ import {
   getDepartmentBoard,
   getDepartments,
 } from "../services/boardApi";
+import { getPinnedPosts } from "../services/postExtraApi";
 import { useNavigate } from "react-router-dom";
-import { Plus, Search, ChevronDown, ClipboardList } from "lucide-react";
+import { Plus, Search, ChevronDown, ClipboardList, Pin } from "lucide-react";
 import {
   WSCard,
   WSAvatar,
@@ -35,6 +36,23 @@ export default function Board() {
     // 드롭다운 목록 전체
     { value: "all", label: "전체" },
   ]); // 전체 -> 고정으로 유지
+  const [pinnedIds, setPinnedIds] = useState(new Set()); // 상단 고정된 글 id
+
+  // 지금 보이는 글들이 속한 게시판의 상단 고정 글을 조회
+  const boardIdsKey = [...new Set(posts.map((p) => p.boardId))].sort().join(",");
+  useEffect(() => {
+    if (!accessToken || !boardIdsKey) {
+      setPinnedIds(new Set());
+      return;
+    }
+    Promise.all(
+      boardIdsKey.split(",").map((id) => getPinnedPosts(accessToken, id)),
+    ).then((results) => {
+      setPinnedIds(
+        new Set(results.flatMap((json) => (json?.data ?? []).map((p) => p.id))),
+      );
+    });
+  }, [accessToken, boardIdsKey]);
 
   // 카테고리 + 검색어 적용하여 정렬
   const filteredPosts = posts.filter((p) => {
@@ -51,8 +69,10 @@ export default function Board() {
     return matchCat && matchSearch;
   });
 
-  // 공지사항을 상단으로
+  // 상단 고정 글 → 공지사항 → 나머지 순
   const sortedPosts = [...filteredPosts].sort((a, b) => {
+    const pinDiff = pinnedIds.has(b.id) - pinnedIds.has(a.id);
+    if (pinDiff !== 0) return pinDiff;
     // boardName으로 수정
     if (a.boardName === "공지사항" && b.boardName !== "공지사항") return -1;
     if (a.boardName !== "공지사항" && b.boardName === "공지사항") return 1;
@@ -254,6 +274,12 @@ export default function Board() {
                 >
                   <div className={s.rowBody}>
                     <div className={s.rowHeader}>
+                      {pinnedIds.has(post.id) && (
+                        <span className={s.pinBadge}>
+                          <Pin size={11} />
+                          고정
+                        </span>
+                      )}
                       {isNotice && (
                         <span className={s.noticeBadge}>공지사항</span>
                       )}

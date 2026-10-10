@@ -30,11 +30,19 @@ import ResourceManageModal, {
 } from "../components/ResourceManageModal";
 import s from "./ReservationPage.module.css";
 
-// 시간표에 표시할 시간대 (08시 ~ 20시)
+// 시간표에 표시할 시간대 (08시 ~ 20시), 한 칸은 30분
 const HOURS = Array.from({ length: 12 }, (_, i) => i + 8);
+const SLOT_MINUTES = 30;
+// 각 칸의 시작 시각을 자정부터의 분으로 (480 = 08:00)
+const SLOTS = HOURS.flatMap((hour) => [hour * 60, hour * 60 + SLOT_MINUTES]);
 
 function pad(value) {
   return String(value).padStart(2, "0");
+}
+
+// 자정부터의 분을 HH:mm 으로
+function toTime(minutes) {
+  return `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`;
 }
 
 function formatPeriod(reservation) {
@@ -84,31 +92,38 @@ export default function ReservationPage() {
     loadReservations();
   }, [accessToken, date]);
 
-  // 해당 자원의 해당 시간대(1시간)와 겹치는 예약
-  const findReservation = (resourceId, hour) => {
-    const slotStart = `${date}T${pad(hour)}:00:00`;
-    const slotEnd = `${date}T${pad(hour + 1)}:00:00`;
+  // 해당 자원의 해당 칸(30분)과 겹치는 예약
+  const findReservation = (resourceId, slot) => {
+    const slotStart = `${date}T${toTime(slot)}:00`;
+    const slotEnd = `${date}T${toTime(slot + SLOT_MINUTES)}:00`;
     return reservations.find(
       (r) =>
         r.resourceId === resourceId && r.startAt < slotEnd && r.endAt > slotStart,
     );
   };
 
-  const openForm = (resourceId, hour) => {
+  // 이미 지난 시각인지 — 지난 칸은 누를 수 없고, 지난 시각으로는 예약할 수 없다
+  const isPast = (time) => new Date(`${date}T${time}:00`) < new Date();
+
+  const openForm = (resourceId, slot) => {
     setFormError("");
     setForm({
       resourceId: String(resourceId ?? ""),
       title: "",
-      startTime: `${pad(hour)}:00`,
-      endTime: `${pad(hour + 1)}:00`,
+      startTime: toTime(slot),
+      endTime: toTime(slot + 60),
     });
   };
+
+  // "예약하기" 버튼용 — 지금 이후 첫 칸에서 시작 (모두 지났으면 첫 칸, 폼에서 안내)
+  const firstAvailableSlot = SLOTS.find((slot) => !isPast(toTime(slot))) ?? SLOTS[0];
 
   const isFormValid =
     form &&
     form.resourceId !== "" &&
     form.title.trim().length > 0 &&
-    form.startTime < form.endTime;
+    form.startTime < form.endTime &&
+    !isPast(form.startTime);
 
   const handleReserve = async () => {
     const json = await reserve(accessToken, {
@@ -162,7 +177,7 @@ export default function ReservationPage() {
             label="예약하기"
             icon={<Plus size={15} />}
             disabled={activeResources.length === 0}
-            onClick={() => openForm(activeResources[0]?.id, 9)}
+            onClick={() => openForm(activeResources[0]?.id, firstAvailableSlot)}
           />
         </div>
       </div>
@@ -179,7 +194,7 @@ export default function ReservationPage() {
             <div className={s.table}>
               <div className={s.headCell} />
               {HOURS.map((hour) => (
-                <div key={hour} className={s.headCell}>
+                <div key={hour} className={`${s.headCell} ${s.headHour}`}>
                   {pad(hour)}시
                 </div>
               ))}
@@ -193,22 +208,25 @@ export default function ReservationPage() {
                       {resource.capacity ? ` · ${resource.capacity}명` : ""}
                     </span>
                   </div>
-                  {HOURS.map((hour) => {
-                    const reservation = findReservation(resource.id, hour);
+                  {SLOTS.map((slot) => {
+                    const reservation = findReservation(resource.id, slot);
                     if (!reservation) {
                       return (
                         <button
-                          key={hour}
+                          key={slot}
                           type="button"
-                          className={s.slot}
-                          aria-label={`${resource.name} ${pad(hour)}시 예약`}
-                          onClick={() => openForm(resource.id, hour)}
+                          className={`${s.slot} ${slot % 60 === 0 ? "" : s.slotHalf}`}
+                          disabled={isPast(toTime(slot))}
+                          aria-label={`${resource.name} ${toTime(slot)} 예약`}
+                          onClick={() => openForm(resource.id, slot)}
                         />
                       );
                     }
+                    // 예약 제목은 그 예약이 시작하는 칸에만 적는다
+                    const isFirst = reservation.startAt.slice(11, 16) >= toTime(slot);
                     return (
                       <div
-                        key={hour}
+                        key={slot}
                         className={`${s.slot} ${reservation.isCancelable ? s.slotMine : s.slotTaken}`}
                         title={`${reservation.title} (${reservation.employeeName}) ${reservation.startAt.slice(11, 16)}~${reservation.endAt.slice(11, 16)}`}
                         onClick={
@@ -217,10 +235,14 @@ export default function ReservationPage() {
                             : undefined
                         }
                       >
-                        <span className={s.slotTitle}>{reservation.title}</span>
-                        <span className={s.slotSub}>
-                          {reservation.employeeName}
-                        </span>
+                        {isFirst && (
+                          <>
+                            <span className={s.slotTitle}>{reservation.title}</span>
+                            <span className={s.slotSub}>
+                              {reservation.employeeName}
+                            </span>
+                          </>
+                        )}
                       </div>
                     );
                   })}
@@ -289,9 +311,11 @@ export default function ReservationPage() {
               label="시간"
               required
               error={
-                form.startTime < form.endTime
-                  ? null
-                  : "종료 시각은 시작 시각보다 늦어야 합니다."
+                form.startTime >= form.endTime
+                  ? "종료 시각은 시작 시각보다 늦어야 합니다."
+                  : isPast(form.startTime)
+                    ? "지난 시간은 예약할 수 없습니다."
+                    : null
               }
             >
               <div className={s.timeRow}>

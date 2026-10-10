@@ -1,0 +1,112 @@
+/* 게시글 댓글·읽음 확인 공용 스타일 */
+
+.comments {
+  margin-top: var(--ws-space-2xl);
+  padding-top: var(--ws-space-xl);
+  border-top: 1px solid var(--ws-border-light);
+}
+.sectionTitle {
+  margin: 0 0 var(--ws-space-md);
+  color: var(--ws-text-800);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.comment {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ws-space-md);
+  padding: var(--ws-space-md) 0;
+  border-bottom: 1px solid var(--ws-border-light);
+}
+.commentBody {
+  flex: 1;
+  min-width: 0;
+}
+.commentMeta {
+  margin: 0 0 2px;
+  color: var(--ws-text-400);
+  font-size: 11.5px;
+}
+.commentAuthor {
+  margin-right: var(--ws-space-sm);
+  color: var(--ws-text-800);
+  font-size: 13px;
+  font-weight: 600;
+}
+.commentContent {
+  margin: 0;
+  color: var(--ws-text-700);
+  font-size: 13.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.iconBtn {
+  display: flex;
+  padding: 6px;
+  border-radius: var(--ws-radius-sm);
+  color: var(--ws-text-400);
+}
+.iconBtn:hover {
+  color: var(--ws-danger);
+  background: #fee2e2;
+}
+
+.commentForm {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--ws-space-sm);
+  margin-top: var(--ws-space-lg);
+}
+.commentInput {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--ws-border);
+  border-radius: var(--ws-radius-md);
+  color: var(--ws-text-800);
+  font-size: 13.5px;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+}
+.commentInput:focus {
+  border-color: #93c5fd;
+}
+.error {
+  margin: var(--ws-space-sm) 0 0;
+  color: var(--ws-danger);
+  font-size: 12px;
+}
+
+.muted {
+  margin: 0;
+  color: var(--ws-text-400);
+  font-size: 12.5px;
+}
+.readers {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.reader {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ws-space-sm);
+  font-size: 12.5px;
+}
+.readerName {
+  color: var(--ws-text-800);
+  font-weight: 600;
+}
+.readerDept {
+  margin-left: 6px;
+  color: var(--ws-text-400);
+  font-weight: 400;
+}
+.readerTime {
+  flex-shrink: 0;
+  color: var(--ws-text-400);
+}

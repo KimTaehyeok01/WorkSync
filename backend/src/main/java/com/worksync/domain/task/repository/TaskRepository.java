@@ -64,6 +64,24 @@ public interface TaskRepository extends JpaRepository<Task,Long> {
             Pageable pageable);
 
 
+    // 통합 검색 — 제목이 일치하는 업무 중 볼 수 있는 것
+    // 관리자는 전체, 그 외에는 내 부서 업무이거나 내가 등록·담당한 업무
+    @Query("""
+        SELECT t FROM Task t
+        LEFT JOIN FETCH t.assignee
+        WHERE t.title LIKE CONCAT('%', :keyword, '%')
+          AND (:isAdmin = true
+               OR t.department.id = :departmentId
+               OR t.creator.id = :employeeId
+               OR t.assignee.id = :employeeId)
+        ORDER BY t.createdAt DESC
+        """)
+    List<Task> searchVisible(@Param("keyword") String keyword,
+                             @Param("isAdmin") boolean isAdmin,
+                             @Param("departmentId") Long departmentId,
+                             @Param("employeeId") Long employeeId,
+                             Pageable pageable);
+
     //dashboard용
     long countByAssigneeIdAndStatus(Long assigneeId,TaskStatus status);
     List<Task> findAllByAssigneeId(Long assigneeId);

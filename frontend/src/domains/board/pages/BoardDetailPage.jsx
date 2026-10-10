@@ -17,6 +17,8 @@ import {
 import useAuthContext from "../../../store/AuthContext";
 import useFileUpload from "../../../hooks/useFileUpload";
 import { getFile, saveFile, deleteFile } from "../../file/services/fileApi";
+import PostComments from "../components/PostComments";
+import PostReadStatus from "../components/PostReadStatus";
 
 const MOCK_ATTACHMENTS = [
   { id: "a1", name: "03_제내_수정.xlsx", size: "1.2 MB", type: "XLSX" },
@@ -146,16 +148,18 @@ export default function BoardDetail() {
               </div>
             </div>
             <div className={s.content}>{post.content}</div>
+            <PostComments accessToken={accessToken} postId={postId} />
           </div>
         </div>
 
         <div className={s.colSide}>
-          <WSCard title="첨부 파일" subtitle="1개 파일 업로드">
+          <WSCard title="첨부 파일" subtitle={`${files.length}개 파일`}>
             <WSFileList
               files={files.map(({ file }) => file)}
               onDownload={handleDownload}
             />
           </WSCard>
+          <PostReadStatus accessToken={accessToken} postId={postId} />
           {me && post && (me.id === post.authorId || me.role === "ADMIN") && (
             <>
               <div className={s.actionsCol}>

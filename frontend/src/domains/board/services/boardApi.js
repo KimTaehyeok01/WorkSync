@@ -20,9 +20,10 @@ export async function getBoards(accessToken) {
 
 //게시글 목록 조회 (departmentId: ADMIN이 부서게시판에서 특정 부서만 필터링할 때)
 export async function getPosts(boardId, accessToken, departmentId) {
-  const url = departmentId
-    ? `${BASE_URL}/boards/${boardId}/posts?departmentId=${departmentId}`
-    : `${BASE_URL}/boards/${boardId}/posts`;
+  // 화면에서 페이지를 나누므로 한 번에 넉넉히 받아온다 (기본 크기로 받으면 첫 페이지 글만 보인다)
+  const params = new URLSearchParams({ size: 200, sort: "createdAt,desc" });
+  if (departmentId) params.append("departmentId", departmentId);
+  const url = `${BASE_URL}/boards/${boardId}/posts?${params}`;
   return await fetch(url, {
     method: "GET",
     headers: {

@@ -5,6 +5,10 @@ import com.worksync.domain.board.entity.Post;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
 
 public interface PostRepository extends JpaRepository<Post,Long> {
 
@@ -22,4 +26,16 @@ public interface PostRepository extends JpaRepository<Post,Long> {
     // ADMIN 전용 - 특정 타입(DEPARTMENT) + 특정 부서 작성자 글 조회
     Page<Post> findByBoardBoardTypeAndAuthorDepartmentId(BoardType boardType, Long departmentId, Pageable pageable);
     Page<Post> findByBoardBoardTypeAndTitleContainingAndAuthorDepartmentId(BoardType boardType, String keyword, Long departmentId, Pageable pageable);
+
+    // 통합 검색 — 제목이 일치하는 글 중 볼 수 있는 것
+    // 부서게시판 글은 관리자이거나 작성자와 같은 부서일 때만 포함한다
+    @Query("SELECT p FROM Post p JOIN FETCH p.board b JOIN FETCH p.author a " +
+            "WHERE p.title LIKE CONCAT('%', :keyword, '%') " +
+            "AND (b.boardType <> :departmentType OR :isAdmin = true OR a.department.id = :departmentId) " +
+            "ORDER BY p.createdAt DESC")
+    List<Post> searchVisible(@Param("keyword") String keyword,
+                             @Param("departmentType") BoardType departmentType,
+                             @Param("isAdmin") boolean isAdmin,
+                             @Param("departmentId") Long departmentId,
+                             Pageable pageable);
 }

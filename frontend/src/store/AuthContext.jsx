@@ -13,6 +13,9 @@ export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
   // 내 상태(ACTIVE/AWAY) 전역 관리 — TopBar에서 변경, 메신저 등에서 즉시 반영
   const [myStatus, setMyStatus] = useState("");
+  // 내 프로필이 바뀔 때마다 올라가는 번호 — 상단 바 등이 이 값을 보고 내 정보를 다시 불러온다
+  const [profileVersion, setProfileVersion] = useState(0);
+  const refreshProfile = () => setProfileVersion((version) => version + 1);
 
   // 인증 헤더 토큰 추가
   const authFetch = async (url, options = {}) => {
@@ -80,6 +83,8 @@ export function AuthProvider({ children }) {
     authFetch,
     myStatus,
     setMyStatus,
+    profileVersion,
+    refreshProfile,
   };
 
   return (

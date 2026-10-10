@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ClipboardList, Plus } from "lucide-react";
+import { ClipboardList, Plus, List, Columns3 } from "lucide-react";
+import TaskKanban from "../components/TaskKanban";
 import useAuthContext from "../../../store/AuthContext";
 import {
   getTaskList,
@@ -45,6 +46,7 @@ export default function Tasks() {
   const [role, setRole] = useState(null);
   const [departmentId, setDepartmentId] = useState(null);
   const [profile, setProfile] = useState([]); // 목록 프로필이미지
+  const [view, setView] = useState("list"); // 보기 방식: list | kanban
   const navigate = useNavigate();
 
   //내 정보 불러오기
@@ -126,6 +128,35 @@ export default function Tasks() {
         ]}
       />
 
+      <div className={s.viewToggle}>
+        <button
+          type="button"
+          className={`${s.viewBtn} ${view === "list" ? s.viewBtnOn : ""}`}
+          onClick={() => setView("list")}
+        >
+          <List size={14} />
+          목록
+        </button>
+        <button
+          type="button"
+          className={`${s.viewBtn} ${view === "kanban" ? s.viewBtnOn : ""}`}
+          onClick={() => setView("kanban")}
+        >
+          <Columns3 size={14} />
+          칸반
+        </button>
+      </div>
+
+      {view === "kanban" ? (
+        <TaskKanban
+          accessToken={accessToken}
+          role={role}
+          departmentId={departmentId}
+          search={search}
+          profiles={profile}
+        />
+      ) : (
+      <>
       <div className={s.table}>
         <WSTableHeader
           columns={TH_COL}
@@ -183,6 +214,8 @@ export default function Tasks() {
           onPageChange={setPage}
         />
       </div>
+      </>
+      )}
     </div>
   );
 }

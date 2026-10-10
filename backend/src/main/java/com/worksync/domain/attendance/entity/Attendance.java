@@ -43,8 +43,33 @@ public class Attendance extends BaseEntity {
     @Column(name = "client_ip", length = 45)
     private String clientIp;
 
-    // 퇴근시간 메서드 추가
+    // 정규 퇴근 시각 — 이보다 일찍 퇴근하면 조퇴
+    private static final int WORK_END_HOUR = 18;
+    // 정규 출근 시각 — 이 시각부터는 지각
+    private static final int WORK_START_HOUR = 9;
+
+    // 퇴근 처리 — 정상 출근자가 18시 전에 퇴근하면 조퇴로 판정 (지각은 지각 그대로 둔다)
     public void checkOut(LocalDateTime checkOutTime){
         this.checkedOutAt = checkOutTime;
+        if (this.status == AttendanceStatus.NORMAL && checkOutTime.getHour() < WORK_END_HOUR) {
+            this.status = AttendanceStatus.EARLY_LEAVE;
+        }
+    }
+
+    // 근무 재개 — 같은 날 다시 로그인하면 퇴근 기록을 지우고 출근 시각 기준 상태로 되돌린다
+    // (로그아웃이 곧 퇴근 처리라, 점심에 로그아웃했다가 돌아온 사람이 조퇴로 남지 않게 한다)
+    public void reopen() {
+        this.checkedOutAt = null;
+        if (this.status == AttendanceStatus.EARLY_LEAVE) {
+            this.status = this.checkedInAt != null && this.checkedInAt.getHour() >= WORK_START_HOUR
+                    ? AttendanceStatus.LATE : AttendanceStatus.NORMAL;
+        }
+    }
+
+    // 관리자 수정 — 출퇴근 시각과 상태를 직접 지정
+    public void adminUpdate(LocalDateTime checkedInAt, LocalDateTime checkedOutAt, AttendanceStatus status) {
+        this.checkedInAt = checkedInAt;
+        this.checkedOutAt = checkedOutAt;
+        this.status = status;
     }
 }

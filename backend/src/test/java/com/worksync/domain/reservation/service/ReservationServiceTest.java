@@ -12,6 +12,7 @@ import com.worksync.domain.reservation.repository.ReservationRepository;
 import com.worksync.domain.reservation.repository.ResourceRepository;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
+import com.worksync.domain.notification.service.NotificationService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,11 +44,16 @@ class ReservationServiceTest {
 	@Mock
 	private EmployeeRepository employeeRepository;
 
+	@Mock
+
+	private NotificationService notificationService;
+
+
 	@InjectMocks
 	private ReservationService reservationService;
 
-	private static final LocalDateTime START = LocalDateTime.of(2026, 10, 12, 10, 0);
-	private static final LocalDateTime END = LocalDateTime.of(2026, 10, 12, 11, 0);
+	private static final LocalDateTime START = LocalDateTime.of(2099, 10, 12, 10, 0);
+	private static final LocalDateTime END = LocalDateTime.of(2099, 10, 12, 11, 0);
 
 	private Employee buildEmployee(Long id, EmployeeRole role) {
 		return Employee.builder()
@@ -221,13 +227,13 @@ class ReservationServiceTest {
 		Resource resource = buildResource(1L, true);
 		given(employeeRepository.findById(1L)).willReturn(Optional.of(me));
 		given(reservationRepository.findByPeriod(
-				LocalDateTime.of(2026, 10, 12, 0, 0), LocalDateTime.of(2026, 10, 13, 0, 0)))
+				LocalDateTime.of(2099, 10, 12, 0, 0), LocalDateTime.of(2099, 10, 13, 0, 0)))
 				.willReturn(List.of(
 						buildReservation(1L, resource, me),
 						buildReservation(2L, resource, other)));
 
 		// when
-		List<ReservationDto.Response> result = reservationService.getReservations(1L, LocalDate.of(2026, 10, 12));
+		List<ReservationDto.Response> result = reservationService.getReservations(1L, LocalDate.of(2099, 10, 12));
 
 		// then
 		assertThat(result).hasSize(2);

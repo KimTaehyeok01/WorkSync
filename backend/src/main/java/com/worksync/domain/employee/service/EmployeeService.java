@@ -5,16 +5,22 @@ import com.worksync.domain.department.entity.Department;
 import com.worksync.domain.department.repository.DepartmentRepository;
 import com.worksync.domain.employee.dto.EmployeeDto;
 import com.worksync.domain.employee.entity.Employee;
+import com.worksync.domain.employee.entity.EmployeeHistory;
 import com.worksync.domain.employee.entity.EmployeeRole;
 import com.worksync.domain.employee.entity.EmployeeStatus;
+import com.worksync.domain.employee.entity.JobGrade;
+import com.worksync.domain.employee.repository.EmployeeHistoryRepository;
 import com.worksync.domain.employee.repository.EmployeeRepository;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
+import com.worksync.global.security.CustomUserDetails;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -30,6 +37,7 @@ import java.util.Map;
 public class EmployeeService {
 
     private final EmployeeRepository employeeRepository;
+    private final EmployeeHistoryRepository employeeHistoryRepository;
     private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
     private final SimpMessagingTemplate messagingTemplate;
@@ -131,6 +139,11 @@ public class EmployeeService {
                 ? passwordEncoder.encode(request.getPassword())
                 : null;
 
+        // 인사 발령 이력용 — 변경 전 값을 잡아 둔다
+        String beforeDepartment = employee.getDepartment() != null ? employee.getDepartment().getName() : null;
+        JobGrade beforeJobGrade = employee.getJobGrade();
+        EmployeeRole beforeRole = employee.getRole();
+
         employee.update(
                 request.getName(),
                 request.getPhone(),
@@ -143,7 +156,34 @@ public class EmployeeService {
                 encodedPassword
         );
 
+        // 부서·직급·권한이 실제로 바뀐 항목만 발령 이력으로 남긴다
+        String afterDepartment = employee.getDepartment() != null ? employee.getDepartment().getName() : null;
+        recordHistory(employee, EmployeeHistory.TYPE_DEPARTMENT, beforeDepartment, afterDepartment);
+        recordHistory(employee, EmployeeHistory.TYPE_JOB_GRADE,
+                String.valueOf(beforeJobGrade), String.valueOf(employee.getJobGrade()));
+        recordHistory(employee, EmployeeHistory.TYPE_ROLE,
+                String.valueOf(beforeRole), String.valueOf(employee.getRole()));
+
         return EmployeeDto.Response.from(employee);
+    }
+
+    // 값이 바뀐 경우에만 발령 이력 저장 — 처리자는 현재 로그인한 관리자
+    private void recordHistory(Employee employee, String changeType, String before, String after) {
+        if (Objects.equals(before, after)) {
+            return;
+        }
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails actor = authentication != null
+                && authentication.getPrincipal() instanceof CustomUserDetails details ? details : null;
+
+        employeeHistoryRepository.save(EmployeeHistory.builder()
+                .employee(employee)
+                .changeType(changeType)
+                .beforeValue(before)
+                .afterValue(after)
+                .actorId(actor != null ? actor.getId() : null)
+                .actorName(actor != null ? actor.getEmployee().getName() : null)
+                .build());
     }
 
     // 내 프로필 수정 (본인) — 연락처·프로필 이미지

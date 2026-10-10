@@ -14,6 +14,7 @@ import com.worksync.domain.employee.repository.EmployeeRepository;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
 import com.worksync.global.security.CustomUserDetails;
+import com.worksync.domain.notification.service.NotificationService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,6 +51,11 @@ class PostServiceTest {
     private EmployeeRepository employeeRepository;
     @Mock
     private SimpMessagingTemplate messagingTemplate;
+
+    @Mock
+
+    private NotificationService notificationService;
+
 
     @InjectMocks
     private PostService postService;
@@ -179,8 +185,9 @@ class PostServiceTest {
     @Test
     void getPosts_departmentBoard_userWithKeyword_usesUserFilteredSearch() {
         // given
-        Board board = buildBoard(1L, BoardType.DEPARTMENT, "부서게시판", buildDepartment(3L, "개발팀"));
-        Employee normalUser = buildEmployee(11L, "사용자", EmployeeRole.USER, null);
+        Department department = buildDepartment(3L, "개발팀");
+        Board board = buildBoard(1L, BoardType.DEPARTMENT, "부서게시판", department);
+        Employee normalUser = buildEmployee(11L, "사용자", EmployeeRole.USER, department);
         CustomUserDetails user = new CustomUserDetails(normalUser);
         Page<Post> page = new PageImpl<>(List.of());
 
@@ -199,8 +206,9 @@ class PostServiceTest {
     @Test
     void getPosts_departmentBoard_userNoKeyword_usesUserFilteredList() {
         // given
-        Board board = buildBoard(1L, BoardType.DEPARTMENT, "부서게시판", buildDepartment(3L, "개발팀"));
-        Employee normalUser = buildEmployee(11L, "사용자", EmployeeRole.USER, null);
+        Department department = buildDepartment(3L, "개발팀");
+        Board board = buildBoard(1L, BoardType.DEPARTMENT, "부서게시판", department);
+        Employee normalUser = buildEmployee(11L, "사용자", EmployeeRole.USER, department);
         CustomUserDetails user = new CustomUserDetails(normalUser);
         Page<Post> page = new PageImpl<>(List.of());
 
@@ -212,6 +220,22 @@ class PostServiceTest {
 
         // then
         verify(postRepository).findByBoardIdAndAuthorDepartmentId(1L, 3L, pageable);
+    }
+
+    @DisplayName("일반 사용자가 다른 부서의 부서게시판을 조회하면 FORBIDDEN 예외가 발생한다")
+    @Test
+    void getPosts_departmentBoard_otherDepartmentUser_throwsForbidden() {
+        // given
+        Board board = buildBoard(1L, BoardType.DEPARTMENT, "부서게시판", buildDepartment(3L, "개발팀"));
+        Employee outsider = buildEmployee(12L, "타부서", EmployeeRole.USER, buildDepartment(4L, "영업팀"));
+        CustomUserDetails user = new CustomUserDetails(outsider);
+        given(boardRepository.findById(1L)).willReturn(Optional.of(board));
+
+        // when & then
+        assertThatThrownBy(() -> postService.getPosts(1L, null, null, pageable, user))
+                .isInstanceOf(CustomException.class)
+                .extracting(e -> ((CustomException) e).getErrorCode())
+                .isEqualTo(ErrorCode.FORBIDDEN);
     }
 
     @DisplayName("부서게시판이 아니면 검색어로 제목 검색을 수행한다")

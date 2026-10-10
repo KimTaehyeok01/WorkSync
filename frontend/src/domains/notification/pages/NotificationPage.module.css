@@ -1,0 +1,141 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ws-space-lg);
+  max-width: 880px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--ws-space-md);
+}
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chip {
+  padding: 6px 14px;
+  border: 1px solid var(--ws-border);
+  border-radius: 999px;
+  color: var(--ws-text-600);
+  background: var(--ws-surface);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.chipOn {
+  color: #fff;
+  border-color: var(--ws-primary);
+  background: var(--ws-primary);
+}
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ws-space-md);
+}
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ws-text-600);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.list {
+  background: var(--ws-surface);
+  border: 1px solid var(--ws-border-light);
+  border-radius: var(--ws-radius-lg);
+  box-shadow: var(--ws-shadow-sm);
+  overflow: hidden;
+}
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--ws-space-md);
+  width: 100%;
+  padding: var(--ws-space-md) var(--ws-space-xl);
+  border-bottom: 1px solid var(--ws-border-light);
+  text-align: left;
+  transition: background 0.15s;
+}
+.item:last-child {
+  border-bottom: none;
+}
+.item:hover {
+  background: #f9fafb;
+}
+.itemUnread {
+  background: rgba(26, 115, 232, 0.04);
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  color: var(--ws-text-500);
+  background: #f3f4f6;
+}
+.iconAPPROVAL {
+  color: #d97706;
+  background: #fef3c7;
+}
+.iconTASK {
+  color: #7c3aed;
+  background: #ede9fe;
+}
+.iconMESSAGE {
+  color: #059669;
+  background: #d1fae5;
+}
+.iconMAIL {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+.iconSCHEDULE {
+  color: #be185d;
+  background: #fce7f3;
+}
+.iconRESERVATION {
+  color: #0e7490;
+  background: #cffafe;
+}
+.iconBOARD {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.content {
+  color: var(--ws-text-700);
+  font-size: 13.5px;
+  word-break: break-word;
+}
+.itemUnread .content {
+  color: var(--ws-text-900);
+  font-weight: 600;
+}
+.meta {
+  color: var(--ws-text-400);
+  font-size: 12px;
+}
+.dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ws-primary);
+}

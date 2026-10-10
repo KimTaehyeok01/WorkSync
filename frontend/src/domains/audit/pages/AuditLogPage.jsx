@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+// 감사 로그 페이지 — 요약, 필터, 표, 상세 패널로 누가 언제 무엇을 했는지 추적한다
+import { useState, useEffect } from "react";
 import {
   LogIn,
   LogOut,
@@ -15,227 +16,167 @@ import {
   Trash2,
   Plus,
   Search,
-  ChevronRight,
-  Globe,
-  Monitor,
   Activity,
   Clock,
+  Download,
+  X,
+  ChevronRight,
 } from "lucide-react";
 import useAuthContext from "../../../store/AuthContext";
-import { TEAM_MEMBERS } from "../../../constants/mockData";
-import {
-  WSCard,
-  WSAvatar,
-  WSPagination,
-} from "../../../components/common/CommonWidgets";
+import { WSAvatar, WSButton, WSPagination } from "../../../components/common/CommonWidgets";
+import { WEEKDAYS } from "../../../constants/statusLabels";
+import { toDateString, downloadCsv } from "../../../utils/dateFormatter";
 import { getAuditLogs, getAuditSummary } from "../services/auditApi";
 import s from "./AuditLogPage.module.css";
 
-// 화면 카테고리 표시 설정
-const CAT_CFG = {
-  auth: { label: "로그인/로그아웃", color: "#10B981", bg: "#D1FAE5" },
-  hr: { label: "입사/퇴사", color: "#8B5CF6", bg: "#EDE9FE" },
-  approval: { label: "전자결재", color: "#1A73E8", bg: "#EBF4FF" },
-  task: { label: "업무", color: "#F59E0B", bg: "#FEF3C7" },
-};
-
-const STATUS_CFG = {
-  success: { label: "성공", color: "#10B981", bg: "#D1FAE5" },
-  failed: { label: "실패", color: "#EF4444", bg: "#FEE2E2" },
-  warning: { label: "경고", color: "#F59E0B", bg: "#FEF3C7" },
-};
-
-// 탭 (화면 키 <-> 백엔드 targetType)
-const TABS = [
+// 분류 탭 (화면 키 <-> 백엔드 targetType)
+const CATEGORIES = [
   { key: "all", label: "전체", target: null },
-  { key: "auth", label: "로그인/로그아웃", target: "AUTH" },
-  { key: "hr", label: "입사/퇴사", target: "HR" },
+  { key: "auth", label: "로그인", target: "AUTH" },
+  { key: "hr", label: "인사", target: "HR" },
   { key: "approval", label: "전자결재", target: "APPROVAL" },
   { key: "task", label: "업무", target: "TASK" },
 ];
 
-// 백엔드 targetType -> 화면 카테고리 키
-const TARGET_TO_CAT = {
-  AUTH: "auth",
-  HR: "hr",
-  APPROVAL: "approval",
-  TASK: "task",
-};
+const CATEGORY_BY_TARGET = Object.fromEntries(
+  CATEGORIES.filter((c) => c.target).map((c) => [c.target, c]),
+);
 
-const DATE_FILTER_OPTS = [
-  { key: "all", label: "전체" },
+const PERIODS = [
+  { key: "all", label: "전체 기간" },
   { key: "today", label: "오늘" },
   { key: "week", label: "이번 주" },
   { key: "month", label: "이번 달" },
 ];
 
-// action 기반 기본 상세 문구 (백엔드 detail 미제공 -> 프론트에서 보강)
-const DETAIL_MAP = {
-  로그인: "정상 로그인 처리",
-  로그아웃: "정상 세션 종료",
-  "로그인 실패": "로그인 시도 실패",
-  "비밀번호 변경": "비밀번호 변경 처리",
-  "입사 등록": "신규 구성원 시스템 등록",
-  "퇴사 처리": "구성원 퇴사 처리",
-  "인사 정보 변경": "인사 정보 변경 처리",
-  "결재 요청": "전자결재 상신",
-  "결재 승인": "전자결재 승인 처리",
-  "결재 반려": "전자결재 반려 처리",
-  "업무 생성": "신규 업무 등록",
-  "업무 완료": "업무 완료 처리",
-  "업무 수정": "업무 정보 수정",
-  "업무 삭제": "업무 삭제 처리",
-  "담당자 변경": "업무 담당자 재배정",
+const PAGE_SIZES = [10, 20, 50];
+const SEARCH_DELAY = 300;
+
+const RESULT_LABEL = { success: "성공", failed: "실패", warning: "주의" };
+
+const ACTION_ICONS = {
+  로그인: LogIn,
+  "로그인 실패": AlertTriangle,
+  로그아웃: LogOut,
+  "비밀번호 변경": Key,
+  "입사 등록": UserPlus,
+  "퇴사 처리": UserMinus,
+  "인사 정보 변경": UserCheck,
+  "근태 수정": Clock,
+  "결재 요청": FileText,
+  "결재 승인": FileCheck,
+  "결재 반려": FileX,
+  "업무 생성": Plus,
+  "업무 완료": CheckSquare,
+  "업무 수정": Pencil,
+  "업무 삭제": Trash2,
+  "담당자 변경": UserCheck,
 };
 
-const PAGE_SIZE = 10;
-
-// 액션명 -> 아이콘
-function ActionIcon({ action, size = 15 }) {
-  const p = { size };
-  switch (action) {
-    case "로그인":
-      return <LogIn {...p} />;
-    case "로그인 실패":
-      return <AlertTriangle {...p} />;
-    case "로그아웃":
-      return <LogOut {...p} />;
-    case "비밀번호 변경":
-      return <Key {...p} />;
-    case "입사 등록":
-      return <UserPlus {...p} />;
-    case "퇴사 처리":
-      return <UserMinus {...p} />;
-    case "인사 정보 변경":
-      return <UserCheck {...p} />;
-    case "결재 요청":
-      return <FileText {...p} />;
-    case "결재 승인":
-      return <FileCheck {...p} />;
-    case "결재 반려":
-      return <FileX {...p} />;
-    case "업무 생성":
-      return <Plus {...p} />;
-    case "업무 완료":
-      return <CheckSquare {...p} />;
-    case "업무 수정":
-      return <Pencil {...p} />;
-    case "업무 삭제":
-      return <Trash2 {...p} />;
-    case "담당자 변경":
-      return <UserCheck {...p} />;
-    default:
-      return <Activity {...p} />;
-  }
-}
-
-// 액션명 -> 성공/실패/경고 유추
-function resolveStatus(action) {
-  if (!action) return "success";
+// 행위명으로 결과 유추 — 실패는 빨강, 반려·삭제·퇴사는 주의
+function resolveResult(action = "") {
   if (action.includes("실패")) return "failed";
-  if (action.includes("반려") || action.includes("삭제")) return "warning";
+  if (action.includes("반려") || action.includes("삭제") || action.includes("퇴사")) return "warning";
   return "success";
 }
 
-// userAgent -> "브라우저 / OS"
+// userAgent -> "브라우저 · OS"
 function parseDevice(ua) {
-  if (!ua) return "Unknown / Unknown";
-  let browser = "Unknown";
-  if (ua.includes("Edg")) browser = "Edge";
-  else if (ua.includes("Chrome")) browser = "Chrome";
-  else if (ua.includes("Firefox")) browser = "Firefox";
-  else if (ua.includes("Safari")) browser = "Safari";
-
-  let os = "Unknown";
-  if (ua.includes("Windows")) os = "Windows";
-  else if (ua.includes("Mac")) os = "macOS";
-  else if (ua.includes("iPhone") || ua.includes("iPad")) os = "iOS";
-  else if (ua.includes("Android")) os = "Android";
-  else if (ua.includes("Linux")) os = "Linux";
-
-  return `${browser} / ${os}`;
+  if (!ua) return "-";
+  const browser = ua.includes("Edg")
+    ? "Edge"
+    : ua.includes("Chrome")
+      ? "Chrome"
+      : ua.includes("Firefox")
+        ? "Firefox"
+        : ua.includes("Safari")
+          ? "Safari"
+          : "기타";
+  const os = ua.includes("Windows")
+    ? "Windows"
+    : ua.includes("iPhone") || ua.includes("iPad")
+      ? "iOS"
+      : ua.includes("Mac")
+        ? "macOS"
+        : ua.includes("Android")
+          ? "Android"
+          : ua.includes("Linux")
+            ? "Linux"
+            : "기타";
+  return `${browser} · ${os}`;
 }
 
-// ISO 일시 -> { date, time }
-function splitDateTime(iso) {
-  if (!iso) return { date: "", time: "" };
-  const d = new Date(iso);
-  const pad = (n) => String(n).padStart(2, "0");
-  const date = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  const time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  return { date, time };
-}
-
-// 날짜 구분선 라벨 (오늘 / 어제 / N월 N일)
-function dateLabel(dateStr) {
+// 날짜 구분줄 라벨 (오늘 / 어제 / M월 D일 (요일))
+function dateLabel(date) {
   const today = new Date();
-  const yest = new Date();
-  yest.setDate(today.getDate() - 1);
-  const pad = (n) => String(n).padStart(2, "0");
-  const fmt = (d) =>
-    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-
-  const [, m, dd] = dateStr.split("-");
-  const base = `${parseInt(m)}월 ${parseInt(dd)}일`;
-  if (dateStr === fmt(today)) return `${base} · 오늘`;
-  if (dateStr === fmt(yest)) return `${base} · 어제`;
+  const yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
+  const weekday = WEEKDAYS[new Date(`${date}T00:00:00`).getDay()];
+  const base = `${Number(date.slice(5, 7))}월 ${Number(date.slice(8))}일 (${weekday})`;
+  if (date === toDateString(today)) return `오늘 · ${base}`;
+  if (date === toDateString(yesterday)) return `어제 · ${base}`;
   return base;
 }
 
-// 백엔드 응답 -> 화면용 항목으로 변환
+// 백엔드 응답 -> 화면용 항목
 function toEntry(log) {
-  const { date, time } = splitDateTime(log.createdAt);
-  const member = TEAM_MEMBERS.find((m) => m.name === log.actorName);
+  const createdAt = log.createdAt ?? "";
   return {
     id: log.id,
-    date,
-    time,
-    cat: TARGET_TO_CAT[log.targetType] || "auth",
+    date: createdAt.slice(0, 10),
+    time: createdAt.slice(11, 19),
+    category: CATEGORY_BY_TARGET[log.targetType] ?? null,
     action: log.action,
-    name: log.actorName || "알 수 없음",
-    role: member?.role || "",
-    avatar: member?.avatar,
-    detail: DETAIL_MAP[log.action] || log.action,
+    actorId: log.actorId,
+    actorName: log.actorName || "알 수 없음",
+    targetId: log.targetId,
     ip: log.clientIp || "-",
     device: parseDevice(log.userAgent),
-    status: resolveStatus(log.action),
+    userAgent: log.userAgent || "-",
+    result: resolveResult(log.action),
   };
 }
 
 export default function AuditLog() {
   const { accessToken } = useAuthContext();
 
-  const [catFilter, setCatFilter] = useState("all");
-  const [dateFilter, setDateFilter] = useState("all");
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1); // UI는 1-base
+  const [category, setCategory] = useState("all");
+  const [period, setPeriod] = useState("all");
+  const [searchInput, setSearchInput] = useState("");
+  // 입력이 멈춘 뒤에만 서버로 보내는 검색어
+  const [keyword, setKeyword] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZES[1]);
 
   const [logs, setLogs] = useState([]);
   const [totalElements, setTotalElements] = useState(0);
-  const [summary, setSummary] = useState({
-    totalCount: 0,
-    todayCount: 0,
-    loginFailCount: 0,
-    approvalCount: 0,
-  });
-  const [tabCounts, setTabCounts] = useState({});
+  const [summary, setSummary] = useState(null);
+  const [counts, setCounts] = useState({});
   const [loading, setLoading] = useState(false);
+  const [selected, setSelected] = useState(null);
 
-  const targetOf = (key) => TABS.find((t) => t.key === key)?.target ?? null;
+  const targetOf = (key) => CATEGORIES.find((c) => c.key === key)?.target ?? null;
 
-  // 목록 조회 (필터/페이지 변경 시마다 서버에서 재조회)
+  // 검색어는 입력이 멈춘 뒤 한 번만 반영 — 글자마다 조회하지 않는다
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setKeyword(searchInput.trim());
+      setPage(1);
+    }, SEARCH_DELAY);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  // 목록 조회
   useEffect(() => {
     if (!accessToken) return;
     let alive = true;
     setLoading(true);
-
     getAuditLogs(
       {
-        category: targetOf(catFilter),
-        period: dateFilter,
-        keyword: search.trim() || null,
-        page: page - 1, // 백엔드는 0-base
-        size: PAGE_SIZE,
+        category: targetOf(category),
+        period,
+        keyword: keyword || null,
+        page: page - 1,
+        size: pageSize,
       },
       accessToken,
     ).then((data) => {
@@ -244,300 +185,318 @@ export default function AuditLog() {
       setTotalElements(data?.totalElements ?? 0);
       setLoading(false);
     });
-
     return () => {
       alive = false;
     };
-  }, [accessToken, catFilter, dateFilter, search, page]);
+  }, [accessToken, category, period, keyword, page, pageSize]);
 
-  // 상단 통계 (필터와 무관 — 마운트 시 + 기간 변경 시 갱신)
+  // 상단 요약 — 화면에 들어올 때 한 번
   useEffect(() => {
     if (!accessToken) return;
-    getAuditSummary(accessToken).then((data) => {
-      if (data) setSummary(data);
-    });
-  }, [accessToken, dateFilter, catFilter, page]);
+    getAuditSummary(accessToken).then((data) => setSummary(data));
+  }, [accessToken]);
 
-  // 탭별 건수 (기간/검색 반영, 카테고리별 totalElements 병렬 조회)
-  const loadTabCounts = useCallback(() => {
+  // 분류별 건수 — 기간·검색어가 바뀔 때만 다시 센다
+  useEffect(() => {
     if (!accessToken) return;
     Promise.all(
-      TABS.map((tab) =>
+      CATEGORIES.map((c) =>
         getAuditLogs(
-          {
-            category: tab.target,
-            period: dateFilter,
-            keyword: search.trim() || null,
-            page: 0,
-            size: 1,
-          },
+          { category: c.target, period, keyword: keyword || null, page: 0, size: 1 },
           accessToken,
-        ).then((data) => [tab.key, data?.totalElements ?? 0]),
+        ).then((data) => [c.key, data?.totalElements ?? 0]),
       ),
-    ).then((pairs) => setTabCounts(Object.fromEntries(pairs)));
-  }, [accessToken, dateFilter, search]);
-
-  useEffect(() => {
-    loadTabCounts();
-  }, [loadTabCounts]);
+    ).then((pairs) => setCounts(Object.fromEntries(pairs)));
+  }, [accessToken, period, keyword]);
 
   const entries = logs.map(toEntry);
-  const totalPages = Math.max(1, Math.ceil(totalElements / PAGE_SIZE));
+
+  const changeFilter = (setter) => (value) => {
+    setter(value);
+    setPage(1);
+    setSelected(null);
+  };
+
+  // 로그인 실패만 빠르게 보기
+  const showLoginFailures = () => {
+    setCategory("auth");
+    setSearchInput("로그인 실패");
+    setSelected(null);
+  };
+
+  const resetFilters = () => {
+    setCategory("all");
+    setPeriod("all");
+    setSearchInput("");
+    setSelected(null);
+  };
+
+  const exportPage = () =>
+    downloadCsv(`감사로그_${toDateString(new Date())}.csv`, [
+      ["일시", "분류", "행위", "결과", "사용자", "IP", "기기"],
+      ...entries.map((e) => [
+        `${e.date} ${e.time}`,
+        e.category?.label ?? "",
+        e.action,
+        RESULT_LABEL[e.result],
+        e.actorName,
+        e.ip,
+        e.device,
+      ]),
+    ]);
+
+  const isFiltered = category !== "all" || period !== "all" || searchInput !== "";
 
   const stats = [
+    { label: "전체 로그", value: summary?.totalCount, icon: Activity, tone: s.toneBlue },
+    { label: "오늘 활동", value: summary?.todayCount, icon: Clock, tone: s.toneGreen },
     {
-      icon: <Activity size={20} />,
-      label: "전체 로그",
-      value: summary.totalCount,
-      sub: "전체 기간",
-      color: "#1A73E8",
-      bg: "#EBF4FF",
-    },
-    {
-      icon: <Clock size={20} />,
-      label: "오늘 활동",
-      value: summary.todayCount,
-      sub: "오늘",
-      color: "#10B981",
-      bg: "#D1FAE5",
-    },
-    {
-      icon: <AlertTriangle size={20} />,
       label: "로그인 실패",
-      value: summary.loginFailCount,
-      sub: "주의 필요",
-      color: "#EF4444",
-      bg: "#FEE2E2",
+      value: summary?.loginFailCount,
+      icon: AlertTriangle,
+      tone: s.toneRed,
+      onClick: showLoginFailures,
+      hint: "눌러서 모아 보기",
     },
-    {
-      icon: <FileCheck size={20} />,
-      label: "결재 처리",
-      value: summary.approvalCount,
-      sub: "전자결재 이벤트",
-      color: "#8B5CF6",
-      bg: "#EDE9FE",
-    },
+    { label: "결재 처리", value: summary?.approvalCount, icon: FileCheck, tone: s.tonePurple },
   ];
 
   return (
-    <div>
-      <div className={s.header}>
-        <div>
-          <div className={s.breadcrumb}>
-            <span>시스템</span>
-            <ChevronRight size={12} />
-            <span className={s.bcCurrent}>감사 로그</span>
-          </div>
-          <h1 className={s.pageTitle}>감사 로그</h1>
-        </div>
-      </div>
-
-      <div className={s.statsGrid}>
-        {stats.map((st) => (
-          <div key={st.label} className={s.statCard}>
-            <div
-              className={s.statIcon}
-              style={{ "--stat-bg": st.bg, "--stat-color": st.color }}
+    <div className={s.root}>
+      {/* ── 요약 ── */}
+      <div className={s.stats}>
+        {stats.map(({ label, value, icon: Icon, tone, onClick, hint }) => {
+          const Tag = onClick ? "button" : "div";
+          return (
+            <Tag
+              key={label}
+              type={onClick ? "button" : undefined}
+              className={`${s.stat} ${onClick ? s.statClickable : ""}`}
+              onClick={onClick}
             >
-              {st.icon}
-            </div>
-            <div>
-              <p className={s.statValue}>{st.value}</p>
-              <p className={s.statLabel}>{st.label}</p>
-              <p className={s.statSub}>{st.sub}</p>
-            </div>
-          </div>
-        ))}
+              <span className={`${s.statIcon} ${tone}`}>
+                <Icon size={18} />
+              </span>
+              <span className={s.statBody}>
+                <span className={s.statLabel}>{label}</span>
+                <span className={s.statValue}>{value ?? "-"}</span>
+              </span>
+              {hint && <span className={s.statHint}>{hint}</span>}
+            </Tag>
+          );
+        })}
       </div>
 
-      <div className={s.filterBar}>
-        <div className={s.tabGroup}>
-          {TABS.map((tab) => {
-            const isActive = catFilter === tab.key;
-            const color =
-              tab.key === "all"
-                ? "#1A73E8"
-                : CAT_CFG[tab.key]?.color || "#1A73E8";
-            const bg =
-              tab.key === "all" ? "#EBF4FF" : CAT_CFG[tab.key]?.bg || "#EBF4FF";
-            return (
-              <button
-                key={tab.key}
-                onClick={() => {
-                  setCatFilter(tab.key);
-                  setPage(1);
-                }}
-                className={`${s.tabBtn} ${isActive ? s.tabBtnActive : ""}`}
-                style={isActive ? { color } : undefined}
-              >
-                {tab.label}
-                <span
-                  className={s.tabCount}
-                  style={isActive ? { background: bg, color } : undefined}
-                >
-                  {tabCounts[tab.key] ?? 0}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className={s.dateGroup}>
-          {DATE_FILTER_OPTS.map((opt) => (
+      <div className={s.panel}>
+        {/* ── 필터 ── */}
+        <div className={s.tabs}>
+          {CATEGORIES.map((c) => (
             <button
-              key={opt.key}
-              onClick={() => {
-                setDateFilter(opt.key);
-                setPage(1);
-              }}
-              className={`${s.dateBtn} ${dateFilter === opt.key ? s.dateBtnActive : ""}`}
+              key={c.key}
+              type="button"
+              className={`${s.tab} ${category === c.key ? s.tabOn : ""}`}
+              onClick={() => changeFilter(setCategory)(c.key)}
             >
-              {opt.label}
+              {c.label}
+              <span className={s.tabCount}>{counts[c.key] ?? 0}</span>
             </button>
           ))}
         </div>
 
-        <div className={s.search}>
-          <Search size={14} className={s.searchIcon} />
-          <input
-            type="text"
-            placeholder="액션, 상세내용, 사용자 검색..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            className={s.searchInput}
-          />
+        <div className={s.toolbar}>
+          <div className={s.search}>
+            <Search size={14} className={s.searchIcon} />
+            <input
+              type="text"
+              placeholder="행위 또는 사용자 이름으로 검색"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className={s.searchInput}
+              aria-label="감사 로그 검색"
+            />
+            {searchInput && (
+              <button
+                type="button"
+                className={s.searchClear}
+                onClick={() => setSearchInput("")}
+                aria-label="검색어 지우기"
+              >
+                <X size={13} />
+              </button>
+            )}
+          </div>
+
+          <div className={s.segment}>
+            {PERIODS.map((p) => (
+              <button
+                key={p.key}
+                type="button"
+                className={`${s.segmentBtn} ${period === p.key ? s.segmentBtnOn : ""}`}
+                onClick={() => changeFilter(setPeriod)(p.key)}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+
+          <div className={s.toolbarRight}>
+            {isFiltered && (
+              <button type="button" className={s.reset} onClick={resetFilters}>
+                필터 초기화
+              </button>
+            )}
+            <span className={s.total}>
+              <strong>{totalElements.toLocaleString()}</strong>건
+            </span>
+            <select
+              className={s.sizeSelect}
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setPage(1);
+              }}
+              aria-label="페이지당 표시 건수"
+            >
+              {PAGE_SIZES.map((size) => (
+                <option key={size} value={size}>
+                  {size}건씩
+                </option>
+              ))}
+            </select>
+            <WSButton
+              label="CSV"
+              size="sm"
+              variant="secondary"
+              icon={<Download size={13} />}
+              disabled={entries.length === 0}
+              onClick={exportPage}
+            />
+          </div>
         </div>
 
-        <span className={s.resultCount}>
-          <strong>{totalElements}</strong>건 조회됨
-        </span>
-      </div>
+        {/* ── 표 + 상세 ── */}
+        <div className={`${s.body} ${selected ? s.bodyWithDetail : ""}`}>
+          <div className={s.tableWrap}>
+            <div className={`${s.row} ${s.head}`}>
+              <span>시각</span>
+              <span>분류</span>
+              <span>행위</span>
+              <span>사용자</span>
+              <span>IP</span>
+              <span>기기</span>
+              <span />
+            </div>
 
-      <WSCard>
-        {loading ? (
-          <div className={s.empty}>
-            <Activity size={40} className={s.emptyIcon} />
-            <p className={s.emptyTitle}>로그를 불러오는 중...</p>
-          </div>
-        ) : entries.length === 0 ? (
-          <div className={s.empty}>
-            <Activity size={40} className={s.emptyIcon} />
-            <p className={s.emptyTitle}>조회된 로그가 없습니다</p>
-            <p className={s.emptyDesc}>검색 조건을 변경해 보세요.</p>
-          </div>
-        ) : (
-          <div>
-            {entries.map((entry, idx) => {
-              const cat = CAT_CFG[entry.cat];
-              const st = STATUS_CFG[entry.status];
-              const prevEntry = entries[idx - 1];
-              const showDateHeader =
-                idx === 0 || prevEntry?.date !== entry.date;
-
-              return (
-                <div key={entry.id}>
-                  {showDateHeader && (
-                    <div
-                      className={`${s.dateDivider} ${idx !== 0 ? s.dateDividerTop : ""}`}
+            {loading && entries.length === 0 ? (
+              <p className={s.empty}>로그를 불러오는 중입니다.</p>
+            ) : entries.length === 0 ? (
+              <div className={s.empty}>
+                <Activity size={32} />
+                <p>조건에 맞는 로그가 없습니다.</p>
+                {isFiltered && (
+                  <button type="button" className={s.reset} onClick={resetFilters}>
+                    필터 초기화
+                  </button>
+                )}
+              </div>
+            ) : (
+              entries.map((entry, idx) => {
+                const Icon = ACTION_ICONS[entry.action] ?? Activity;
+                const isNewDate = idx === 0 || entries[idx - 1].date !== entry.date;
+                return (
+                  <div key={entry.id}>
+                    {isNewDate && <div className={s.dateRow}>{dateLabel(entry.date)}</div>}
+                    <button
+                      type="button"
+                      className={`${s.row} ${s.dataRow} ${s[`row_${entry.result}`]} ${selected?.id === entry.id ? s.rowSelected : ""}`}
+                      onClick={() => setSelected(selected?.id === entry.id ? null : entry)}
                     >
-                      <span className={s.dateDividerLabel}>
-                        {dateLabel(entry.date)}
-                      </span>
-                      <span className={s.dateDividerCount}>
-                        {entries.filter((l) => l.date === entry.date).length}건
-                      </span>
-                    </div>
-                  )}
-
-                  <div
-                    className={s.logRow}
-                    style={{ "--log-color": cat.color }}
-                  >
-                    <div
-                      className={s.catIcon}
-                      style={{ "--cat-bg": cat.bg, "--cat-color": cat.color }}
-                    >
-                      <ActionIcon action={entry.action} size={15} />
-                    </div>
-
-                    <div className={s.userCell}>
-                      <WSAvatar
-                        src={entry.avatar}
-                        name={entry.name}
-                        size={30}
-                      />
-                      <div className={s.userBody}>
-                        <p className={s.userName}>{entry.name}</p>
-                        <p className={s.userRole}>{entry.role}</p>
-                      </div>
-                    </div>
-
-                    <div className={s.actionCell}>
-                      <div className={s.actionRow}>
-                        <span
-                          className={s.actionBadge}
-                          style={{
-                            "--cat-bg": cat.bg,
-                            "--cat-color": cat.color,
-                          }}
-                        >
-                          {entry.action}
+                      <span className={s.time}>{entry.time}</span>
+                      <span>
+                        <span className={`${s.badge} ${s[`cat_${entry.category?.key}`] ?? ""}`}>
+                          {entry.category?.label ?? "기타"}
                         </span>
-                        <span className={s.catBadge}>{cat.label}</span>
-                      </div>
-                      <p className={s.actionDetail}>{entry.detail}</p>
-                    </div>
-
-                    <div className={s.meta}>
-                      <div className={s.metaLine}>
-                        <Globe size={11} className={s.metaIcon} />
-                        <span className={s.metaText}>{entry.ip}</span>
-                      </div>
-                      <div className={`${s.metaLine} ${s.metaLineSub}`}>
-                        <Monitor size={11} className={s.metaIcon} />
-                        <span className={s.metaText}>{entry.device}</span>
-                      </div>
-                    </div>
-
-                    <div className={s.timeCell}>
-                      <p className={s.timeValue}>{entry.time}</p>
-                      <p className={s.timeDate}>
-                        {entry.date.slice(5).replace("-", "/")}
-                      </p>
-                    </div>
-
-                    <div className={s.statusCell}>
-                      <span
-                        className={s.statusBadge}
-                        style={{
-                          "--status-bg": st.bg,
-                          "--status-color": st.color,
-                        }}
-                      >
-                        {st.label}
                       </span>
-                    </div>
+                      <span className={s.action}>
+                        <span className={`${s.actionIcon} ${s[`result_${entry.result}`]}`}>
+                          <Icon size={14} />
+                        </span>
+                        {entry.action}
+                      </span>
+                      <span className={s.user}>
+                        <WSAvatar name={entry.actorName} size={24} />
+                        {entry.actorName}
+                      </span>
+                      <span className={s.mono}>{entry.ip}</span>
+                      <span className={s.device}>{entry.device}</span>
+                      <ChevronRight size={14} className={s.chevron} />
+                    </button>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
+          </div>
+
+          {selected && (
+            <aside className={s.detail}>
+              <div className={s.detailHeader}>
+                <span className={`${s.actionIcon} ${s[`result_${selected.result}`]}`}>
+                  {(() => {
+                    const Icon = ACTION_ICONS[selected.action] ?? Activity;
+                    return <Icon size={16} />;
+                  })()}
+                </span>
+                <h3 className={s.detailTitle}>{selected.action}</h3>
+                <button
+                  type="button"
+                  className={s.detailClose}
+                  onClick={() => setSelected(null)}
+                  aria-label="상세 닫기"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <dl className={s.detailList}>
+                {[
+                  ["결과", RESULT_LABEL[selected.result]],
+                  ["일시", `${selected.date} ${selected.time}`],
+                  ["분류", selected.category?.label ?? "기타"],
+                  ["사용자", `${selected.actorName}${selected.actorId ? ` (ID ${selected.actorId})` : ""}`],
+                  ["대상 ID", selected.targetId ?? "-"],
+                  ["IP 주소", selected.ip],
+                  ["기기", selected.device],
+                  ["User-Agent", selected.userAgent],
+                ].map(([label, value]) => (
+                  <div key={label} className={s.detailRow}>
+                    <dt>{label}</dt>
+                    <dd>{value}</dd>
+                  </div>
+                ))}
+              </dl>
+              <WSButton
+                label="이 사용자의 로그만 보기"
+                size="sm"
+                variant="secondary"
+                onClick={() => setSearchInput(selected.actorName)}
+              />
+            </aside>
+          )}
+        </div>
+
+        {totalElements > pageSize && (
+          <div className={s.pagination}>
+            <WSPagination
+              total={totalElements}
+              page={page}
+              perPage={pageSize}
+              onPageChange={(next) => {
+                setPage(next);
+                setSelected(null);
+              }}
+            />
           </div>
         )}
-      </WSCard>
-
-      {totalPages > 1 && (
-        <div className={s.pagination}>
-          <WSPagination
-            total={totalElements}
-            page={page}
-            perPage={PAGE_SIZE}
-            onPageChange={setPage}
-          />
-        </div>
-      )}
+      </div>
     </div>
   );
 }

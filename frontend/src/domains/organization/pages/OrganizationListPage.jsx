@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthContext from "../../../store/AuthContext";
-import { Plus, ChevronRight, Building2, ClipboardList } from "lucide-react";
+import { Plus, ChevronRight, Building2, ClipboardList, Upload } from "lucide-react";
+import EmployeeBulkModal from "../components/EmployeeBulkModal";
 import {
   WSAvatar,
   WSPagination,
@@ -43,6 +44,8 @@ export default function OrganizationListPage() {
   const [editDeptId, setEditDeptId] = useState("");
   const [modalView, setModalView] = useState("dept");
   const [myRole, setMyRole] = useState("");
+  const [bulkModal, setBulkModal] = useState(false);
+  const [bulkVersion, setBulkVersion] = useState(0);
 
   // 사용자 데이터 불러오기
   useEffect(() => {
@@ -68,13 +71,13 @@ export default function OrganizationListPage() {
     })),
   ];
 
-  // 직원 불러오기
+  // 직원 불러오기 — 일괄 등록이 끝나면(bulkVersion 증가) 다시 불러온다
   useEffect(() => {
     if (!accessToken) return;
     getEmployee(accessToken).then((data) => {
       setEmployee(Array.isArray(data.data) ? data.data : []);
     });
-  }, [accessToken]);
+  }, [accessToken, bulkVersion]);
 
   // 직급
   const JOB_GRADE = {
@@ -186,9 +189,22 @@ export default function OrganizationListPage() {
                   icon: <Plus size={16} />,
                   variant: "primary",
                 },
+                {
+                  label: "일괄 등록",
+                  onClick: () => setBulkModal(true),
+                  icon: <Upload size={16} />,
+                  variant: "secondary",
+                },
               ]
             : []
         }
+      />
+
+      <EmployeeBulkModal
+        isOpen={bulkModal}
+        onClose={() => setBulkModal(false)}
+        accessToken={accessToken}
+        onDone={() => setBulkVersion((version) => version + 1)}
       />
 
       <div className={style.table}>

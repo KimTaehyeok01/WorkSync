@@ -4,6 +4,8 @@ package com.worksync.domain.notification.dto;
 import com.worksync.domain.notification.entity.Notification;
 import com.worksync.domain.notification.entity.NotificationType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,6 +24,40 @@ public class NotificationDto {
 
         @Schema(description = "읽음 처리할 알림 대상 ID", example = "10")
         private Long targetId;
+    }
+
+    @Getter @Setter
+    @Schema(name = "NotificationDto.ReadRequest")
+    public static class ReadRequest {
+
+        @NotNull
+        @Schema(description = "읽음 처리할 알림 ID", example = "1")
+        private Long id;
+    }
+
+    @Getter @Setter
+    @Schema(name = "NotificationDto.SettingRequest")
+    public static class SettingRequest {
+
+        @NotNull
+        @Schema(description = "알림 유형", example = "MAIL")
+        private NotificationType type;
+
+        @NotNull
+        @Schema(description = "수신 여부", example = "true")
+        private Boolean isEnabled;
+    }
+
+    @Getter
+    @AllArgsConstructor
+    @Schema(name = "NotificationDto.SettingResponse")
+    public static class SettingResponse {
+
+        @Schema(description = "알림 유형", example = "MAIL")
+        private NotificationType type;
+
+        @Schema(description = "수신 여부", example = "true")
+        private Boolean isEnabled;
     }
 
     @Getter @Builder

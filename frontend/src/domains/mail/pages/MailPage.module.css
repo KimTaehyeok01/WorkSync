@@ -1,0 +1,314 @@
+.root {
+  display: grid;
+  grid-template-columns: 380px minmax(0, 1fr);
+  gap: var(--ws-space-lg);
+  height: calc(100vh - var(--ws-topbar-h) - 48px);
+  min-height: 480px;
+}
+
+/* ── 왼쪽 메일함 ── */
+.listPane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--ws-surface);
+  border: 1px solid var(--ws-border-light);
+  border-radius: var(--ws-radius-lg);
+  box-shadow: var(--ws-shadow-sm);
+  overflow: hidden;
+}
+.listHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ws-space-sm);
+  padding: var(--ws-space-md) var(--ws-space-lg);
+  border-bottom: 1px solid var(--ws-border-light);
+}
+.boxTabs {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--ws-radius-md);
+  background: #f3f4f6;
+}
+.boxTab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: var(--ws-radius-sm);
+  color: var(--ws-text-500);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.boxTabActive {
+  color: var(--ws-primary);
+  background: var(--ws-surface);
+  box-shadow: var(--ws-shadow-sm);
+}
+
+.listTools {
+  display: flex;
+  align-items: center;
+  gap: var(--ws-space-sm);
+  padding: var(--ws-space-md) var(--ws-space-lg);
+}
+.listTools > :first-child {
+  flex: 1;
+}
+.filterChip {
+  flex-shrink: 0;
+  padding: 7px 12px;
+  border: 1px solid var(--ws-border);
+  border-radius: 999px;
+  color: var(--ws-text-600);
+  font-size: 12px;
+  font-weight: 600;
+}
+.filterChipOn {
+  color: var(--ws-primary);
+  border-color: var(--ws-primary);
+  background: var(--ws-primary-soft);
+}
+
+.list {
+  flex: 1;
+  overflow-y: auto;
+}
+.item {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ws-space-md);
+  width: 100%;
+  padding: var(--ws-space-md) var(--ws-space-lg);
+  border-bottom: 1px solid var(--ws-border-light);
+  text-align: left;
+  transition: background 0.15s;
+}
+.item:hover {
+  background: #f9fafb;
+}
+.itemActive,
+.itemActive:hover {
+  background: var(--ws-primary-soft);
+}
+.itemBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.itemTop {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ws-space-sm);
+}
+.itemName {
+  color: var(--ws-text-700);
+  font-size: 12.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.itemTime {
+  flex-shrink: 0;
+  color: var(--ws-text-400);
+  font-size: 11.5px;
+}
+.itemSubject {
+  color: var(--ws-text-800);
+  font-size: 13.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.itemPreview {
+  color: var(--ws-text-400);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 안 읽은 메일은 굵게 */
+.itemUnread .itemName,
+.itemUnread .itemSubject {
+  color: var(--ws-text-900);
+  font-weight: 700;
+}
+.unreadDot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--ws-primary);
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ws-space-md);
+  padding: var(--ws-space-sm);
+  border-top: 1px solid var(--ws-border-light);
+  color: var(--ws-text-600);
+  font-size: 12.5px;
+}
+.pagerBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--ws-border);
+  border-radius: var(--ws-radius-sm);
+  color: var(--ws-text-600);
+}
+.pagerBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── 오른쪽 본문 ── */
+.detailPane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: var(--ws-space-xl) var(--ws-space-2xl);
+  background: var(--ws-surface);
+  border: 1px solid var(--ws-border-light);
+  border-radius: var(--ws-radius-lg);
+  box-shadow: var(--ws-shadow-sm);
+  overflow-y: auto;
+}
+.detailPaneEmpty {
+  align-items: center;
+  justify-content: center;
+}
+.detailActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ws-space-sm);
+  margin-bottom: var(--ws-space-lg);
+}
+.detailButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ws-space-xs);
+  margin-left: auto;
+}
+.backBtn {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  color: var(--ws-text-600);
+  font-size: 13px;
+  font-weight: 600;
+}
+.subject {
+  margin: 0 0 var(--ws-space-lg);
+  color: var(--ws-text-900);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.4;
+  word-break: break-word;
+}
+.meta {
+  display: flex;
+  gap: var(--ws-space-md);
+  padding-bottom: var(--ws-space-lg);
+  border-bottom: 1px solid var(--ws-border-light);
+}
+.metaBody {
+  flex: 1;
+  min-width: 0;
+}
+.metaSender {
+  margin: 0 0 4px;
+  color: var(--ws-text-900);
+  font-size: 14px;
+  font-weight: 700;
+}
+.metaDept {
+  margin-left: var(--ws-space-sm);
+  color: var(--ws-text-400);
+  font-size: 12px;
+  font-weight: 400;
+}
+.metaLine {
+  margin: 2px 0 0;
+  color: var(--ws-text-600);
+  font-size: 12.5px;
+  word-break: break-word;
+}
+.metaLabel {
+  display: inline-block;
+  min-width: 62px;
+  color: var(--ws-text-400);
+}
+.metaTime {
+  flex-shrink: 0;
+  color: var(--ws-text-400);
+  font-size: 12px;
+}
+.content {
+  flex: 1;
+  padding: var(--ws-space-2xl) 0;
+  color: var(--ws-text-800);
+  font-size: 14px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.readStatus {
+  padding-top: var(--ws-space-lg);
+  border-top: 1px solid var(--ws-border-light);
+}
+.readStatusTitle {
+  margin: 0 0 var(--ws-space-sm);
+  color: var(--ws-text-600);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.readChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.readChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  color: var(--ws-text-500);
+  background: #f3f4f6;
+  font-size: 12px;
+}
+.readChipDone {
+  color: #047857;
+  background: #d1fae5;
+}
+.readChipCc {
+  opacity: 0.7;
+  font-size: 11px;
+}
+
+/* 좁은 화면 — 목록과 본문을 한 번에 하나씩 */
+@media (max-width: 1023px) {
+  .root {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .listPaneHidden,
+  .detailPaneEmpty {
+    display: none;
+  }
+  .backBtn {
+    display: flex;
+  }
+}

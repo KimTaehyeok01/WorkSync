@@ -9,7 +9,10 @@ import com.worksync.domain.board.repository.BoardRepository;
 import com.worksync.domain.board.repository.PostRepository;
 import com.worksync.domain.employee.entity.Employee;
 import com.worksync.domain.employee.entity.EmployeeRole;
+import com.worksync.domain.employee.entity.EmployeeStatus;
 import com.worksync.domain.employee.repository.EmployeeRepository;
+import com.worksync.domain.notification.entity.NotificationType;
+import com.worksync.domain.notification.service.NotificationService;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
 import com.worksync.global.security.CustomUserDetails;
@@ -30,6 +33,7 @@ public class PostService {
     private final BoardRepository boardRepository;
     private final EmployeeRepository employeeRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final NotificationService notificationService;
 
     //게시글 목록 조회(페이징+제목검색)
     //departmentId: ADMIN이 부서게시판에서 특정 부서만 골라볼 때 사용 (null이면 전체 부서)
@@ -63,6 +67,13 @@ public class PostService {
             } else {
                 // USER: 해당 부서 작성자 글만 반환
                 Long deptId = board.getDepartment().getId();
+
+                // 다른 부서의 게시판 id 를 직접 넣어 남의 부서 글을 읽지 못하게 막는다
+                Long myDeptId = user != null && user.getEmployee().getDepartment() != null
+                        ? user.getEmployee().getDepartment().getId() : null;
+                if (!deptId.equals(myDeptId)) {
+                    throw new CustomException(ErrorCode.FORBIDDEN);
+                }
                 if (keyword != null) {
                     posts = postRepository.findByBoardIdAndTitleContainingAndAuthorDepartmentId(boardId, keyword, deptId, pageable);
                 } else {
@@ -118,6 +129,17 @@ public class PostService {
         // (webSocket) 공지 게시글 작성 시 전체 사용자에게 새 게시글 실시간 push
         if (board.getBoardType() == BoardType.NOTICE) {
             messagingTemplate.convertAndSend("/topic/board/notice", PostDto.Response.from(saved));
+
+            // 재직 중인 전 직원에게 공지 알림 (작성자 본인 제외)
+            notificationService.sendToMany(
+                    employeeRepository.findByStatusNot(EmployeeStatus.INACTIVE).stream()
+                            .map(Employee::getId)
+                            .toList(),
+                    author.getId(),
+                    NotificationType.BOARD,
+                    "새 공지가 등록되었습니다: " + saved.getTitle(),
+                    "POST",
+                    saved.getId());
         }
 
         return saved.getId();

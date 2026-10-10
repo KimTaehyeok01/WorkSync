@@ -3,6 +3,7 @@ package com.worksync.domain.approval.repository;
 import com.worksync.domain.approval.entity.ApprovalDoc;
 import com.worksync.domain.approval.entity.ApprovalDocStatus;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -34,6 +35,16 @@ public interface ApprovalDocRepository extends JpaRepository<ApprovalDoc, Long> 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT d FROM ApprovalDoc d WHERE d.id = :id")
     Optional<ApprovalDoc> lockById(@Param("id") Long id);
+
+    // 통합 검색 — 제목이 일치하는 문서 중 내가 기안했거나 결재선(참조 포함)에 있는 것
+    @Query("SELECT DISTINCT d FROM ApprovalDoc d JOIN FETCH d.drafter " +
+            "WHERE d.title LIKE CONCAT('%', :keyword, '%') " +
+            "AND (d.drafter.id = :employeeId " +
+            "     OR EXISTS (SELECT 1 FROM ApprovalLine l WHERE l.doc = d AND l.approver.id = :employeeId)) " +
+            "ORDER BY d.createdAt DESC")
+    List<ApprovalDoc> searchMine(@Param("keyword") String keyword,
+                                 @Param("employeeId") Long employeeId,
+                                 Pageable pageable);
 
     // 특정 양식을 사용 중인 결재 문서가 있는지 확인 (양식 삭제 가능 여부 판단용)
     boolean existsByForm_Id(Long formId);

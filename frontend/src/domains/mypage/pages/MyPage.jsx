@@ -11,28 +11,26 @@ import {
   WSAlert,
 } from "../../../components/common/CommonWidgets";
 import { uploadFile } from "../../file/services/fileApi";
+import { isOk } from "../../../api/apiRequest";
+import {
+  JOB_GRADE_LABEL,
+  NOTIFICATION_TYPE_LABEL,
+} from "../../../constants/statusLabels";
 import {
   getMyInfo,
   updateMyProfile,
   changeMyPassword,
+  getNotificationSettings,
+  updateNotificationSetting,
 } from "../services/mypageApi";
 import s from "./MyPage.module.css";
-
-const JOB_GRADE = {
-  STAFF: "사원",
-  SENIOR: "주임",
-  ASSISTANT_MANAGER: "대리",
-  MANAGER: "과장",
-  GENERAL_MANAGER: "부장",
-  DIRECTOR: "이사",
-  CEO: "대표",
-};
 
 const EMPTY_PASSWORDS = { currentPassword: "", newPassword: "", confirm: "" };
 
 export default function MyPage() {
-  const { accessToken } = useAuthContext();
+  const { accessToken, refreshProfile } = useAuthContext();
   const fileInputRef = useRef(null);
+  const [settings, setSettings] = useState([]);
   const [me, setMe] = useState(null);
   const [phone, setPhone] = useState("");
   const [profileImage, setProfileImage] = useState(null);
@@ -49,6 +47,9 @@ export default function MyPage() {
       setPhone(data.phone ?? "");
       setProfileImage(data.profileImage ?? null);
     });
+    getNotificationSettings(accessToken).then((json) =>
+      setSettings(Array.isArray(json?.data) ? json.data : []),
+    );
   }, [accessToken]);
 
   const isValidPhone = phone === "" || /^010-\d{4}-\d{4}$/.test(phone);
@@ -88,6 +89,23 @@ export default function MyPage() {
     }
     setMe(json.data);
     setProfileAlert({ type: "success", message: "프로필이 저장되었습니다." });
+    // 상단 바의 이름·사진도 바로 바뀌도록 알린다
+    refreshProfile();
+  };
+
+  // 알림 수신 설정 — 누르면 바로 저장하고, 실패하면 원래 값으로 되돌린다
+  const handleToggleSetting = async (type, isEnabled) => {
+    setSettings((prev) =>
+      prev.map((setting) => (setting.type === type ? { ...setting, isEnabled } : setting)),
+    );
+    const json = await updateNotificationSetting(accessToken, type, isEnabled);
+    if (!isOk(json)) {
+      setSettings((prev) =>
+        prev.map((setting) =>
+          setting.type === type ? { ...setting, isEnabled: !isEnabled } : setting,
+        ),
+      );
+    }
   };
 
   const handleChangePassword = async () => {
@@ -112,7 +130,7 @@ export default function MyPage() {
     ["사번", me.empNo],
     ["이메일", me.email],
     ["부서", me.departmentName ?? "미배정"],
-    ["직급", JOB_GRADE[me.jobGrade] ?? me.jobGrade],
+    ["직급", JOB_GRADE_LABEL[me.jobGrade] ?? me.jobGrade],
     ["입사일", me.hireDate ?? "-"],
   ];
 
@@ -188,6 +206,22 @@ export default function MyPage() {
               onClick={handleSaveProfile}
             />
           </div>
+        </div>
+      </WSCard>
+
+      <WSCard title="알림 수신 설정" subtitle="끄면 해당 종류의 알림을 받지 않습니다.">
+        <div className={s.settings}>
+          {settings.map((setting) => (
+            <label key={setting.type} className={s.settingRow}>
+              <span>{NOTIFICATION_TYPE_LABEL[setting.type] ?? setting.type}</span>
+              <input
+                type="checkbox"
+                className={s.switch}
+                checked={setting.isEnabled}
+                onChange={(e) => handleToggleSetting(setting.type, e.target.checked)}
+              />
+            </label>
+          ))}
         </div>
       </WSCard>
 

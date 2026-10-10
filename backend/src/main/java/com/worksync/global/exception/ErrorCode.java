@@ -83,7 +83,16 @@ public enum ErrorCode {
     RESERVATION_CONFLICT(409, "해당 시간에 이미 예약이 있습니다."),
     INVALID_RESERVATION_PERIOD(400, "예약 종료 시각은 시작 시각보다 늦어야 합니다."),
 
+    RESERVATION_IN_PAST(400, "지난 시간은 예약할 수 없습니다."),
+
+    // 메일
+    MAIL_NOT_FOUND(404, "존재하지 않는 메일입니다."),
+
+    // 댓글
+    COMMENT_NOT_FOUND(404, "존재하지 않는 댓글입니다."),
+
     // 공통
+    INVALID_REQUEST(400, "요청 값이 올바르지 않습니다."),
     FORBIDDEN(403, "접근 권한이 없습니다."),
     INTERNAL_SERVER_ERROR(500, "서버 내부 오류가 발생했습니다.");
 

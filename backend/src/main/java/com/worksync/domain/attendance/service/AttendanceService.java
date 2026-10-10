@@ -4,7 +4,9 @@ import com.worksync.domain.attendance.dto.AttendanceDto;
 import com.worksync.domain.attendance.entity.Attendance;
 import com.worksync.domain.attendance.entity.AttendanceStatus;
 import com.worksync.domain.attendance.repository.AttendanceRepository;
+import com.worksync.domain.audit.service.AuditLogService;
 import com.worksync.domain.employee.entity.Employee;
+import com.worksync.domain.employee.entity.EmployeeStatus;
 import com.worksync.domain.employee.repository.EmployeeRepository;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
@@ -16,8 +18,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -29,6 +34,7 @@ public class AttendanceService {
   private final AttendanceRepository attendanceRepository;
   private final EmployeeRepository employeeRepository;
   private final SimpMessagingTemplate messagingTemplate;
+  private final AuditLogService auditLogService;
 
   @Transactional
   // 출근체크
@@ -110,8 +116,13 @@ public class AttendanceService {
     LocalDate today = LocalDate.now();
     LocalDateTime now = LocalDateTime.now();
 
-    // 이미 출근 기록 있으면 아무것도 안 함 (재로그인 허용)
-    if (attendanceRepository.findByEmployeeIdAndWorkDt(employeeId, today).isPresent()) {
+    // 이미 출근 기록 있으면 새로 만들지 않는다 (재로그인 허용)
+    // 로그아웃으로 퇴근 처리됐던 기록이면 근무 재개로 되돌린다 — 로그아웃했다 돌아온 사람이 조퇴로 남지 않게
+    Optional<Attendance> existing = attendanceRepository.findByEmployeeIdAndWorkDt(employeeId, today);
+    if (existing.isPresent()) {
+      if (existing.get().getCheckedOutAt() != null) {
+        existing.get().reopen();
+      }
       return;
     }
 
@@ -202,6 +213,50 @@ public class AttendanceService {
     return members.stream()
             .map(e -> AttendanceDto.DepartmentResponse.of(e, attendanceByEmployee.get(e.getId())))
             .toList();
+  }
+
+  // ADMIN — 해당 일자의 재직자 전원 근태 (출근 기록이 없으면 결근으로 표시)
+  public List<AttendanceDto.AdminResponse> getAllEmployeesByDate(LocalDate date) {
+    Map<Long, Attendance> attendanceByEmployee = attendanceRepository.findByWorkDt(date)
+            .stream()
+            .collect(Collectors.toMap(a -> a.getEmployee().getId(), a -> a));
+
+    return employeeRepository.findByStatusNot(EmployeeStatus.INACTIVE).stream()
+            .sorted(Comparator.comparing(Employee::getId))
+            .map(e -> AttendanceDto.AdminResponse.of(e, date, attendanceByEmployee.get(e.getId())))
+            .toList();
+  }
+
+  // ADMIN — 근태 기록 수정 (해당 일자 기록이 없으면 새로 만든다)
+  @Transactional
+  public AttendanceDto.AdminResponse adminUpdate(Long actorId, AttendanceDto.AdminUpdateRequest request) {
+    Employee employee = employeeRepository.findById(request.getEmployeeId())
+            .orElseThrow(() -> new CustomException(ErrorCode.EMPLOYEE_NOT_FOUND));
+
+    LocalDateTime checkedInAt = toDateTime(request.getWorkDate(), request.getCheckInTime());
+    LocalDateTime checkedOutAt = toDateTime(request.getWorkDate(), request.getCheckOutTime());
+    if (checkedInAt != null && checkedOutAt != null && checkedOutAt.isBefore(checkedInAt)) {
+      throw new CustomException(ErrorCode.INVALID_REQUEST);
+    }
+
+    Attendance attendance = attendanceRepository
+            .findByEmployeeIdAndWorkDt(employee.getId(), request.getWorkDate())
+            .orElseGet(() -> Attendance.builder()
+                    .employee(employee)
+                    .workDt(request.getWorkDate())
+                    .build());
+    attendance.adminUpdate(checkedInAt, checkedOutAt, request.getStatus());
+    Attendance saved = attendanceRepository.save(attendance);
+
+    // 감사 로그 — 누가 누구의 근태를 고쳤는지 남긴다
+    String actorName = employeeRepository.findById(actorId).map(Employee::getName).orElse(null);
+    auditLogService.log(actorId, actorName, "근태 수정", "HR", employee.getId(), null, null);
+
+    return AttendanceDto.AdminResponse.of(employee, request.getWorkDate(), saved);
+  }
+
+  private LocalDateTime toDateTime(LocalDate date, LocalTime time) {
+    return time != null ? LocalDateTime.of(date, time) : null;
   }
 
   // 단건 조회

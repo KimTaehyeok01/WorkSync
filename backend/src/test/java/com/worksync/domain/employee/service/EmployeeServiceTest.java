@@ -12,6 +12,7 @@ import com.worksync.domain.employee.entity.JobGrade;
 import com.worksync.domain.employee.repository.EmployeeRepository;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
+import com.worksync.domain.employee.repository.EmployeeHistoryRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,6 +52,11 @@ class EmployeeServiceTest {
     private SimpMessagingTemplate messagingTemplate;
     @Mock
     private AuditLogService auditLogService;
+
+    @Mock
+
+    private EmployeeHistoryRepository employeeHistoryRepository;
+
 
     @InjectMocks
     private EmployeeService employeeService;

@@ -46,9 +46,13 @@ export async function getTasksByDepartment(
   departmentId,
   page = 0,
   size = 10,
+  status,
 ) {
+  // 상태 필터도 서버로 보낸다 (빠져 있으면 필터를 걸어도 전체가 조회돼 페이지 수가 어긋난다)
+  const params = new URLSearchParams({ page, size });
+  if (status && status !== "all") params.append("status", status);
   return await fetch(
-    `${BASE_URL}/tasks/department/${departmentId}?page=${page}&size=${size}`,
+    `${BASE_URL}/tasks/department/${departmentId}?${params}`,
     {
       method: "GET",
       headers: {

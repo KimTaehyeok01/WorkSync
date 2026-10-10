@@ -6,6 +6,8 @@ import com.worksync.domain.employee.entity.Employee;
 import com.worksync.global.entity.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -22,6 +24,7 @@ import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /** 캘린더 일정. */
@@ -79,9 +82,23 @@ public class Schedule extends BaseTimeEntity {
 	@Comment("공개 범위")
 	private ScheduleScope scope;
 
+	@Enumerated(EnumType.STRING)
+	@Column(name = "repeat_type", nullable = false, length = 10)
+	@Comment("반복 주기")
+	@Builder.Default
+	private RepeatType repeatType = RepeatType.NONE;
+
+	// 이 날짜까지 반복 (null 이면 계속 반복)
+	@Column(name = "repeat_until")
+	@Comment("반복 종료일")
+	private LocalDate repeatUntilDt;
+
 	public void update(String title, String description, String location,
 			LocalDateTime startAt, LocalDateTime endAt, Boolean isAllDay,
-			ScheduleScope scope, Department department) {
+			ScheduleScope scope, Department department,
+			RepeatType repeatType, LocalDate repeatUntilDt) {
+		this.repeatType = repeatType;
+		this.repeatUntilDt = repeatUntilDt;
 		this.title = title;
 		this.description = description;
 		this.location = location;

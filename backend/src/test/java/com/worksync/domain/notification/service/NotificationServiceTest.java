@@ -7,6 +7,7 @@ import com.worksync.domain.notification.dto.NotificationDto;
 import com.worksync.domain.notification.entity.Notification;
 import com.worksync.domain.notification.entity.NotificationType;
 import com.worksync.domain.notification.repository.NotificationRepository;
+import com.worksync.domain.notification.repository.NotificationSettingRepository;
 import com.worksync.global.exception.CustomException;
 import com.worksync.global.exception.ErrorCode;
 import org.junit.jupiter.api.DisplayName;
@@ -35,6 +36,8 @@ class NotificationServiceTest {
 
     @Mock
     private NotificationRepository notificationRepository;
+    @Mock
+    private NotificationSettingRepository notificationSettingRepository;
     @Mock
     private EmployeeRepository employeeRepository;
     @Mock

@@ -87,6 +87,31 @@
   opacity: 0.9;
 }
 
+/* 목록 / 칸반 보기 전환 */
+.viewToggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  margin-bottom: var(--ws-space-lg);
+  border-radius: var(--ws-radius-md);
+  background: #e5e7eb;
+}
+.viewBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--ws-radius-sm);
+  color: var(--ws-text-500);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.viewBtnOn {
+  color: var(--ws-primary);
+  background: var(--ws-surface);
+  box-shadow: var(--ws-shadow-sm);
+}
+
 .table {
   background: #fff;
   border: 1px solid var(--ws-border);

@@ -19,10 +19,22 @@
 .tableScroll {
   overflow-x: auto;
 }
+/* 한 칸은 30분 — 시간 머리글은 두 칸을 합쳐 쓴다 */
 .table {
   display: grid;
-  grid-template-columns: 160px repeat(12, minmax(64px, 1fr));
-  min-width: 928px;
+  grid-template-columns: 160px repeat(24, minmax(34px, 1fr));
+  min-width: 976px;
+}
+.headHour {
+  grid-column: span 2;
+}
+/* 30분 칸은 정각 칸보다 옅은 경계로 구분 */
+.slotHalf {
+  border-left: 1px dashed var(--ws-border-light);
+}
+.slot:disabled {
+  background: repeating-linear-gradient(-45deg, #fafafa, #fafafa 4px, #f3f4f6 4px, #f3f4f6 8px);
+  cursor: not-allowed;
 }
 /* 행 래퍼는 그리드에 참여하지 않고 자식 셀이 직접 배치되도록 한다 */
 .resourceRow {

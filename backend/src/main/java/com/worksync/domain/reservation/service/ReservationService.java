@@ -4,6 +4,8 @@ package com.worksync.domain.reservation.service;
 import com.worksync.domain.employee.entity.Employee;
 import com.worksync.domain.employee.entity.EmployeeRole;
 import com.worksync.domain.employee.repository.EmployeeRepository;
+import com.worksync.domain.notification.entity.NotificationType;
+import com.worksync.domain.notification.service.NotificationService;
 import com.worksync.domain.reservation.dto.ReservationDto;
 import com.worksync.domain.reservation.entity.Reservation;
 import com.worksync.domain.reservation.entity.Resource;
@@ -28,6 +30,7 @@ public class ReservationService {
 	private final ResourceRepository resourceRepository;
 	private final ReservationRepository reservationRepository;
 	private final EmployeeRepository employeeRepository;
+	private final NotificationService notificationService;
 
 	// 자원 목록 조회 (비활성 자원 포함 — 화면에서 구분 표시)
 	public List<ReservationDto.ResourceResponse> getResources() {
@@ -87,6 +90,9 @@ public class ReservationService {
 		if (!request.getEndAt().isAfter(request.getStartAt())) {
 			throw new CustomException(ErrorCode.INVALID_RESERVATION_PERIOD);
 		}
+		if (request.getStartAt().isBefore(LocalDateTime.now())) {
+			throw new CustomException(ErrorCode.RESERVATION_IN_PAST);
+		}
 		Employee me = findEmployee(employeeId);
 
 		Resource resource = resourceRepository.findByIdForUpdate(request.getResourceId())
@@ -116,6 +122,18 @@ public class ReservationService {
 				.orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND));
 		if (!canCancel(reservation, me)) {
 			throw new CustomException(ErrorCode.FORBIDDEN);
+		}
+
+		// 관리자가 남의 예약을 취소하면 예약자에게 알린다
+		Long ownerId = reservation.getEmployee().getId();
+		if (!ownerId.equals(me.getId())) {
+			notificationService.send(
+					ownerId,
+					NotificationType.RESERVATION,
+					"관리자가 예약을 취소했습니다: " + reservation.getResource().getName()
+							+ " · " + reservation.getTitle(),
+					"RESERVATION",
+					reservation.getId());
 		}
 		reservationRepository.delete(reservation);
 	}

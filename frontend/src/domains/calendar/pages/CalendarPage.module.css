@@ -30,7 +30,7 @@
   background: #f9fafb;
 }
 .monthLabel {
-  min-width: 110px;
+  min-width: 132px;
   text-align: center;
   color: var(--ws-text-900);
   font-size: 18px;
@@ -154,6 +154,40 @@
 .chipTask {
   color: #b91c1c;
   background: #fee2e2;
+}
+.chipReservation {
+  color: #0e7490;
+  background: #cffafe;
+}
+.chipIcon {
+  margin-right: 3px;
+  vertical-align: -1px;
+}
+
+.toolbarRight {
+  display: flex;
+  align-items: center;
+  gap: var(--ws-space-md);
+}
+/* 월 / 주 / 일 보기 전환 */
+.viewToggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--ws-radius-md);
+  background: #e5e7eb;
+}
+.viewBtn {
+  padding: 6px 14px;
+  border-radius: var(--ws-radius-sm);
+  color: var(--ws-text-500);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.viewBtnOn {
+  color: var(--ws-primary);
+  background: var(--ws-surface);
+  box-shadow: var(--ws-shadow-sm);
 }
 
 @media (max-width: 767px) {

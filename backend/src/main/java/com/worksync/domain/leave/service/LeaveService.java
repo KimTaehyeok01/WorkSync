@@ -64,14 +64,14 @@ public class LeaveService {
 
         // 잔여 연차 부족 검증 — 휴가 시작일이 속한 연도의 연차 기준 (승인 시 차감 연도와 일치)
         short leaveYear = (short) req.getStartDate().getYear();
-        // 해당 연도 연차 정보가 없으면 기본 15일로 자동 부여 후 진행
+        // 해당 연도 연차 정보가 없으면 입사일 기준 일수로 자동 부여 후 진행
         AnnualLeaveBalance balance = annualLeaveBalanceRepository
                 .findByEmployeeIdAndYear(employeeId, leaveYear)
                 .orElseGet(() -> annualLeaveBalanceRepository.save(
                         AnnualLeaveBalance.builder()
                                 .employee(employee)
                                 .year(leaveYear)
-                                .totalDays(BigDecimal.valueOf(15))
+                                .totalDays(AnnualLeavePolicy.grantDays(employee.getHireDate(), leaveYear))
                                 .build()));
 
         if (balance.getRemainingDays().compareTo(req.getDayCount()) < 0) {
@@ -144,7 +144,7 @@ public class LeaveService {
                         AnnualLeaveBalance.builder()
                                 .employee(employee)
                                 .year(currentYear)
-                                .totalDays(BigDecimal.valueOf(15))
+                                .totalDays(AnnualLeavePolicy.grantDays(employee.getHireDate(), currentYear))
                                 .build()));
 
         return LeaveDto.BalanceResponse.from(balance);

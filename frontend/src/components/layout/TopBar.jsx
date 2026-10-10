@@ -27,6 +27,7 @@ import {
   getUnreadCount,
   putNotifications,
 } from "../../domains/notification/services/notificationApi";
+import { getNotificationPath } from "../../domains/notification/services/notificationCenterApi";
 import { getEmployee } from "../../domains/chat/services/chatApi";
 import styles from "./TopBar.module.css";
 
@@ -58,7 +59,10 @@ const PAGE_TITLES = {
   },
   "/board": { title: "게시판", breadcrumb: ["홈", "게시판"] },
   "/board/new": { title: "글쓰기", breadcrumb: ["홈", "게시판", "글쓰기"] },
-  "/audit-log": { titlse: "감사 로그", breadcrumb: ["홈", "감사 로그"] },
+  "/audit-log": { title: "감사 로그", breadcrumb: ["홈", "감사 로그"] },
+  "/mail": { title: "메일", breadcrumb: ["홈", "메일"] },
+  "/notifications": { title: "알림", breadcrumb: ["홈", "알림"] },
+  "/search": { title: "통합 검색", breadcrumb: ["홈", "검색"] },
 };
 
 const notifIcons = {
@@ -96,6 +100,7 @@ export function TopBar({ pathname, onMenuClick }) {
     logout,
     myStatus: status,
     setMyStatus: setStatus,
+    profileVersion,
   } = useAuthContext();
   const [my, setMy] = useState({});
   const [showNotifs, setShowNotifs] = useState(false);
@@ -147,7 +152,8 @@ export function TopBar({ pathname, onMenuClick }) {
     getUnreadCount(accessToken).then((data) => {
       setUnreadCount(data.unreadCount || 0);
     });
-  }, [accessToken]);
+    // profileVersion — 마이페이지에서 프로필을 저장하면 이름·사진을 다시 불러온다
+  }, [accessToken, profileVersion]);
 
   // 알림 리스트 클릭
   const handleClick = (notif) => {
@@ -160,13 +166,9 @@ export function TopBar({ pathname, onMenuClick }) {
       targetId: notif.targetId,
     });
 
-    if (notif.type === "APPROVAL") {
-      return navigate(`/approval/${notif.targetId}`);
-    } else if (notif.type === "MESSAGE") {
-      return navigate(`/messenger`);
-    } else if (notif.type === "TASK") {
-      return navigate(`/tasks/${notif.targetId}`);
-    }
+    // 유형별 이동 경로는 알림 센터와 같은 규칙을 쓴다
+    const path = getNotificationPath(notif);
+    if (path) navigate(path);
   };
 
   // WebSocket 실시간 알림 갱신
@@ -263,25 +265,33 @@ export function TopBar({ pathname, onMenuClick }) {
         </div>
       </div>
 
-      {/* <div className={styles.search}>
+      {/* 통합 검색 — Enter 로 검색 결과 화면으로 이동 */}
+      <div className={styles.search}>
         <Search size={15} className={styles.searchIcon} />
         <input
           type="text"
-          placeholder="통합 검색하세요."
+          placeholder="통합 검색 (2자 이상)"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && search.trim().length >= 2) {
+              navigate(`/search?q=${encodeURIComponent(search.trim())}`);
+            }
+          }}
           className={styles.searchInput}
+          aria-label="통합 검색"
         />
         {search && (
           <button
             onClick={() => setSearch("")}
             className={styles.searchClear}
             aria-label="검색어 지우기"
+            type="button"
           >
             <X size={13} />
           </button>
         )}
-      </div> */}
+      </div>
 
       <div className={styles.bellWrap} ref={notifRef}>
         <button
@@ -327,7 +337,18 @@ export function TopBar({ pathname, onMenuClick }) {
                   </div>
                 ))}
             </div>
-            <div className={styles.notifFooter}></div>
+            <div className={styles.notifFooter}>
+              <button
+                type="button"
+                className={styles.notifFooterBtn}
+                onClick={() => {
+                  setShowNotifs(false);
+                  navigate("/notifications");
+                }}
+              >
+                전체 알림 보기
+              </button>
+            </div>
           </div>
         )}
       </div>

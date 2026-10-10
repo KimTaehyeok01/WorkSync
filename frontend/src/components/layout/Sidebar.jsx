@@ -18,6 +18,7 @@ import {
   Clock,
   CalendarDays,
   CalendarClock,
+  Mail,
 } from "lucide-react";
 import { getNotifications } from "../../domains/notification/services/notificationApi";
 import styles from "./Sidebar.module.css";
@@ -40,7 +41,14 @@ const MAIN_NAV = [
     id: "ws-task",
     type: "TASK",
   },
-  { path: "/calendar", label: "캘린더", icon: CalendarDays, id: "ws-cal" },
+  { path: "/mail", label: "메일", icon: Mail, id: "ws-mail", type: "MAIL" },
+  {
+    path: "/calendar",
+    label: "캘린더",
+    icon: CalendarDays,
+    id: "ws-cal",
+    type: "SCHEDULE",
+  },
   { path: "/reservation", label: "예약", icon: CalendarClock, id: "ws-rsv" },
   { path: "/attendance", label: "근태/연차", icon: Clock, id: "ws-att" },
   {

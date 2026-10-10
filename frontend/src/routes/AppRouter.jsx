@@ -24,6 +24,9 @@ import AttendancePage from "../domains/attendance/pages/AttendancePage";
 import MyPage from "../domains/mypage/pages/MyPage";
 import CalendarPage from "../domains/calendar/pages/CalendarPage";
 import ReservationPage from "../domains/reservation/pages/ReservationPage";
+import MailPage from "../domains/mail/pages/MailPage";
+import NotificationPage from "../domains/notification/pages/NotificationPage";
+import SearchPage from "../domains/search/pages/SearchPage";
 import styles from "./AppRouter.module.css";
 import useAuthContext from "../store/AuthContext";
 
@@ -81,6 +84,9 @@ export const router = createBrowserRouter([
       { path: "mypage", Component: MyPage },
       { path: "calendar", Component: CalendarPage },
       { path: "reservation", Component: ReservationPage },
+      { path: "mail", Component: MailPage },
+      { path: "notifications", Component: NotificationPage },
+      { path: "search", Component: SearchPage },
       { path: "*", Component: NotFound },
     ],
   },

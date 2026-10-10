@@ -8,6 +8,7 @@ import {
   resignEmployee,
 } from "../services/organizationListApi";
 import EmployeeForm from "../components/EmployeeForm";
+import EmployeeHistoryCard from "../components/EmployeeHistoryCard";
 import { WSSuccessScreen } from "../../../components/common/LayoutComponents";
 import useFileUpload from "../../../hooks/useFileUpload";
 import { getFile, saveFile, deleteFile } from "../../file/services/fileApi";
@@ -165,7 +166,8 @@ export default function EmployeeEdit() {
     }
 
     try {
-      await deleteEmployee(accessToken, id);
+      // 영구 삭제가 아니라 퇴사 처리(INACTIVE) — 데이터는 남고 감사 로그에 기록된다
+      await resignEmployee(accessToken, id);
       removeFiles();
       clearFiles();
       navigate("/organization");
@@ -178,10 +180,10 @@ export default function EmployeeEdit() {
   if (submitted) {
     return (
       <WSSuccessScreen
-        title="작업이 등록되었습니다."
-        description="업무 보드로 이동합니다."
-        redirectLabel="업무 보드로 이동 중..."
-        isVisible={isVisible}
+        title="직원 정보가 수정되었습니다."
+        description="조직도로 이동합니다."
+        redirectLabel="조직도로 이동 중..."
+        isVisible={submitted}
       />
     );
   }
@@ -205,6 +207,7 @@ export default function EmployeeEdit() {
         addFiles={addFiles}
         removeFiles={handleRemoveFile}
       />
+      <EmployeeHistoryCard accessToken={accessToken} employeeId={id} />
     </>
   );
 }

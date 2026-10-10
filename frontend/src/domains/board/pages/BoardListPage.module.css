@@ -103,6 +103,19 @@
   border-bottom: none;
 }
 
+.pinBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  padding: 3px 8px;
+  margin-right: 6px;
+  border-radius: 4px;
+  color: var(--ws-primary);
+  background: var(--ws-primary-soft);
+  font-size: 10.5px;
+  font-weight: 700;
+}
 .noticeBadge {
   flex-shrink: 0;
   padding: 4px 8px;
