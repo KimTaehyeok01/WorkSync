@@ -14,6 +14,7 @@ import {
 import useAuthContext from "../../../store/AuthContext";
 import { WSEmptyState } from "../../../components/common/CommonWidgets";
 import { isOk } from "../../../api/apiRequest";
+import { trackEvent } from "../../../utils/matomo";
 import {
   TASK_STATUS_LABEL,
   APPROVAL_STATUS_LABEL,
@@ -79,6 +80,7 @@ export default function SearchPage() {
         setError(json?.message ?? "검색에 실패했습니다.");
         return;
       }
+      trackEvent("search", "query");
       setError("");
       setResult(json.data);
     });

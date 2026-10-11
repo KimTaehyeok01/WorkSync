@@ -3,6 +3,8 @@ import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import { log } from "sockjs-client/dist/sockjs";
 import useAuthContext from "../../../store/AuthContext";
+import { isOk } from "../../../api/apiRequest";
+import { trackEvent } from "../../../utils/matomo";
 import {
   Search,
   Send,
@@ -325,6 +327,7 @@ export default function Messenger() {
     setSummary(null);
     try {
       const res = await summarizeRoom(accessToken, activeConvId);
+      if (isOk(res)) trackEvent("chat", "ai_summary");
       setSummary(res?.data ?? "요약에 실패했습니다.");
     } catch {
       setSummary("요약에 실패했습니다.");

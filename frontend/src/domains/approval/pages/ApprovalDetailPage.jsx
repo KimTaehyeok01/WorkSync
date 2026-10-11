@@ -26,6 +26,7 @@ import {
 import useFileUpload from "../../../hooks/useFileUpload";
 import { getFile, saveFile, deleteFile } from "../../file/services/fileApi";
 import { STATUS_CONFIG } from "../constants/statusConfig";
+import { trackEvent } from "../../../utils/matomo";
 import s from "./ApprovalDetailPage.module.css";
 
 function stepClass(status) {
@@ -486,6 +487,10 @@ export default function ApprovalDetail() {
       commentInput,
     );
     if (result?.status === 200) {
+      trackEvent(
+        "approval",
+        confirmAction === "REJECTED" ? "reject" : "approve",
+      );
       alert(
         confirmAction === "REJECTED"
           ? "결재 반려가 완료되었습니다."

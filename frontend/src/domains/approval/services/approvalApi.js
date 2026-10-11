@@ -1,3 +1,5 @@
+import { trackEvent } from "../../../utils/matomo";
+
 const BASE_URL = "/api";
 
 // 내 정보 조회
@@ -213,6 +215,7 @@ export function withdrawApproval(accessToken, id) {
   })
     .then((response) => {
       if (!response.ok) throw new Error(response.status);
+      trackEvent("approval", "withdraw");
       return response;
     })
     .catch((error) => {
@@ -232,6 +235,7 @@ export function resubmitApproval(accessToken, id) {
   })
     .then((response) => {
       if (!response.ok) throw new Error(response.status);
+      trackEvent("approval", "resubmit");
       return response;
     })
     .catch((error) => {

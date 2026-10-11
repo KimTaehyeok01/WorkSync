@@ -28,11 +28,17 @@ import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
+import java.net.URI;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -40,6 +46,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /** 전자결재 도메인의 비즈니스 로직을 처리한다. */
@@ -59,6 +66,15 @@ public class ApprovalService {
     private final AnnualLeaveBalanceRepository annualLeaveBalanceRepository;
     private final LeaveRequestRepository leaveRequestRepository;
     private final ObjectMapper objectMapper;
+
+    // Matomo 서버 사이드 이벤트 — url 이 비어 있으면 전송하지 않는다 (GroqService와 같은 RestTemplate 방식)
+    @Value("${matomo.url:}")
+    private String matomoUrl;
+
+    @Value("${matomo.site-id:1}")
+    private int matomoSiteId;
+
+    private final RestTemplate matomoRestTemplate = createMatomoRestTemplate();
 
     // 감사 로그 카테고리 / 액션명
     private static final String CATEGORY_APPROVAL = "APPROVAL";
@@ -280,6 +296,9 @@ public class ApprovalService {
                         "APPROVAL",
                         doc.getId()
                 ));
+
+        // Matomo 이벤트 — 비동기 전송이라 트랜잭션을 붙잡지 않고, 사용자 식별자·IP는 보내지 않는다
+        trackMatomoEvent("approval", "submit");
 
         return ApprovalDto.DetailResponse.from(doc);
     }
@@ -713,6 +732,42 @@ public class ApprovalService {
         } catch (JsonProcessingException e) {
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    // Matomo 이벤트 비동기 전송 — url 미설정 시 no-op, 실패는 로그만 남기고 호출자에게 전파하지 않는다
+    private void trackMatomoEvent(String category, String action) {
+        if (matomoUrl == null || matomoUrl.isBlank()) {
+            return;
+        }
+        try {
+            CompletableFuture.runAsync(() -> {
+                try {
+                    // 인코딩이 끝난 URI를 그대로 넘겨 이중 인코딩을 막는다 (사용자 식별자·IP는 포함하지 않음)
+                    URI uri = UriComponentsBuilder
+                            .fromUriString(matomoUrl.trim().replaceAll("/+$", "") + "/matomo.php")
+                            .queryParam("idsite", matomoSiteId)
+                            .queryParam("rec", 1)
+                            .queryParam("apiv", 1)
+                            .queryParam("e_c", category)
+                            .queryParam("e_a", action)
+                            .build()
+                            .encode()
+                            .toUri();
+                    matomoRestTemplate.getForEntity(uri, byte[].class);
+                } catch (Exception e) {
+                    log.warn("Matomo 이벤트 전송 실패 category={}, action={}, cause={}", category, action, e.toString());
+                }
+            });
+        } catch (RuntimeException e) {
+            log.warn("Matomo 이벤트 전송 예약 실패 category={}, action={}, cause={}", category, action, e.toString());
+        }
+    }
+
+    private static RestTemplate createMatomoRestTemplate() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(2));
+        factory.setReadTimeout(Duration.ofSeconds(2));
+        return new RestTemplate(factory);
     }
 
     // formSchema JSON 역직렬화 전용 내부 캐리어 — 계층을 넘지 않으므로 private static

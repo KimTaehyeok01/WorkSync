@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { WSAvatar } from "../../../components/common/CommonWidgets";
 import { TASK_STATUS_LABEL } from "../../../constants/statusLabels";
 import { getTaskList, updateTask } from "../services/taskApi";
+import { trackEvent } from "../../../utils/matomo";
 import s from "./TaskKanban.module.css";
 
 const COLUMNS = ["TODO", "IN_PROGRESS", "DONE"];
@@ -53,6 +54,8 @@ export default function TaskKanban({ accessToken, myId, search, profiles }) {
       return;
     }
     setError("");
+    trackEvent("task", "status_change", status);
+    if (status === "DONE") trackEvent("task", "complete");
   };
 
   const keyword = search.replace(/\s/g, "").toLowerCase();

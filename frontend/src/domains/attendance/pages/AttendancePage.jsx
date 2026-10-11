@@ -31,6 +31,7 @@ import {
   WSAlert,
 } from "../../../components/common/CommonWidgets";
 import { isOk } from "../../../api/apiRequest";
+import { trackEvent } from "../../../utils/matomo";
 import {
   WEEKDAYS,
   ATTENDANCE_STATUS,
@@ -155,12 +156,13 @@ export default function AttendancePage() {
   }, [accessToken, tab, adminDate]);
 
   // 출근·퇴근 처리 — 실패하면 서버 메시지를 그대로 보여준다
-  const handleCheck = async (apiCall) => {
+  const handleCheck = async (apiCall, eventAction) => {
     const json = await apiCall(accessToken);
     if (!isOk(json)) {
       setMessage(json?.message ?? "처리에 실패했습니다.");
       return;
     }
+    trackEvent("attendance", eventAction);
     setMessage("");
     loadToday();
     loadMonth();
@@ -273,14 +275,14 @@ export default function AttendancePage() {
                   label="출근"
                   icon={<LogIn size={15} />}
                   disabled={!!todayRecord}
-                  onClick={() => handleCheck(checkIn)}
+                  onClick={() => handleCheck(checkIn, "check_in")}
                 />
                 <WSButton
                   label="퇴근"
                   variant="secondary"
                   icon={<LogOut size={15} />}
                   disabled={!todayRecord || !!todayRecord.checkOutTime}
-                  onClick={() => handleCheck(checkOut)}
+                  onClick={() => handleCheck(checkOut, "check_out")}
                 />
               </div>
               {message && <p className={s.message}>{message}</p>}

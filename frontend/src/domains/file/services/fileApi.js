@@ -1,3 +1,6 @@
+import { isOk } from "../../../api/apiRequest";
+import { trackEvent } from "../../../utils/matomo";
+
 const BASE_URL = "/api";
 
 export async function uploadFile(accessToken, fileData) {
@@ -12,6 +15,7 @@ export async function uploadFile(accessToken, fileData) {
       return response.json();
     })
     .then((json) => {
+      if (isOk(json)) trackEvent("file", "upload");
       return json;
     })
     .catch((error) => {

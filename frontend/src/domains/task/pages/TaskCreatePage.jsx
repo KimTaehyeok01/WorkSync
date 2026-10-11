@@ -14,6 +14,7 @@ import {
 } from "../../../components/common/FormComponents";
 import useFileUpload from "../../../hooks/useFileUpload";
 import { getFile, saveFile, deleteFile } from "../../file/services/fileApi";
+import { trackEvent } from "../../../utils/matomo";
 import s from "./TaskCreatePage.module.css";
 
 const STATUS_OPTIONS = [
@@ -134,6 +135,7 @@ export default function TaskNew() {
     try {
       const response = await createTask(accessToken, data);
       const taskId = Number(response.id);
+      trackEvent("task", "create");
 
       // 파일 저장
       for (const file of uploadedFile) {

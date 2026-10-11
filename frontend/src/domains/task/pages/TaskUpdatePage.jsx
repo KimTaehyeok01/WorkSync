@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import {
@@ -21,6 +21,7 @@ import {
 } from "../../../components/common/FormComponents";
 import useFileUpload from "../../../hooks/useFileUpload";
 import { getFile, saveFile, deleteFile } from "../../file/services/fileApi";
+import { trackEvent } from "../../../utils/matomo";
 import s from "./TaskCreatePage.module.css";
 
 const STATUS_OPTIONS = [
@@ -70,6 +71,7 @@ export default function TaskUpdate() {
   const [myId, setMyId] = useState(null);
   const [creatorId, setCreatorId] = useState(null);
   const [error, setError] = useState("");
+  const loadedStatusRef = useRef(null); // 불러온 시점의 상태 — 저장 시 바뀌었는지 비교용
 
   // 파일 선언
   const {
@@ -116,6 +118,7 @@ export default function TaskUpdate() {
       }
 
       setCreatorId(data.creatorId);
+      loadedStatusRef.current = data.status;
       setForm({
         title: data.title,
         description: data.description,
@@ -176,6 +179,11 @@ export default function TaskUpdate() {
       if (!res) {
         setError("저장하지 못했습니다. 권한이나 입력값을 확인해 주세요.");
         return;
+      }
+
+      if (form.status !== loadedStatusRef.current) {
+        trackEvent("task", "status_change", form.status);
+        if (form.status === "DONE") trackEvent("task", "complete");
       }
 
       // 파일 경로가 있으면 파일 저장

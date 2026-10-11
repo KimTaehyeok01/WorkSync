@@ -1,0 +1,40 @@
+# Matomo(웹 분석) 단독 스택 — WorkSync 본 스택과 별도로 기동한다 (cd matomo && docker compose up -d)
+services:
+  db:
+    image: mariadb:11.4
+    command: --max-allowed-packet=64MB
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MATOMO_DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: matomo
+      MARIADB_USER: matomo
+      MARIADB_PASSWORD: ${MATOMO_DB_PASSWORD}
+    volumes:
+      - db:/var/lib/mysql
+    restart: unless-stopped
+
+  matomo:
+    image: matomo:5-apache
+    depends_on: [db]
+    # Authorization 헤더를 PHP 로 전달 (OAuth2 Bearer 헤더 사용 시 필요)
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        echo 'SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$$1' > /etc/apache2/conf-enabled/pass-authorization.conf
+        exec /entrypoint.sh apache2-foreground
+    environment:
+      MATOMO_DATABASE_HOST: db
+      MATOMO_DATABASE_ADAPTER: mysql
+      MATOMO_DATABASE_TABLES_PREFIX: matomo_
+      MATOMO_DATABASE_USERNAME: matomo
+      MATOMO_DATABASE_PASSWORD: ${MATOMO_DB_PASSWORD}
+      MATOMO_DATABASE_DBNAME: matomo
+    ports:
+      - "8081:80"
+    volumes:
+      - matomo:/var/www/html
+    restart: unless-stopped
+
+volumes:
+  db:
+  matomo:

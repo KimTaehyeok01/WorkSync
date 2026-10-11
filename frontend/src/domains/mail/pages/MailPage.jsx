@@ -24,6 +24,7 @@ import {
   WSFileList,
 } from "../../../components/common/CommonWidgets";
 import { isOk } from "../../../api/apiRequest";
+import { trackEvent } from "../../../utils/matomo";
 import { formatDateTime, toDateString } from "../../../utils/dateFormatter";
 import {
   getMyInfo,
@@ -179,6 +180,7 @@ export default function MailPage() {
   const handleSend = async ({ files = [], ...mail }) => {
     const json = await sendMail(accessToken, mail);
     if (!isOk(json)) return json;
+    trackEvent("mail", "send");
 
     const failedNames = [];
     for (const file of files) {

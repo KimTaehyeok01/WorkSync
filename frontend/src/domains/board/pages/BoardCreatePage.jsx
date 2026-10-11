@@ -16,6 +16,7 @@ import {
 import useAuthContext from "../../../store/AuthContext";
 import useFileUpload from "../../../hooks/useFileUpload";
 import { getFile, saveFile, deleteFile } from "../../file/services/fileApi";
+import { trackEvent } from "../../../utils/matomo";
 import s from "./BoardCreatePage.module.css";
 
 const BOARD_COLORS = {
@@ -78,6 +79,8 @@ export default function BoardNew() {
         accessToken,
       );
       const postId = result;
+      // 서비스가 실패 시 undefined 를 돌려주므로 게시글 id 가 있을 때만 기록한다
+      if (postId) trackEvent("board", "post_create");
 
       // 파일 저장
       for (const file of uploadedFile) {

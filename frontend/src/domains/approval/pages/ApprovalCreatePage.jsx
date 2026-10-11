@@ -11,6 +11,7 @@ import {
 } from "../../../components/common/FormComponents";
 import useFileUpload from "../../../hooks/useFileUpload";
 import { getFile, saveFile, deleteFile } from "../../file/services/fileApi";
+import { trackEvent } from "../../../utils/matomo";
 import {
   ArrowLeft,
   X,
@@ -181,6 +182,9 @@ export default function ApprovalNew() {
       }
 
       if (approvalId) {
+        if (selectedForm?.formType === "LEAVE") {
+          trackEvent("leave", "request");
+        }
         setSubmitted(true);
         setTimeout(() => navigate("/approval"), 1600);
         // 파일 초기화 (성공 시에만)

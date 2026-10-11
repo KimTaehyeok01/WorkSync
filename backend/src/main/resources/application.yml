@@ -73,3 +73,8 @@ app:
 # 키가 없으면 빈 값으로 부팅되고 요약 기능만 동작하지 않음 (서버 전체는 정상 기동)
 groq:
   api-key: ${GROQ_API_KEY:}
+
+# Matomo 서버 사이드 이벤트 (로그인·결재 상신). url 이 비어 있으면 전송 비활성
+matomo:
+  url: ${MATOMO_URL:}
+  site-id: ${MATOMO_SITE_ID:1}

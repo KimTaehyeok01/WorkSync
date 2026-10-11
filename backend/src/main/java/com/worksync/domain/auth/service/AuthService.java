@@ -11,13 +11,20 @@ import com.worksync.global.exception.ErrorCode;
 import com.worksync.global.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
@@ -30,6 +37,15 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final AttendanceService attendanceService;
     private final AuditLogService auditLogService;
+
+    // Matomo 서버 사이드 이벤트 — url 이 비어 있으면 전송하지 않는다 (GroqService와 같은 RestTemplate 방식)
+    @Value("${matomo.url:}")
+    private String matomoUrl;
+
+    @Value("${matomo.site-id:1}")
+    private int matomoSiteId;
+
+    private final RestTemplate matomoRestTemplate = createMatomoRestTemplate();
 
     // 감사 로그 카테고리
     private static final String CATEGORY_AUTH = "AUTH";
@@ -80,6 +96,9 @@ public class AuthService {
         String accessToken = jwtTokenProvider.generateAccessToken(
                 employee.getId(), employee.getEmail(), employee.getRole().name());
         String refreshToken = jwtTokenProvider.generateRefreshToken(employee.getId());
+
+        // Matomo 이벤트 — 비동기 전송이라 트랜잭션을 붙잡지 않고, 사용자 식별자·IP는 보내지 않는다
+        trackMatomoEvent("auth", "login");
 
         return AuthDto.LoginResponse.builder()
                 .employeeId(employee.getId())
@@ -142,5 +161,41 @@ public class AuthService {
         // 감사 로그 — 로그아웃
         auditLogService.log(employee.getId(), employee.getName(),
                 ACTION_LOGOUT, CATEGORY_AUTH, null, clientIp, userAgent);
+    }
+
+    // Matomo 이벤트 비동기 전송 — url 미설정 시 no-op, 실패는 로그만 남기고 호출자에게 전파하지 않는다
+    private void trackMatomoEvent(String category, String action) {
+        if (matomoUrl == null || matomoUrl.isBlank()) {
+            return;
+        }
+        try {
+            CompletableFuture.runAsync(() -> {
+                try {
+                    // 인코딩이 끝난 URI를 그대로 넘겨 이중 인코딩을 막는다 (사용자 식별자·IP는 포함하지 않음)
+                    URI uri = UriComponentsBuilder
+                            .fromUriString(matomoUrl.trim().replaceAll("/+$", "") + "/matomo.php")
+                            .queryParam("idsite", matomoSiteId)
+                            .queryParam("rec", 1)
+                            .queryParam("apiv", 1)
+                            .queryParam("e_c", category)
+                            .queryParam("e_a", action)
+                            .build()
+                            .encode()
+                            .toUri();
+                    matomoRestTemplate.getForEntity(uri, byte[].class);
+                } catch (Exception e) {
+                    log.warn("Matomo 이벤트 전송 실패 category={}, action={}, cause={}", category, action, e.toString());
+                }
+            });
+        } catch (RuntimeException e) {
+            log.warn("Matomo 이벤트 전송 예약 실패 category={}, action={}, cause={}", category, action, e.toString());
+        }
+    }
+
+    private static RestTemplate createMatomoRestTemplate() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(2));
+        factory.setReadTimeout(Duration.ofSeconds(2));
+        return new RestTemplate(factory);
     }
 }

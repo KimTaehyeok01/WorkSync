@@ -29,6 +29,7 @@ import NotificationPage from "../domains/notification/pages/NotificationPage";
 import SearchPage from "../domains/search/pages/SearchPage";
 import styles from "./AppRouter.module.css";
 import useAuthContext from "../store/AuthContext";
+import { trackPageView } from "../utils/matomo";
 
 function NotFound() {
   return (
@@ -91,3 +92,14 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
+
+// 화면 이동마다 Matomo 페이지뷰 기록 (최초 진입 포함)
+let lastTrackedPath = router.state.location.pathname;
+trackPageView(lastTrackedPath);
+router.subscribe((state) => {
+  const path = state.location.pathname;
+  if (state.navigation.state === "idle" && path !== lastTrackedPath) {
+    lastTrackedPath = path;
+    trackPageView(path);
+  }
+});

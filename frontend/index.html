@@ -12,6 +12,25 @@
     <script>
       window.global = window;
     </script>
+    <!-- Matomo 추적 코드 -->
+    <script>
+      var _paq = (window._paq = window._paq || []);
+      // 페이지뷰는 SPA 라우터에서 기록한다 (src/utils/matomo.js)
+      _paq.push(["enableLinkTracking"]);
+      // 운영 도메인에서만 전송 (로컬 개발 방문이 운영 통계에 섞이지 않도록)
+      if (/(^|\.)worksync\.kr$/.test(location.hostname))
+      (function () {
+        var u = "https://matomo.worksync.kr/";
+        _paq.push(["setTrackerUrl", u + "matomo.php"]);
+        _paq.push(["setSiteId", "1"]);
+        var d = document,
+          g = d.createElement("script"),
+          s = d.getElementsByTagName("script")[0];
+        g.async = true;
+        g.src = u + "matomo.js";
+        s.parentNode.insertBefore(g, s);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
