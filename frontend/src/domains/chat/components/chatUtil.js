@@ -6,7 +6,9 @@ export const JOB_GRADE = {
   MANAGER: "과장",
   GENERAL_MANAGER: "부장",
   DIRECTOR: "이사",
-  CEO: "대표",
+  VICE_PRESIDENT: "부사장",
+  PRESIDENT: "사장",
+  CEO: "대표이사",
 };
 
 // 상태별 css 컬러

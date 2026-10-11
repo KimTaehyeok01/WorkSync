@@ -41,9 +41,11 @@ export default function OrganizationListPage() {
   const [employee, setEmployee] = useState([]);
   const [addDeptName, setAddDeptName] = useState("");
   const [addDeptError, setAddDeptError] = useState("");
+  const [addDeptParentId, setAddDeptParentId] = useState("");
   const [adding, setAdding] = useState(false);
   const [editDeptName, setEditDeptName] = useState("");
   const [editDeptId, setEditDeptId] = useState("");
+  const [editDeptParentId, setEditDeptParentId] = useState("");
   const [modalView, setModalView] = useState("dept");
   const [myRole, setMyRole] = useState("");
   const [bulkModal, setBulkModal] = useState(false);
@@ -89,7 +91,9 @@ export default function OrganizationListPage() {
     MANAGER: "과장",
     GENERAL_MANAGER: "부장",
     DIRECTOR: "이사",
-    CEO: "대표",
+    VICE_PRESIDENT: "부사장",
+    PRESIDENT: "사장",
+    CEO: "대표이사",
   };
 
   // 목록 필터
@@ -110,7 +114,11 @@ export default function OrganizationListPage() {
     if (adding || !addDeptName.trim()) return;
     setAdding(true);
     try {
-      const response = await createDepartments(accessToken, addDeptName.trim());
+      const response = await createDepartments(
+        accessToken,
+        addDeptName.trim(),
+        addDeptParentId ? Number(addDeptParentId) : null,
+      );
 
       // 서버가 거절(이름 중복·권한 없음 등)하면 data 가 null — 목록에 넣지 않고 사유를 보여준다
       const succeeded =
@@ -122,6 +130,7 @@ export default function OrganizationListPage() {
 
       setDepartments([...departments, response.data]);
       setAddDeptName("");
+      setAddDeptParentId("");
       setAddDeptError("");
       setModalView("dept");
     } finally {
@@ -147,8 +156,15 @@ export default function OrganizationListPage() {
             alert("부서를 삭제하지 못했습니다.");
             return;
           }
+          // DB 는 하위 부서의 상위를 비우므로(SET NULL) 화면 상태도 맞춘다
           setDepartments(
-            departments.filter((dept) => dept.id !== Number(editDeptId)),
+            departments
+              .filter((dept) => dept.id !== Number(editDeptId))
+              .map((dept) =>
+                dept.parentId === Number(editDeptId)
+                  ? { ...dept, parentId: null }
+                  : dept,
+              ),
           );
           // 삭제한 부서를 보고 있었다면 전체로 되돌린다
           if (deptFilter === Number(editDeptId)) {
@@ -172,6 +188,7 @@ export default function OrganizationListPage() {
         accessToken,
         editDeptName.trim(),
         editDeptId,
+        editDeptParentId ? Number(editDeptParentId) : null,
       );
 
       // 성공 판정은 부서 추가와 같다 — 거절·네트워크 오류면 서버 메시지(없으면 기본 문구)를 보여준다
@@ -313,11 +330,15 @@ export default function OrganizationListPage() {
         setAddDeptName={setAddDeptName}
         addDeptError={addDeptError}
         setAddDeptError={setAddDeptError}
+        addDeptParentId={addDeptParentId}
+        setAddDeptParentId={setAddDeptParentId}
         adding={adding}
         editDeptName={editDeptName}
         setEditDeptName={setEditDeptName}
         editDeptId={editDeptId}
         setEditDeptId={setEditDeptId}
+        editDeptParentId={editDeptParentId}
+        setEditDeptParentId={setEditDeptParentId}
         handleAdd={handleAdd}
         handleDelete={handleDelete}
         handleEdit={handleEdit}

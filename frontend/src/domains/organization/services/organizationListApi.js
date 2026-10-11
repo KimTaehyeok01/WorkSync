@@ -19,14 +19,14 @@ export async function getDepartments(accessToken) {
     });
 }
 
-export async function createDepartments(accessToken, addDeptName) {
+export async function createDepartments(accessToken, addDeptName, parentId) {
   return await fetch(`${BASE_URL}/departments`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify({ name: addDeptName }),
+    body: JSON.stringify({ name: addDeptName, parentId: parentId ?? null }),
   })
     .then((response) => {
       return response.json();
@@ -39,14 +39,19 @@ export async function createDepartments(accessToken, addDeptName) {
     });
 }
 
-export async function editDepartments(accessToken, editDeptName, editDeptId) {
+export async function editDepartments(
+  accessToken,
+  editDeptName,
+  editDeptId,
+  parentId,
+) {
   return await fetch(`${BASE_URL}/departments/${editDeptId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify({ name: editDeptName }),
+    body: JSON.stringify({ name: editDeptName, parentId: parentId ?? null }),
   })
     .then((response) => {
       return response.json();

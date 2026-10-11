@@ -143,7 +143,7 @@ public class AttendanceDto {
         @Schema(description = "직원 이름", example = "홍길동")
         private String employeeName;
 
-        @Schema(description = "직급 (STAFF, SENIOR, ASSISTANT_MANAGER, MANAGER, GENERAL_MANAGER, DIRECTOR, CEO)", example = "STAFF")
+        @Schema(description = "직급 (STAFF, SENIOR, ASSISTANT_MANAGER, MANAGER, GENERAL_MANAGER, DIRECTOR, VICE_PRESIDENT, PRESIDENT, CEO)", example = "STAFF")
         private JobGrade jobGrade;
 
         @Schema(description = "프로필 이미지 경로")

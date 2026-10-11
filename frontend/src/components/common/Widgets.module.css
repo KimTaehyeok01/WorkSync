@@ -883,6 +883,9 @@
 .modalLg {
   max-width: 42rem;
 }
+.modalXl {
+  max-width: 64rem;
+}
 .modalHeader {
   display: flex;
   align-items: center;

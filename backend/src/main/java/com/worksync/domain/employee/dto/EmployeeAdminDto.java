@@ -35,7 +35,7 @@ public class EmployeeAdminDto {
 		@Schema(description = "연락처", example = "010-1234-5678")
 		private String phone;
 
-		@Schema(description = "직급 (STAFF, SENIOR, ASSISTANT_MANAGER, MANAGER, GENERAL_MANAGER, DIRECTOR, CEO)", example = "STAFF")
+		@Schema(description = "직급 (STAFF, SENIOR, ASSISTANT_MANAGER, MANAGER, GENERAL_MANAGER, DIRECTOR, VICE_PRESIDENT, PRESIDENT, CEO)", example = "STAFF")
 		private String jobGrade;
 
 		@Schema(description = "부서명 — 비우면 미배정", example = "개발팀")

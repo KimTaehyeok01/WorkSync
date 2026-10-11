@@ -152,7 +152,7 @@ export default function EmployeeBulkModal({ isOpen, onClose, accessToken, onDone
           <div className={s.stepBody}>
             <p className={s.stepTitle}>양식 내려받기</p>
             <p className={s.stepDesc}>
-              직급은 STAFF, SENIOR, ASSISTANT_MANAGER, MANAGER, GENERAL_MANAGER, DIRECTOR, CEO 중
+              직급은 STAFF, SENIOR, ASSISTANT_MANAGER, MANAGER, GENERAL_MANAGER, DIRECTOR, VICE_PRESIDENT, PRESIDENT, CEO 중
               하나, 입사일은 2026-01-02 형식으로 적습니다. 부서명은 등록된 부서와 같아야 합니다.
             </p>
           </div>

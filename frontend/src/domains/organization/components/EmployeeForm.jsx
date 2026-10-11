@@ -25,7 +25,9 @@ const JOB_GRADE_OPTIONS = [
   { key: "MANAGER", label: "과장" },
   { key: "GENERAL_MANAGER", label: "부장" },
   { key: "DIRECTOR", label: "이사" },
-  { key: "CEO", label: "대표" },
+  { key: "VICE_PRESIDENT", label: "부사장" },
+  { key: "PRESIDENT", label: "사장" },
+  { key: "CEO", label: "대표이사" },
 ];
 
 // 권한

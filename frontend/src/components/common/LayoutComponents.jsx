@@ -3,6 +3,9 @@ import { useEffect, useId } from "react";
 import { WSSearchInput, WSFilterDropdown } from "./FormComponents";
 import s from "./Widgets.module.css";
 
+let openModalCount = 0;
+let originalBodyOverflow = "";
+
 /** 모달 */
 export function WSModal({
   isOpen,
@@ -22,9 +25,27 @@ export function WSModal({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
+  // 모달이 열려 있는 동안 배경 페이지 스크롤 막기 (겹친 모달은 마지막 하나가 닫힐 때만 복원)
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    if (openModalCount === 0) originalBodyOverflow = document.body.style.overflow;
+    openModalCount += 1;
+    document.body.style.overflow = "hidden";
+    return () => {
+      openModalCount -= 1;
+      if (openModalCount === 0) document.body.style.overflow = originalBodyOverflow;
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
   const sizeCls =
-    size === "sm" ? s.modalSm : size === "lg" ? s.modalLg : s.modalMd;
+    size === "sm"
+      ? s.modalSm
+      : size === "xl"
+        ? s.modalXl
+        : size === "lg"
+          ? s.modalLg
+          : s.modalMd;
   return (
     <div
       className={s.modalOverlay}

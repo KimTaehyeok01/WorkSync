@@ -19,8 +19,10 @@ import {
   Coffee,
   UserRound,
   Menu,
+  Network,
 } from "lucide-react";
 import { WSAvatar } from "../../components/common/CommonWidgets";
+import OrgChartModal from "../../domains/organization/components/OrgChartModal";
 import { getMyInfo, patchStatus } from "../service/TopBarApi";
 import {
   getNotifications,
@@ -89,7 +91,9 @@ const JOB_GRADE = {
   MANAGER: "과장",
   GENERAL_MANAGER: "부장",
   DIRECTOR: "이사",
-  CEO: "대표",
+  VICE_PRESIDENT: "부사장",
+  PRESIDENT: "사장",
+  CEO: "대표이사",
 };
 
 export function TopBar({ pathname, onMenuClick }) {
@@ -109,6 +113,7 @@ export function TopBar({ pathname, onMenuClick }) {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifId, setNotifId] = useState(0);
+  const [showOrgChart, setShowOrgChart] = useState(false);
   const clientRef = useRef(null);
   const page = PAGE_TITLES[pathname] || {
     title: "WorkSync",
@@ -292,6 +297,20 @@ export function TopBar({ pathname, onMenuClick }) {
           </button>
         )}
       </div>
+
+      <button
+        onClick={() => setShowOrgChart(true)}
+        className={styles.iconBtn}
+        aria-label="조직도 보기"
+        type="button"
+      >
+        <Network size={19} />
+      </button>
+      <OrgChartModal
+        isOpen={showOrgChart}
+        onClose={() => setShowOrgChart(false)}
+        accessToken={accessToken}
+      />
 
       <div className={styles.bellWrap} ref={notifRef}>
         <button

@@ -39,6 +39,12 @@ class DepartmentServiceTest {
         return request;
     }
 
+    private DepartmentDto.Request buildRequest(String name, Long parentId) {
+        DepartmentDto.Request request = buildRequest(name);
+        request.setParentId(parentId);
+        return request;
+    }
+
     @DisplayName("전체 부서 목록을 조회한다")
     @Test
     void findDept_success() {
@@ -165,6 +171,116 @@ class DepartmentServiceTest {
                 .extracting(e -> ((CustomException) e).getErrorCode())
                 .isEqualTo(ErrorCode.DUPLICATE_DEPARTMENT_NAME);
         assertThat(existing.getName()).isEqualTo("기존팀");
+    }
+
+    @DisplayName("상위 부서를 지정해 하위 부서를 생성한다")
+    @Test
+    void createDept_withParent_success() {
+        // given
+        Department parent = Department.builder().id(1L).name("개발본부").build();
+        DepartmentDto.Request request = buildRequest("개발팀", 1L);
+        given(departmentRepository.existsByName("개발팀")).willReturn(false);
+        given(departmentRepository.findById(1L)).willReturn(Optional.of(parent));
+        given(departmentRepository.save(any(Department.class)))
+                .willAnswer(invocation -> {
+                    Department arg = invocation.getArgument(0);
+                    return Department.builder().id(2L).name(arg.getName()).parent(arg.getParent()).build();
+                });
+
+        // when
+        DepartmentDto.Response result = departmentService.createDept(request);
+
+        // then
+        assertThat(result.getId()).isEqualTo(2L);
+        assertThat(result.getParentId()).isEqualTo(1L);
+    }
+
+    @DisplayName("존재하지 않는 상위 부서로 생성하면 예외가 발생한다")
+    @Test
+    void createDept_parentNotFound_throwsDepartmentNotFound() {
+        // given
+        DepartmentDto.Request request = buildRequest("개발팀", 999L);
+        given(departmentRepository.existsByName("개발팀")).willReturn(false);
+        given(departmentRepository.findById(999L)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> departmentService.createDept(request))
+                .isInstanceOf(CustomException.class)
+                .extracting(e -> ((CustomException) e).getErrorCode())
+                .isEqualTo(ErrorCode.DEPARTMENT_NOT_FOUND);
+        verify(departmentRepository, never()).save(any());
+    }
+
+    @DisplayName("자기 자신을 상위 부서로 수정하면 예외가 발생한다")
+    @Test
+    void updateDept_selfAsParent_throwsInvalidDepartmentParent() {
+        // given
+        Department existing = Department.builder().id(1L).name("개발팀").build();
+        DepartmentDto.Request request = buildRequest("개발팀", 1L);
+        given(departmentRepository.findById(1L)).willReturn(Optional.of(existing));
+
+        // when & then
+        assertThatThrownBy(() -> departmentService.updateDept(1L, request))
+                .isInstanceOf(CustomException.class)
+                .extracting(e -> ((CustomException) e).getErrorCode())
+                .isEqualTo(ErrorCode.INVALID_DEPARTMENT_PARENT);
+        assertThat(existing.getParent()).isNull();
+    }
+
+    @DisplayName("자기 하위(후손) 부서를 상위 부서로 수정하면 순환이므로 예외가 발생한다")
+    @Test
+    void updateDept_descendantAsParent_throwsInvalidDepartmentParent() {
+        // given: 본부(1) <- 개발팀(2) <- 백엔드팀(3)
+        Department root = Department.builder().id(1L).name("본부").build();
+        Department child = Department.builder().id(2L).name("개발팀").parent(root).build();
+        Department grandChild = Department.builder().id(3L).name("백엔드팀").parent(child).build();
+        DepartmentDto.Request request = buildRequest("본부", 3L);
+        given(departmentRepository.findById(1L)).willReturn(Optional.of(root));
+        given(departmentRepository.findById(3L)).willReturn(Optional.of(grandChild));
+
+        // when & then
+        assertThatThrownBy(() -> departmentService.updateDept(1L, request))
+                .isInstanceOf(CustomException.class)
+                .extracting(e -> ((CustomException) e).getErrorCode())
+                .isEqualTo(ErrorCode.INVALID_DEPARTMENT_PARENT);
+        assertThat(root.getParent()).isNull();
+    }
+
+    @DisplayName("부서명은 그대로 두고 상위 부서만 변경한다")
+    @Test
+    void updateDept_sameNameChangeParent_success() {
+        // given
+        Department newParent = Department.builder().id(1L).name("개발본부").build();
+        Department existing = Department.builder().id(2L).name("개발팀").build();
+        DepartmentDto.Request request = buildRequest("개발팀", 1L);
+        given(departmentRepository.findById(2L)).willReturn(Optional.of(existing));
+        given(departmentRepository.findById(1L)).willReturn(Optional.of(newParent));
+
+        // when
+        DepartmentDto.Response result = departmentService.updateDept(2L, request);
+
+        // then
+        assertThat(result.getName()).isEqualTo("개발팀");
+        assertThat(result.getParentId()).isEqualTo(1L);
+        assertThat(existing.getParent()).isSameAs(newParent);
+        verify(departmentRepository, never()).existsByName(any());
+    }
+
+    @DisplayName("상위 부서를 null 로 수정하면 최상위 부서로 해제된다")
+    @Test
+    void updateDept_nullParent_clearsParent() {
+        // given
+        Department parent = Department.builder().id(1L).name("개발본부").build();
+        Department existing = Department.builder().id(2L).name("개발팀").parent(parent).build();
+        DepartmentDto.Request request = buildRequest("개발팀", null);
+        given(departmentRepository.findById(2L)).willReturn(Optional.of(existing));
+
+        // when
+        DepartmentDto.Response result = departmentService.updateDept(2L, request);
+
+        // then
+        assertThat(result.getParentId()).isNull();
+        assertThat(existing.getParent()).isNull();
     }
 
     @DisplayName("부서를 정상적으로 삭제한다")

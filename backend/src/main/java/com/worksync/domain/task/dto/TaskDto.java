@@ -41,7 +41,7 @@ public class TaskDto {
         @Schema(description = "부서 ID", example = "1")
         private Long departmentId;
 
-        @Schema(description = "담당자 직급 (STAFF, SENIOR, ASSISTANT_MANAGER, MANAGER, GENERAL_MANAGER, DIRECTOR, CEO)", example = "STAFF")
+        @Schema(description = "담당자 직급 (STAFF, SENIOR, ASSISTANT_MANAGER, MANAGER, GENERAL_MANAGER, DIRECTOR, VICE_PRESIDENT, PRESIDENT, CEO)", example = "STAFF")
         private JobGrade assigneeJobGrade;
 
         @Min(0) @Max(100)
@@ -74,7 +74,7 @@ public class TaskDto {
         @Schema(description = "담당자 이름", example = "김철수")
         private String assigneeName;
 
-        @Schema(description = "담당자 직급 (STAFF, SENIOR, ASSISTANT_MANAGER, MANAGER, GENERAL_MANAGER, DIRECTOR, CEO)", example = "STAFF")
+        @Schema(description = "담당자 직급 (STAFF, SENIOR, ASSISTANT_MANAGER, MANAGER, GENERAL_MANAGER, DIRECTOR, VICE_PRESIDENT, PRESIDENT, CEO)", example = "STAFF")
         private String assigneeJobGrade;
 
         @Schema(description = "부서 ID", example = "1")

@@ -12,8 +12,17 @@ import {
   WSButton,
   WSAlert,
 } from "../../../components/common/CommonWidgets";
+import { WSSelect } from "../../../components/common/FormComponents";
 import style from "../pages/OrganizationListPage.module.css";
 import useAuthContext from "../../../store/AuthContext";
+import { flattenDeptTree, getDeptSubtreeIds } from "../utils/deptTree";
+
+// 상위 부서 선택 항목 — 계층이 보이도록 들여쓴다
+const toParentOptions = (flatDepts) =>
+  flatDepts.map((dept) => ({
+    value: dept.id,
+    label: `${"   ".repeat(dept.depth)}${dept.depth ? "└ " : ""}${dept.name}`,
+  }));
 
 export default function DeptModal({
   departments = [],
@@ -25,20 +34,31 @@ export default function DeptModal({
   setAddDeptName,
   addDeptError,
   setAddDeptError,
+  addDeptParentId,
+  setAddDeptParentId,
   adding,
   editDeptName,
   setEditDeptName,
   editDeptId,
   setEditDeptId,
+  editDeptParentId,
+  setEditDeptParentId,
   handleAdd,
   handleDelete,
   handleEdit,
   modalView,
   setModalView,
 }) {
+  const flatDepts = flattenDeptTree(departments);
+  // 수정 중인 부서와 그 하위 부서는 상위 부서로 고를 수 없다
+  const editBlockedIds = editDeptId
+    ? getDeptSubtreeIds(departments, Number(editDeptId))
+    : new Set();
+
   // 부서 추가 화면을 열 때마다 이전 입력과 에러를 비운다
   const openAdd = () => {
     setAddDeptName("");
+    setAddDeptParentId("");
     setAddDeptError("");
     setModalView("add");
   };
@@ -70,14 +90,16 @@ export default function DeptModal({
             </button>
 
             <div className={style.deptList}>
-              {departments.map((dept) => (
+              {flatDepts.map((dept) => (
                 <button
                   key={dept.id}
                   className={style.deptItem}
+                  style={{ paddingLeft: 16 + dept.depth * 20 }}
                   onClick={() => {
                     setModalView("edit");
                     setEditDeptId(`${dept.id}`);
                     setEditDeptName(`${dept.name}`);
+                    setEditDeptParentId(dept.parentId ? `${dept.parentId}` : "");
                   }}
                 >
                   <span>{dept.name}</span>
@@ -104,6 +126,15 @@ export default function DeptModal({
               setAddDeptError("");
             }}
             placeholder="부서명을 입력하세요"
+          />
+        </WSFormField>
+
+        <WSFormField label="상위 부서">
+          <WSSelect
+            value={addDeptParentId}
+            onChange={(e) => setAddDeptParentId(e.target.value)}
+            options={toParentOptions(flatDepts)}
+            placeholder="없음 (최상위 부서)"
           />
         </WSFormField>
 
@@ -145,6 +176,17 @@ export default function DeptModal({
             value={editDeptName}
             onChange={(e) => setEditDeptName(e.target.value)}
             placeholder="부서명을 입력하세요"
+          />
+        </WSFormField>
+
+        <WSFormField label="상위 부서">
+          <WSSelect
+            value={editDeptParentId}
+            onChange={(e) => setEditDeptParentId(e.target.value)}
+            options={toParentOptions(
+              flatDepts.filter((dept) => !editBlockedIds.has(dept.id)),
+            )}
+            placeholder="없음 (최상위 부서)"
           />
         </WSFormField>
 

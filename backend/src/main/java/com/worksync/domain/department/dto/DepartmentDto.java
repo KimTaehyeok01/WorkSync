@@ -21,6 +21,9 @@ public class DepartmentDto {
         @Size(max = 30)
         @Schema(description = "부서명", maxLength = 30, example = "개발팀")
         private String name;
+
+        @Schema(description = "상위 부서 ID (생략 또는 null이면 최상위 부서)", example = "1", nullable = true)
+        private Long parentId;
     }
 
     @Getter @Builder
@@ -33,6 +36,9 @@ public class DepartmentDto {
         @Schema(description = "부서명", example = "개발팀")
         private String name;
 
+        @Schema(description = "상위 부서 ID (null이면 최상위 부서)", example = "1", nullable = true)
+        private Long parentId;
+
         @Schema(description = "생성 일시")
         private LocalDateTime createdAt;
 
@@ -40,6 +46,8 @@ public class DepartmentDto {
             return Response.builder()
                     .id(department.getId())
                     .name(department.getName())
+                    // LAZY 프록시의 getId() 는 추가 쿼리를 내지 않는다
+                    .parentId(department.getParent() != null ? department.getParent().getId() : null)
                     .createdAt(department.getCreatedAt())
                     .build();
         }

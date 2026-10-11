@@ -44,7 +44,7 @@ public class EmployeeDto {
         private String phone;
 
         @NotNull
-        @Schema(description = "직급 (STAFF, SENIOR, ASSISTANT_MANAGER, MANAGER, GENERAL_MANAGER, DIRECTOR, CEO)", example = "STAFF")
+        @Schema(description = "직급 (STAFF, SENIOR, ASSISTANT_MANAGER, MANAGER, GENERAL_MANAGER, DIRECTOR, VICE_PRESIDENT, PRESIDENT, CEO)", example = "STAFF")
         private JobGrade jobGrade;
 
         @Schema(description = "권한 (USER, ADMIN)", example = "USER")
@@ -85,7 +85,7 @@ public class EmployeeDto {
         @Schema(description = "상태 (ACTIVE, INACTIVE, AWAY)", example = "ACTIVE")
         private EmployeeStatus status;
 
-        @Schema(description = "직급 (STAFF, SENIOR, ASSISTANT_MANAGER, MANAGER, GENERAL_MANAGER, DIRECTOR, CEO)", example = "STAFF")
+        @Schema(description = "직급 (STAFF, SENIOR, ASSISTANT_MANAGER, MANAGER, GENERAL_MANAGER, DIRECTOR, VICE_PRESIDENT, PRESIDENT, CEO)", example = "STAFF")
         private JobGrade jobGrade;
 
         @Schema(description = "부서 ID", example = "1")
@@ -135,7 +135,7 @@ public class EmployeeDto {
         @Schema(description = "비밀번호")
         private String password;
 
-        @Schema(description = "직급 (STAFF, SENIOR, ASSISTANT_MANAGER, MANAGER, GENERAL_MANAGER, DIRECTOR, CEO)", example = "STAFF")
+        @Schema(description = "직급 (STAFF, SENIOR, ASSISTANT_MANAGER, MANAGER, GENERAL_MANAGER, DIRECTOR, VICE_PRESIDENT, PRESIDENT, CEO)", example = "STAFF")
         private JobGrade jobGrade;
 
         @Schema(description = "권한 (USER, ADMIN)", example = "USER")

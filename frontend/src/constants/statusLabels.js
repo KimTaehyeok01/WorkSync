@@ -9,7 +9,9 @@ export const JOB_GRADE_LABEL = {
   MANAGER: "과장",
   GENERAL_MANAGER: "부장",
   DIRECTOR: "이사",
-  CEO: "대표",
+  VICE_PRESIDENT: "부사장",
+  PRESIDENT: "사장",
+  CEO: "대표이사",
 };
 
 export const ROLE_LABEL = {
